@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,28 +7,115 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GraduationCap, User, BookOpen, Shield } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 type UserRole = "student" | "teacher" | "admin";
 
 const Auth = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login, register, isAuthenticated, user, isLoading: authLoading } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [selectedRole, setSelectedRole] = useState<UserRole>("student");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleAuth = (e: React.FormEvent) => {
-    e.preventDefault();
+  // Show loading while auth context is initializing
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Debug authentication state
+  console.log('Auth component render:', { 
+    isAuthenticated, 
+    user, 
+    userRole: user?.role, 
+    authLoading,
+    isLoading 
+  });
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    console.log('Auth useEffect triggered:', { isAuthenticated, user, userRole: user?.role });
     
-    // This is a placeholder - will be connected to Lovable Cloud
-    if (isLogin) {
-      toast.success("Login successful!");
-      // Navigate based on role
-      navigate(`/${selectedRole}-dashboard`);
-    } else {
-      toast.success("Account created successfully!");
-      navigate(`/${selectedRole}-dashboard`);
+    if (isAuthenticated && user && user.role !== undefined) {
+      console.log('User object:', user);
+      console.log('User role:', user.role, typeof user.role);
+      
+      // Map numeric role to string role
+      let userRole: string;
+      if (typeof user.role === 'number') {
+        // Map numeric roles: 0 = Student, 1 = Teacher, 2 = Admin (adjust as needed)
+        const roleMap: { [key: number]: string } = {
+          0: 'student',
+          1: 'teacher', 
+          2: 'admin'
+        };
+        userRole = roleMap[user.role] || 'student';
+      } else if (typeof user.role === 'string') {
+        userRole = user.role.toLowerCase();
+      } else {
+        userRole = 'student'; // fallback
+      }
+      
+      const from = location.state?.from?.pathname || `/${userRole}-dashboard`;
+      console.log('Navigating to:', from);
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, user, navigate, location.state?.from?.pathname]);
+
+  if (isAuthenticated) {
+    console.log('User is authenticated, should redirect...');
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Redirecting to dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      if (isLogin) {
+        await login(email, password);
+        toast.success("Login successful!");
+        // The user will be redirected by the useEffect below when isAuthenticated becomes true
+      } else {
+        if (!firstName || !lastName) {
+          toast.error("Please enter both first and last name");
+          setIsLoading(false);
+          return;
+        }
+
+        const roleMap: Record<UserRole, 'Student' | 'Teacher' | 'Admin'> = {
+          student: 'Student',
+          teacher: 'Teacher',
+          admin: 'Admin'
+        };
+
+        await register(firstName, lastName, email, password, roleMap[selectedRole]);
+        toast.success("Account created successfully!");
+        navigate(`/${selectedRole}-dashboard`, { replace: true });
+      }
+    } catch (error: any) {
+      toast.error(error.message || "An error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -103,18 +190,30 @@ const Auth = () => {
                 </div>
               )}
 
-              {/* Name Field (Sign Up Only) */}
+              {/* Name Fields (Sign Up Only) */}
               {!isLogin && (
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input
-                    id="name"
-                    placeholder="Enter your name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                  />
-                </div>
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName">First Name</Label>
+                    <Input
+                      id="firstName"
+                      placeholder="Enter your first name"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName">Last Name</Label>
+                    <Input
+                      id="lastName"
+                      placeholder="Enter your last name"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      required
+                    />
+                  </div>
+                </>
               )}
 
               {/* Email Field */}
@@ -144,8 +243,12 @@ const Auth = () => {
               </div>
 
               {/* Submit Button */}
-              <Button type="submit" className="w-full bg-gradient-hero hover:opacity-90 transition-opacity">
-                {isLogin ? "Sign In" : "Create Account"}
+              <Button 
+                type="submit" 
+                className="w-full bg-gradient-hero hover:opacity-90 transition-opacity"
+                disabled={isLoading}
+              >
+                {isLoading ? "Please wait..." : (isLogin ? "Sign In" : "Create Account")}
               </Button>
 
               {/* Toggle Login/Signup */}

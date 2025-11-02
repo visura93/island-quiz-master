@@ -1,10 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GraduationCap, Users, BookOpen, Settings, Shield } from "lucide-react";
+import { GraduationCap, Users, BookOpen, Settings, Shield, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
 
   const stats = [
     { label: "Total Users", value: "0", icon: Users, color: "text-primary" },
@@ -23,9 +30,15 @@ const AdminDashboard = () => {
               Island First
             </span>
           </div>
-          <Button variant="outline" onClick={() => navigate("/")}>
-            Logout
-          </Button>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-muted-foreground">
+              Welcome, {user?.firstName}!
+            </span>
+            <Button variant="outline" onClick={handleLogout}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
+          </div>
         </div>
       </header>
 
