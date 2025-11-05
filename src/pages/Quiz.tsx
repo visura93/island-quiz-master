@@ -325,17 +325,35 @@ const Quiz = () => {
                             </div>
                           </div>
                           
-                          <p className="font-medium mb-4">{questionResult.questionText}</p>
+                          <div className="mb-4">
+                            {questionResult.questionText && (
+                              <p className="font-medium mb-2">{questionResult.questionText}</p>
+                            )}
+                            {questionResult.questionImage && (
+                              <div className="mb-2">
+                                <img 
+                                  src={questionResult.questionImage} 
+                                  alt="Question" 
+                                  className="max-w-full h-auto rounded-lg border-2 border-border shadow-md"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.style.display = 'none';
+                                  }}
+                                />
+                              </div>
+                            )}
+                          </div>
                           
                           <div className="space-y-2">
                             {questionResult.options.map((option, optionIndex) => {
                               const isSelected = questionResult.selectedAnswerIndex === optionIndex;
                               const isCorrect = questionResult.correctAnswerIndex === optionIndex;
+                              const optionImage = questionResult.optionImages?.[optionIndex];
                               
                               return (
                                 <div
                                   key={optionIndex}
-                                  className={`p-3 rounded-lg border-2 flex items-center gap-2 ${
+                                  className={`p-3 rounded-lg border-2 flex items-start gap-2 ${
                                     isCorrect
                                       ? 'border-green-500 bg-green-100'
                                       : isSelected && !isCorrect
@@ -344,28 +362,45 @@ const Quiz = () => {
                                   }`}
                                 >
                                   {isCorrect && (
-                                    <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+                                    <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                                   )}
                                   {isSelected && !isCorrect && (
-                                    <XCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+                                    <XCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
                                   )}
                                   {!isSelected && !isCorrect && (
-                                    <Circle className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                                    <Circle className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
                                   )}
-                                  <span className={`flex-1 ${
+                                  <div className={`flex-1 ${
                                     isCorrect
                                       ? 'font-semibold text-green-900'
                                       : isSelected && !isCorrect
                                       ? 'font-semibold text-red-900'
                                       : 'text-gray-700'
                                   }`}>
-                                    {String.fromCharCode(65 + optionIndex)}. {option}
-                                  </span>
+                                    {option && (
+                                      <span className="block mb-2">
+                                        {String.fromCharCode(65 + optionIndex)}. {option}
+                                      </span>
+                                    )}
+                                    {optionImage && (
+                                      <div className="mt-2">
+                                        <img 
+                                          src={optionImage} 
+                                          alt={`Option ${String.fromCharCode(65 + optionIndex)}`}
+                                          className="max-w-full h-auto max-h-64 rounded-lg border border-border"
+                                          onError={(e) => {
+                                            const target = e.target as HTMLImageElement;
+                                            target.style.display = 'none';
+                                          }}
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
                                   {isCorrect && (
-                                    <Badge className="bg-green-600 ml-auto">Correct Answer</Badge>
+                                    <Badge className="bg-green-600 ml-auto flex-shrink-0">Correct Answer</Badge>
                                   )}
                                   {isSelected && !isCorrect && (
-                                    <Badge variant="destructive" className="ml-auto">Your Answer</Badge>
+                                    <Badge variant="destructive" className="ml-auto flex-shrink-0">Your Answer</Badge>
                                   )}
                                 </div>
                               );
@@ -587,28 +622,65 @@ const Quiz = () => {
           <CardContent className="space-y-6">
             {currentQuestion ? (
               <div>
-                <h2 className="text-xl font-semibold mb-6 text-foreground">{currentQuestion.questionText}</h2>
+                <div className="mb-6">
+                  {currentQuestion.questionText && (
+                    <h2 className="text-xl font-semibold mb-4 text-foreground">{currentQuestion.questionText}</h2>
+                  )}
+                  {currentQuestion.questionImage && (
+                    <div className="mb-4">
+                      <img 
+                        src={currentQuestion.questionImage} 
+                        alt="Question" 
+                        className="max-w-full h-auto rounded-lg border-2 border-border shadow-md"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
                 <div className="space-y-4">
-                  {currentQuestion.options.map((option, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleAnswerSelect(index)}
-                      className={`w-full p-6 text-left border-2 rounded-xl transition-all hover:shadow-md card-hover ${
-                        selectedAnswers[currentQuestion.id] === index
-                          ? 'border-primary bg-primary/5 shadow-elegant'
-                          : 'border-border hover:border-primary/50'
-                      }`}
-                    >
-                      <div className="flex items-center gap-4">
-                        {selectedAnswers[currentQuestion.id] === index ? (
-                          <CheckCircle className="h-6 w-6 text-primary" />
-                        ) : (
-                          <Circle className="h-6 w-6 text-muted-foreground" />
-                        )}
-                        <span className="text-lg font-medium">{option}</span>
-                      </div>
-                    </button>
-                  ))}
+                  {currentQuestion.options.map((option, index) => {
+                    const optionImage = currentQuestion.optionImages?.[index];
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => handleAnswerSelect(index)}
+                        className={`w-full p-6 text-left border-2 rounded-xl transition-all hover:shadow-md card-hover ${
+                          selectedAnswers[currentQuestion.id] === index
+                            ? 'border-primary bg-primary/5 shadow-elegant'
+                            : 'border-border hover:border-primary/50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-4">
+                          {selectedAnswers[currentQuestion.id] === index ? (
+                            <CheckCircle className="h-6 w-6 text-primary flex-shrink-0" />
+                          ) : (
+                            <Circle className="h-6 w-6 text-muted-foreground flex-shrink-0" />
+                          )}
+                          <div className="flex-1">
+                            {option && (
+                              <span className="text-lg font-medium block mb-2">{option}</span>
+                            )}
+                            {optionImage && (
+                              <div className="mt-2">
+                                <img 
+                                  src={optionImage} 
+                                  alt={`Option ${index + 1}`}
+                                  className="max-w-full h-auto max-h-64 rounded-lg border border-border"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.style.display = 'none';
+                                  }}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             ) : (
