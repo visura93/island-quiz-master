@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://localhost:57629/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://islandfirst-exendtg0a8c5cpfg.canadacentral-01.azurewebsites.net/api';
 
 export interface LoginRequest {
   email: string;
