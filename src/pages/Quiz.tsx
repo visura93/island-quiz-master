@@ -379,8 +379,8 @@ const Quiz = () => {
                                   }`}>
                                     {option && (
                                       <span className="block mb-2">
-                                        {String.fromCharCode(65 + optionIndex)}. {option}
-                                      </span>
+                                    {String.fromCharCode(65 + optionIndex)}. {option}
+                                  </span>
                                     )}
                                     {optionImage && (
                                       <div className="mt-2">
@@ -644,21 +644,21 @@ const Quiz = () => {
                   {currentQuestion.options.map((option, index) => {
                     const optionImage = currentQuestion.optionImages?.[index];
                     return (
-                      <button
-                        key={index}
-                        onClick={() => handleAnswerSelect(index)}
-                        className={`w-full p-6 text-left border-2 rounded-xl transition-all hover:shadow-md card-hover ${
-                          selectedAnswers[currentQuestion.id] === index
-                            ? 'border-primary bg-primary/5 shadow-elegant'
-                            : 'border-border hover:border-primary/50'
-                        }`}
-                      >
-                        <div className="flex items-center gap-4">
-                          {selectedAnswers[currentQuestion.id] === index ? (
+                    <button
+                      key={index}
+                      onClick={() => handleAnswerSelect(index)}
+                      className={`w-full p-6 text-left border-2 rounded-xl transition-all hover:shadow-md card-hover ${
+                        selectedAnswers[currentQuestion.id] === index
+                          ? 'border-primary bg-primary/5 shadow-elegant'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-4">
+                        {selectedAnswers[currentQuestion.id] === index ? (
                             <CheckCircle className="h-6 w-6 text-primary flex-shrink-0" />
-                          ) : (
+                        ) : (
                             <Circle className="h-6 w-6 text-muted-foreground flex-shrink-0" />
-                          )}
+                        )}
                           <div className="flex-1">
                             {option && (
                               <span className="text-lg font-medium block mb-2">{option}</span>
@@ -677,8 +677,8 @@ const Quiz = () => {
                               </div>
                             )}
                           </div>
-                        </div>
-                      </button>
+                      </div>
+                    </button>
                     );
                   })}
                 </div>

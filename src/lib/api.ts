@@ -66,7 +66,9 @@ export interface Quiz {
 export interface QuizAnswer {
   id: string;
   questionText: string;
+  questionImage?: string;
   options: string[];
+  optionImages?: string[];
   selectedAnswerIndex: number;
   correctAnswerIndex: number;
   isCorrect: boolean;
@@ -141,6 +143,28 @@ export interface RecentActivity {
   type: string;
 }
 
+export interface StudentActivity {
+  id: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  email: string;
+  totalQuizzes: number;
+  totalScore: number;
+  averageScore: number;
+  lastActivityDate: string;
+  createdAt: string;
+  isActive: boolean;
+}
+
+export interface StudentDetail extends User {
+  totalQuizzes: number;
+  totalScore: number;
+  averageScore: number;
+  lastActivityDate: string;
+  quizAttempts: QuizAttempt[];
+}
+
 export interface StartQuizRequest {
   quizId: string;
 }
@@ -156,13 +180,44 @@ export interface StartQuizResponse {
 export interface Question {
   id: string;
   questionText: string;
+  questionImage?: string;
   options: string[];
+  optionImages?: string[];
   order: number;
 }
 
 export interface SubmitAnswerRequest {
   questionId: string;
   selectedAnswerIndex: number;
+}
+
+export interface BlobUploadResponse {
+  url: string; // SAS URL for uploading
+  blobName: string;
+  publicUrl: string; // Public URL to access the blob after upload
+}
+
+export interface CreateQuizRequest {
+  title: string;
+  description: string;
+  grade: string;
+  medium: string;
+  subject: string;
+  type: string;
+  timeLimit: number;
+  difficulty: string;
+  year: number;
+  questions: CreateQuestionRequest[];
+}
+
+export interface CreateQuestionRequest {
+  questionText?: string;
+  questionImage?: string;
+  options: string[];
+  optionImages?: string[];
+  correctAnswerIndex: number;
+  explanation?: string;
+  order: number;
 }
 
 class ApiService {
@@ -280,6 +335,61 @@ class ApiService {
 
   async getTimeAnalytics(): Promise<TimeAnalytics> {
     return this.request<TimeAnalytics>('/quizattempt/time-analytics');
+  }
+
+  // Admin endpoints
+  async getAllStudents(): Promise<StudentActivity[]> {
+    return this.request<StudentActivity[]>('/admin/students');
+  }
+
+  async getStudentDetail(studentId: string): Promise<StudentDetail> {
+    return this.request<StudentDetail>(`/admin/students/${studentId}`);
+  }
+
+  async getStudentQuizAttempts(studentId: string): Promise<QuizAttempt[]> {
+    return this.request<QuizAttempt[]>(`/admin/students/${studentId}/quiz-attempts`);
+  }
+
+  // Blob storage endpoints
+  async getBlobUploadUrl(fileName: string, contentType: string): Promise<BlobUploadResponse> {
+    return this.request<BlobUploadResponse>('/admin/blob/upload-url', {
+      method: 'POST',
+      body: JSON.stringify({ fileName, contentType }),
+    });
+  }
+
+  async uploadToBlob(blobUrl: string, file: File): Promise<void> {
+    const response = await fetch(blobUrl, {
+      method: 'PUT',
+      headers: {
+        'x-ms-blob-type': 'BlockBlob',
+        'Content-Type': file.type,
+      },
+      body: file,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to upload file: ${response.statusText}`);
+    }
+  }
+
+  // Quiz creation endpoints
+  async createQuiz(quizData: CreateQuizRequest): Promise<Quiz> {
+    return this.request<Quiz>('/admin/quiz', {
+      method: 'POST',
+      body: JSON.stringify(quizData),
+    });
+  }
+
+  async uploadImageToBlob(file: File): Promise<string> {
+    // Get upload URL from backend
+    const uploadResponse = await this.getBlobUploadUrl(file.name, file.type);
+    
+    // Upload file to blob storage
+    await this.uploadToBlob(uploadResponse.url, file);
+    
+    // Return the public URL provided by the backend
+    return uploadResponse.publicUrl;
   }
 }
 
