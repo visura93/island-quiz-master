@@ -36,6 +36,11 @@ export interface RefreshTokenRequest {
   refreshToken: string;
 }
 
+export interface ErrorResponse {
+  message: string;
+  errors?: string[];
+}
+
 export interface QuizBundle {
   id: string;
   title: string;
@@ -253,8 +258,54 @@ class ApiService {
     const response = await fetch(url, config);
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: 'An error occurred' }));
-      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      let errorData: ErrorResponse;
+      const contentType = response.headers.get('content-type');
+      
+      try {
+        // First, try to get the response as text to see what we're dealing with
+        const responseText = await response.text();
+        
+        if (contentType && contentType.includes('application/json')) {
+          // Try to parse as JSON
+          try {
+            errorData = JSON.parse(responseText);
+          } catch {
+            // If JSON parsing fails, use the text as message
+            errorData = { message: responseText.trim() || `HTTP error! status: ${response.status}` };
+          }
+        } else {
+          // Not JSON, try to parse anyway, but if it fails, use as plain text
+          try {
+            errorData = JSON.parse(responseText);
+          } catch {
+            // If it's plain text, use it as the message
+            // Clean up the text (remove quotes and whitespace)
+            const cleanText = responseText.trim().replace(/^["']|["']$/g, '');
+            errorData = { message: cleanText || `HTTP error! status: ${response.status}` };
+          }
+        }
+      } catch (err) {
+        // Fallback if all parsing fails
+        errorData = { message: `HTTP error! status: ${response.status}` };
+      }
+      
+      // Ensure we have a message
+      if (!errorData.message || errorData.message === 'An error occurred') {
+        // For 401 errors (Unauthorized), provide a default message
+        if (response.status === 401) {
+          errorData.message = 'Invalid email or password';
+        } else {
+          errorData.message = errorData.message || `HTTP error! status: ${response.status}`;
+        }
+      }
+      
+      // Create a custom error object that includes the structured error response
+      const error = new Error(errorData.message);
+      (error as any).errors = errorData.errors || [errorData.message];
+      (error as any).errorResponse = errorData;
+      (error as any).status = response.status;
+      
+      throw error;
     }
 
     return response.json();
@@ -342,6 +393,10 @@ class ApiService {
 
   async getCompletedQuizzes(): Promise<QuizAttempt[]> {
     return this.request<QuizAttempt[]>('/quizattempt/completed');
+  }
+
+  async getQuizAttemptDetails(attemptId: string): Promise<QuizAttempt> {
+    return this.request<QuizAttempt>(`/quizattempt/${attemptId}`);
   }
 
   async getTimeAnalytics(): Promise<TimeAnalytics> {

@@ -3,7 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { GraduationCap, BookOpen, Trophy, Clock, TrendingUp, LogOut, Search, FileText, Award, School, X, Info, Play } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { GraduationCap, BookOpen, Trophy, Clock, TrendingUp, LogOut, Search, FileText, Award, School, X, Info, Play, Calendar, CheckCircle, Eye, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
@@ -341,6 +343,157 @@ const StudentDashboard = () => {
             </Card>
           ))}
         </div>
+
+        {/* Recently Completed Quizzes */}
+        {completedQuizzes.length > 0 && (
+          <Card className="border-2 shadow-elegant bg-gradient-card mb-12">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-gradient-hero rounded-lg">
+                    <Trophy className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-2xl bg-gradient-hero bg-clip-text text-transparent">
+                      Recently Completed Quizzes
+                    </CardTitle>
+                    <CardDescription>
+                      Review your quiz performance and answers
+                    </CardDescription>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate('/completed-quizzes')}
+                  className="btn-modern"
+                >
+                  View All
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {completedQuizzes
+                  .sort((a, b) => new Date(b.completedDate).getTime() - new Date(a.completedDate).getTime())
+                  .slice(0, 3)
+                  .map((quiz) => {
+                    const formatQuizDate = (dateString: string) => {
+                      const date = new Date(dateString);
+                      return date.toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'short', 
+                        day: 'numeric' 
+                      });
+                    };
+
+                    const getScoreColor = (score: number) => {
+                      if (score >= 90) return "text-green-600 bg-green-100";
+                      if (score >= 80) return "text-blue-600 bg-blue-100";
+                      if (score >= 70) return "text-yellow-600 bg-yellow-100";
+                      return "text-red-600 bg-red-100";
+                    };
+
+                    return (
+                      <Card key={quiz.id} className="border-2 hover:shadow-md transition-all">
+                        <CardContent className="p-4">
+                          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                            {/* Quiz Info */}
+                            <div className="flex-1">
+                              <div className="flex items-start gap-4">
+                                <div className="p-2 bg-gradient-hero rounded-lg">
+                                  <BookOpen className="h-5 w-5 text-white" />
+                                </div>
+                                <div className="flex-1">
+                                  <h3 className="text-lg font-semibold mb-2">{quiz.quizTitle}</h3>
+                                  <div className="flex flex-wrap gap-2 mb-2">
+                                    <Badge variant="outline" className="text-xs">
+                                      {quiz.grade}
+                                    </Badge>
+                                    <Badge variant="outline" className="text-xs">
+                                      {quiz.medium}
+                                    </Badge>
+                                    <Badge variant="outline" className="text-xs">
+                                      {quiz.subject}
+                                    </Badge>
+                                    <Badge 
+                                      variant="outline" 
+                                      className={`text-xs ${
+                                        quiz.difficulty === 'Advanced' ? 'border-red-200 text-red-600' :
+                                        quiz.difficulty === 'Intermediate' ? 'border-yellow-200 text-yellow-600' :
+                                        'border-green-200 text-green-600'
+                                      }`}
+                                    >
+                                      {quiz.difficulty}
+                                    </Badge>
+                                  </div>
+                                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                    <div className="flex items-center gap-1">
+                                      <Calendar className="h-4 w-4" />
+                                      {formatQuizDate(quiz.completedDate)}
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <Clock className="h-4 w-4" />
+                                      {formatTime(quiz.timeSpent)} / {formatTime(quiz.timeLimit)}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Score and Details */}
+                            <div className="flex flex-col sm:flex-row lg:flex-col gap-4 items-center lg:items-end">
+                              <div className="text-center">
+                                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-lg font-bold ${getScoreColor(quiz.score)}`}>
+                                  <Trophy className="h-4 w-4" />
+                                  {quiz.score}%
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {quiz.correctAnswers} / {quiz.totalQuestions} correct
+                                </p>
+                              </div>
+                              
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => navigate('/completed-quizzes')}
+                                className="btn-modern"
+                              >
+                                <Eye className="h-4 w-4 mr-2" />
+                                View Details
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* Progress Bar */}
+                          <div className="mt-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm font-medium">Performance</span>
+                              <span className="text-sm text-muted-foreground">{quiz.score}%</span>
+                            </div>
+                            <Progress value={quiz.score} className="h-2" />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+              
+              {/* See More Button */}
+              {completedQuizzes.length > 3 && (
+                <div className="pt-4 border-t border-border">
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate('/completed-quizzes')}
+                    className="w-full btn-modern"
+                  >
+                    See More
+                    <ChevronRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </div>
+              )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Quiz Selection Interface */}
         <Card className="border-2 shadow-elegant bg-gradient-card overflow-hidden">

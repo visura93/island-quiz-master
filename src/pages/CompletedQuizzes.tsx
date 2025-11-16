@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   ArrowLeft, 
   Clock, 
@@ -14,7 +15,9 @@ import {
   TrendingUp,
   Star,
   Award,
-  CheckCircle
+  CheckCircle,
+  Eye,
+  XCircle
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiService, QuizAttempt } from "@/lib/api";
@@ -26,6 +29,8 @@ const CompletedQuizzes = () => {
   const [completedQuizzes, setCompletedQuizzes] = useState<QuizAttempt[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
+  const [selectedQuiz, setSelectedQuiz] = useState<QuizAttempt | null>(null);
+  const [loadingDetails, setLoadingDetails] = useState<boolean>(false);
 
   // Fetch completed quizzes on component mount
   useEffect(() => {
@@ -33,6 +38,15 @@ const CompletedQuizzes = () => {
       try {
         setIsLoading(true);
         const quizzes = await apiService.getCompletedQuizzes();
+        console.log("Fetched completed quizzes:", quizzes);
+        // Log if any quizzes have questions
+        quizzes.forEach((quiz, index) => {
+          if (quiz.questions && quiz.questions.length > 0) {
+            console.log(`Quiz ${index} (${quiz.quizTitle}) has ${quiz.questions.length} questions`);
+          } else {
+            console.log(`Quiz ${index} (${quiz.quizTitle}) has no questions in initial fetch`);
+          }
+        });
         setCompletedQuizzes(quizzes);
       } catch (err: any) {
         setError(err.message || "Failed to load completed quizzes");
@@ -53,6 +67,12 @@ const CompletedQuizzes = () => {
     if (score >= 80) return "text-blue-600 bg-blue-100";
     if (score >= 70) return "text-yellow-600 bg-yellow-100";
     return "text-red-600 bg-red-100";
+  };
+
+  const getScoreTextColor = (score: number) => {
+    if (score >= 80) return "text-green-600";
+    if (score >= 60) return "text-yellow-600";
+    return "text-red-600";
   };
 
   const getScoreIcon = (score: number) => {
@@ -234,7 +254,7 @@ const CompletedQuizzes = () => {
                         <BookOpen className="h-6 w-6 text-white" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-xl font-semibold mb-2">{quiz.title}</h3>
+                        <h3 className="text-xl font-semibold mb-2">{quiz.quizTitle}</h3>
                         <div className="flex flex-wrap gap-2 mb-3">
                           <Badge variant="outline" className="text-xs">
                             {quiz.grade}
@@ -263,7 +283,7 @@ const CompletedQuizzes = () => {
                           </div>
                           <div className="flex items-center gap-1">
                             <Clock className="h-4 w-4" />
-                            {formatTime(quiz.timeTaken)} / {formatTime(quiz.timeLimit)}
+                            {formatTime(quiz.timeSpent)} / {formatTime(quiz.timeLimit)}
                           </div>
                         </div>
                       </div>
@@ -302,6 +322,65 @@ const CompletedQuizzes = () => {
                     className="h-2"
                   />
                 </div>
+
+                {/* View Answers Button */}
+                <div className="mt-4 flex justify-end">
+                  <Button
+                    onClick={async () => {
+                      setLoadingDetails(true);
+                      setSelectedQuiz(null); // Clear previous selection
+                      try {
+                        // First check if questions are already available in the quiz object
+                        if (quiz.questions && quiz.questions.length > 0) {
+                          console.log("Using questions from initial fetch:", quiz.questions.length);
+                          setSelectedQuiz(quiz);
+                          setLoadingDetails(false);
+                          return;
+                        }
+
+                        // If not, try to fetch detailed quiz attempt with questions
+                        console.log("Fetching quiz details for attempt:", quiz.id);
+                        const detailedQuiz = await apiService.getQuizAttemptDetails(quiz.id);
+                        console.log("Fetched quiz details:", detailedQuiz);
+                        console.log("Questions count:", detailedQuiz.questions?.length || 0);
+                        
+                        if (detailedQuiz.questions && detailedQuiz.questions.length > 0) {
+                          setSelectedQuiz(detailedQuiz);
+                        } else {
+                          // If still no questions, show the quiz with empty questions array
+                          console.warn("No questions found in detailed quiz response");
+                          setSelectedQuiz({ ...quiz, questions: [] });
+                        }
+                      } catch (err: any) {
+                        console.error("Error loading quiz details:", err);
+                        console.error("Error details:", {
+                          message: err.message,
+                          status: err.status,
+                          response: err.errorResponse
+                        });
+                        
+                        // Check if the quiz already has questions
+                        if (quiz.questions && quiz.questions.length > 0) {
+                          console.log("Using questions from initial quiz object as fallback");
+                          setSelectedQuiz(quiz);
+                        } else {
+                          // Show error message to user
+                          setError(err.message || "Failed to load quiz details. Please ensure the backend endpoint GET /api/quizattempt/{attemptId} is implemented.");
+                          // Still show the quiz but with a message that details aren't available
+                          setSelectedQuiz({ ...quiz, questions: [] });
+                        }
+                      } finally {
+                        setLoadingDetails(false);
+                      }
+                    }}
+                    variant="outline"
+                    className="btn-modern"
+                    disabled={loadingDetails}
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    {loadingDetails ? "Loading..." : "View Answers"}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
                 ))}
@@ -328,6 +407,170 @@ const CompletedQuizzes = () => {
             )}
           </>
         )}
+
+        {/* Quiz Detail Dialog */}
+        <Dialog open={!!selectedQuiz && !loadingDetails} onOpenChange={() => {
+          if (!loadingDetails) {
+            setSelectedQuiz(null);
+          }
+        }}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{selectedQuiz?.quizTitle}</DialogTitle>
+              <DialogDescription>
+                Quiz completed on {selectedQuiz ? formatDate(selectedQuiz.completedDate) : ""}
+              </DialogDescription>
+            </DialogHeader>
+            {selectedQuiz && selectedQuiz.questions && selectedQuiz.questions.length > 0 && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-3 gap-4 p-4 bg-muted/50 rounded-lg">
+                  <div>
+                    <div className="text-sm text-muted-foreground">Score</div>
+                    <div className={`text-2xl font-bold ${getScoreTextColor(selectedQuiz.score)}`}>
+                      {selectedQuiz.score}%
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground">Correct Answers</div>
+                    <div className="text-2xl font-bold">
+                      {selectedQuiz.correctAnswers} / {selectedQuiz.totalQuestions}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground">Time Spent</div>
+                    <div className="text-2xl font-bold">
+                      {formatTime(selectedQuiz.timeSpent)}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-lg">Question Review</h3>
+                  {selectedQuiz.questions.map((question, index) => (
+                    <Card key={question.id || index} className="border-2">
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="font-semibold">Question {index + 1}</span>
+                          {question.isCorrect ? (
+                            <Badge className="bg-green-600">
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Correct
+                            </Badge>
+                          ) : (
+                            <Badge variant="destructive">
+                              <XCircle className="h-3 w-3 mr-1" />
+                              Incorrect
+                            </Badge>
+                          )}
+                        </div>
+                        
+                        <div className="mb-4">
+                          {question.questionText && (
+                            <p className="font-medium mb-2">{question.questionText}</p>
+                          )}
+                          {question.questionImage && (
+                            <div className="mb-2">
+                              <img 
+                                src={question.questionImage} 
+                                alt="Question" 
+                                className="max-w-full h-auto rounded-lg border border-border"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = 'none';
+                                }}
+                              />
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          {question.options && question.options.map((option, optionIndex) => {
+                            const isSelected = question.selectedAnswerIndex === optionIndex;
+                            const isCorrect = question.correctAnswerIndex === optionIndex;
+                            const optionImage = question.optionImages?.[optionIndex];
+
+                            return (
+                              <div
+                                key={optionIndex}
+                                className={`p-3 rounded-lg border-2 flex items-start gap-2 ${
+                                  isCorrect
+                                    ? "border-green-500 bg-green-100"
+                                    : isSelected && !isCorrect
+                                    ? "border-red-500 bg-red-100"
+                                    : "border-gray-200 bg-white"
+                                }`}
+                              >
+                                {isCorrect && (
+                                  <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                                )}
+                                {isSelected && !isCorrect && (
+                                  <XCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                                )}
+                                {!isSelected && !isCorrect && (
+                                  <div className="w-5 h-5 border-2 border-gray-400 rounded-full flex-shrink-0 mt-0.5" />
+                                )}
+                                <div className="flex-1">
+                                  {option && (
+                                    <span className="block mb-2">
+                                      {String.fromCharCode(65 + optionIndex)}. {option}
+                                    </span>
+                                  )}
+                                  {optionImage && (
+                                    <div className="mt-2">
+                                      <img 
+                                        src={optionImage} 
+                                        alt={`Option ${String.fromCharCode(65 + optionIndex)}`}
+                                        className="max-w-full h-auto max-h-48 rounded-lg border border-border"
+                                        onError={(e) => {
+                                          const target = e.target as HTMLImageElement;
+                                          target.style.display = 'none';
+                                        }}
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                                {isCorrect && (
+                                  <Badge className="bg-green-600 ml-auto flex-shrink-0">Correct</Badge>
+                                )}
+                                {isSelected && !isCorrect && (
+                                  <Badge variant="destructive" className="ml-auto flex-shrink-0">
+                                    Selected
+                                  </Badge>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {question.explanation && (
+                          <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded">
+                            <p className="text-sm font-semibold text-blue-900 mb-1">Explanation:</p>
+                            <p className="text-sm text-blue-800">{question.explanation}</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+            {selectedQuiz && (!selectedQuiz.questions || selectedQuiz.questions.length === 0) && (
+              <div className="text-center py-8">
+                <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+                <p className="text-muted-foreground mb-2">Question details are not available for this quiz.</p>
+                <p className="text-xs text-muted-foreground">
+                  The backend endpoint GET /api/quizattempt/{selectedQuiz.id} should return questions array.
+                </p>
+              </div>
+            )}
+            {loadingDetails && (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Loading quiz details...</p>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
