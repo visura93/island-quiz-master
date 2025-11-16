@@ -12,6 +12,8 @@ import TeacherDashboard from "./pages/TeacherDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import StudentProfile from "./pages/StudentProfile";
 import CreateQuiz from "./pages/CreateQuiz";
+import ViewQuizzes from "./pages/ViewQuizzes";
+import EditQuiz from "./pages/EditQuiz";
 import Quiz from "./pages/Quiz";
 import CompletedQuizzes from "./pages/CompletedQuizzes";
 import TimeAnalytics from "./pages/TimeAnalytics";
@@ -66,6 +68,22 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="Admin">
                   <CreateQuiz />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/quizzes" 
+              element={
+                <ProtectedRoute requiredRole="Admin">
+                  <ViewQuizzes />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/edit-quiz/:quizId" 
+              element={
+                <ProtectedRoute requiredRole="Admin">
+                  <EditQuiz />
                 </ProtectedRoute>
               } 
             />

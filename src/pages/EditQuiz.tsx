@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,7 +18,7 @@ import {
   FileText,
   CheckCircle
 } from "lucide-react";
-import { apiService, CreateQuizRequest, CreateQuestionRequest } from "@/lib/api";
+import { apiService, CreateQuizRequest, CreateQuestionRequest, QuestionWithAnswer } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
 interface QuestionFormData {
@@ -32,8 +32,9 @@ interface QuestionFormData {
   explanation: string;
 }
 
-const CreateQuiz = () => {
+const EditQuiz = () => {
   const navigate = useNavigate();
+  const { quizId } = useParams<{ quizId: string }>();
   const { toast } = useToast();
   
   const [quizData, setQuizData] = useState({
@@ -52,22 +53,90 @@ const CreateQuiz = () => {
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
 
-  const [questions, setQuestions] = useState<QuestionFormData[]>([
-    {
-      questionText: "",
-      questionImageFile: null,
-      questionImageUrl: null,
-      options: ["", "", "", ""],
-      optionImageFiles: [null, null, null, null],
-      optionImageUrls: [null, null, null, null],
-      correctAnswerIndex: 0,
-      explanation: "",
-    },
-  ]);
-
+  const [questions, setQuestions] = useState<QuestionFormData[]>([]);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("quiz");
+
+  useEffect(() => {
+    if (quizId) {
+      loadQuiz();
+    }
+  }, [quizId]);
+
+  const loadQuiz = async () => {
+    if (!quizId) return;
+    
+    try {
+      setLoading(true);
+      const { quiz, questions: quizQuestions } = await apiService.getQuizForEdit(quizId);
+      
+      // Set quiz data
+      setQuizData({
+        title: quiz.title,
+        description: quiz.description || "",
+        grade: quiz.grade,
+        medium: quiz.medium,
+        subject: quiz.subject,
+        type: quiz.type,
+        timeLimit: quiz.timeLimit,
+        difficulty: quiz.difficulty,
+        year: quiz.year,
+        thumbnail: (quiz as any).thumbnail || "",
+      });
+
+      if ((quiz as any).thumbnail) {
+        setThumbnailUrl((quiz as any).thumbnail);
+      }
+
+      // Convert questions to form data
+      const sortedQuestions = [...quizQuestions].sort((a, b) => a.order - b.order);
+      const formQuestions: QuestionFormData[] = sortedQuestions.map((q) => ({
+        questionText: q.questionText || "",
+        questionImageFile: null,
+        questionImageUrl: q.questionImage || null,
+        options: q.options || ["", "", "", ""],
+        optionImageFiles: [null, null, null, null],
+        optionImageUrls: q.optionImages || [null, null, null, null],
+        correctAnswerIndex: q.correctAnswerIndex,
+        explanation: q.explanation || "",
+      }));
+
+      // Ensure at least 4 options for each question
+      formQuestions.forEach((q) => {
+        while (q.options.length < 4) {
+          q.options.push("");
+        }
+        while (q.optionImageUrls.length < 4) {
+          q.optionImageUrls.push(null);
+        }
+        while (q.optionImageFiles.length < 4) {
+          q.optionImageFiles.push(null);
+        }
+      });
+
+      setQuestions(formQuestions.length > 0 ? formQuestions : [{
+        questionText: "",
+        questionImageFile: null,
+        questionImageUrl: null,
+        options: ["", "", "", ""],
+        optionImageFiles: [null, null, null, null],
+        optionImageUrls: [null, null, null, null],
+        correctAnswerIndex: 0,
+        explanation: "",
+      }]);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to load quiz",
+        variant: "destructive",
+      });
+      navigate("/admin/quizzes");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleQuizDataChange = (field: string, value: any) => {
     setQuizData((prev) => ({ ...prev, [field]: value }));
@@ -223,6 +292,8 @@ const CreateQuiz = () => {
   };
 
   const handleSubmit = async () => {
+    if (!quizId) return;
+
     const validationError = validateQuiz();
     if (validationError) {
       toast({
@@ -278,18 +349,18 @@ const CreateQuiz = () => {
         questions: createQuestions,
       };
 
-      await apiService.createQuiz(quizRequest);
+      await apiService.updateQuiz(quizId, quizRequest);
 
       toast({
         title: "Success",
-        description: "Quiz created successfully!",
+        description: "Quiz updated successfully!",
       });
 
-      navigate("/admin-dashboard");
+      navigate("/admin/quizzes");
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Failed to create quiz",
+        description: error.message || "Failed to update quiz",
         variant: "destructive",
       });
     } finally {
@@ -359,13 +430,24 @@ const CreateQuiz = () => {
     );
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-mesh flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading quiz...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-mesh">
       <header className="border-b border-border/50 backdrop-blur-sm bg-background/80">
         <div className="container mx-auto px-4 py-4">
-          <Button variant="ghost" onClick={() => navigate("/admin-dashboard")} className="mb-4">
+          <Button variant="ghost" onClick={() => navigate("/admin/quizzes")} className="mb-4">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
+            Back to Quizzes
           </Button>
         </div>
       </header>
@@ -373,12 +455,12 @@ const CreateQuiz = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-4xl font-bold mb-2">Create New Quiz</h1>
-            <p className="text-muted-foreground text-lg">Add questions with text or images</p>
+            <h1 className="text-4xl font-bold mb-2">Edit Quiz</h1>
+            <p className="text-muted-foreground text-lg">Update quiz details and questions</p>
           </div>
           <Button onClick={handleSubmit} disabled={saving || uploading} size="lg">
             <Save className="h-5 w-5 mr-2" />
-            {saving ? "Saving..." : "Save Quiz"}
+            {saving ? "Saving..." : "Update Quiz"}
           </Button>
         </div>
 
@@ -405,7 +487,7 @@ const CreateQuiz = () => {
             <Card className="border-2 shadow-elegant bg-gradient-card">
               <CardHeader>
                 <CardTitle>Quiz Information</CardTitle>
-                <CardDescription>Enter the basic details for this quiz</CardDescription>
+                <CardDescription>Update the basic details for this quiz</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-6">
@@ -671,5 +753,5 @@ const CreateQuiz = () => {
   );
 };
 
-export default CreateQuiz;
+export default EditQuiz;
 

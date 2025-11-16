@@ -7,7 +7,7 @@ import { GraduationCap, BookOpen, Trophy, Clock, TrendingUp, LogOut, Search, Fil
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
-import { apiService, QuizBundle } from "@/lib/api";
+import { apiService, QuizBundle, QuizAttempt, TimeAnalytics } from "@/lib/api";
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
@@ -22,6 +22,9 @@ const StudentDashboard = () => {
   const [paperBundles, setPaperBundles] = useState<QuizBundle[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
+  const [completedQuizzes, setCompletedQuizzes] = useState<QuizAttempt[]>([]);
+  const [timeAnalytics, setTimeAnalytics] = useState<TimeAnalytics | null>(null);
+  const [statsLoading, setStatsLoading] = useState<boolean>(true);
 
   const handleLogout = () => {
     logout();
@@ -97,6 +100,28 @@ const StudentDashboard = () => {
   const clearSearch = () => {
     setSearchQuery("");
   };
+
+  // Fetch student statistics on component mount
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setStatsLoading(true);
+        const [quizzes, analytics] = await Promise.all([
+          apiService.getCompletedQuizzes(),
+          apiService.getTimeAnalytics()
+        ]);
+        setCompletedQuizzes(quizzes);
+        setTimeAnalytics(analytics);
+      } catch (err: any) {
+        console.error("Error loading statistics:", err);
+        // Don't show error to user, just use default values
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
 
   const handleStartQuiz = (bundleId: string, bundleTitle: string) => {
     // Navigate to quiz page with bundle information
@@ -184,11 +209,50 @@ const StudentDashboard = () => {
     }
   ];
 
+  // Calculate statistics from fetched data
+  const formatTime = (minutes: number) => {
+    if (minutes < 60) return `${minutes}m`;
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    if (mins === 0) return `${hours}h`;
+    return `${hours}h ${mins}m`;
+  };
+
+  const quizzesCompleted = completedQuizzes.length;
+  const averageScore = completedQuizzes.length > 0
+    ? Math.round(completedQuizzes.reduce((sum, quiz) => sum + quiz.score, 0) / completedQuizzes.length)
+    : 0;
+  const totalTimeSpent = timeAnalytics?.totalTime || completedQuizzes.reduce((sum, quiz) => sum + quiz.timeSpent, 0);
+  
+  // Calculate progress (could be based on goals or completion rate)
+  // For now, using a simple calculation based on average score
+  const progress = averageScore;
+
   const stats = [
-    { label: "Quizzes Completed", value: "0", icon: BookOpen, color: "text-primary" },
-    { label: "Average Score", value: "0%", icon: Trophy, color: "text-success" },
-    { label: "Time Spent", value: "0h", icon: Clock, color: "text-secondary" },
-    { label: "Progress", value: "0%", icon: TrendingUp, color: "text-accent" },
+    { 
+      label: "Quizzes Completed", 
+      value: statsLoading ? "..." : quizzesCompleted.toString(), 
+      icon: BookOpen, 
+      color: "text-primary" 
+    },
+    { 
+      label: "Average Score", 
+      value: statsLoading ? "..." : `${averageScore}%`, 
+      icon: Trophy, 
+      color: "text-success" 
+    },
+    { 
+      label: "Time Spent", 
+      value: statsLoading ? "..." : formatTime(totalTimeSpent), 
+      icon: Clock, 
+      color: "text-secondary" 
+    },
+    { 
+      label: "Progress", 
+      value: statsLoading ? "..." : `${progress}%`, 
+      icon: TrendingUp, 
+      color: "text-accent" 
+    },
   ];
 
   return (

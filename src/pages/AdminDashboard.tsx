@@ -154,7 +154,17 @@ const AdminDashboard = () => {
         {/* Stats Grid */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
           {stats.map((stat, index) => (
-            <Card key={index} className="border-2 hover:shadow-hover transition-all bg-gradient-card">
+            <Card 
+              key={index} 
+              className={`border-2 hover:shadow-hover transition-all bg-gradient-card ${
+                stat.label === "Total Quizzes" ? "cursor-pointer hover:scale-105" : ""
+              }`}
+              onClick={() => {
+                if (stat.label === "Total Quizzes") {
+                  navigate("/admin/quizzes");
+                }
+              }}
+            >
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>

@@ -61,6 +61,7 @@ export interface Quiz {
   questionCount: number;
   isActive: boolean;
   createdAt: string;
+  thumbnail?: string;
 }
 
 export interface QuizAnswer {
@@ -186,6 +187,11 @@ export interface Question {
   order: number;
 }
 
+export interface QuestionWithAnswer extends Question {
+  correctAnswerIndex: number;
+  explanation?: string;
+}
+
 export interface SubmitAnswerRequest {
   questionId: string;
   selectedAnswerIndex: number;
@@ -207,6 +213,7 @@ export interface CreateQuizRequest {
   timeLimit: number;
   difficulty: string;
   year: number;
+  thumbnail?: string;
   questions: CreateQuestionRequest[];
 }
 
@@ -316,6 +323,10 @@ class ApiService {
     return this.request<Question[]>(`/quiz/${quizId}/questions`);
   }
 
+  async getQuizForEdit(quizId: string): Promise<{ quiz: Quiz; questions: QuestionWithAnswer[] }> {
+    return this.request<{ quiz: Quiz; questions: QuestionWithAnswer[] }>(`/admin/quiz/${quizId}/edit`);
+  }
+
   async submitAnswer(attemptId: string, questionId: string, selectedAnswerIndex: number): Promise<void> {
     await this.request(`/quizattempt/${attemptId}/answer`, {
       method: 'POST',
@@ -378,6 +389,23 @@ class ApiService {
     return this.request<Quiz>('/admin/quiz', {
       method: 'POST',
       body: JSON.stringify(quizData),
+    });
+  }
+
+  async getAllQuizzes(): Promise<Quiz[]> {
+    return this.request<Quiz[]>('/admin/quiz');
+  }
+
+  async updateQuiz(quizId: string, quizData: CreateQuizRequest): Promise<Quiz> {
+    return this.request<Quiz>(`/admin/quiz/${quizId}`, {
+      method: 'PUT',
+      body: JSON.stringify(quizData),
+    });
+  }
+
+  async deleteQuiz(quizId: string): Promise<void> {
+    return this.request<void>(`/admin/quiz/${quizId}`, {
+      method: 'DELETE',
     });
   }
 
