@@ -20,12 +20,17 @@ import { useAuth } from "@/contexts/AuthContext";
 import { apiService, Question, QuizAnswer } from "@/lib/api";
 
 interface QuizState {
-  bundleId: string;
-  bundleTitle: string;
+  bundleId?: string;
+  bundleTitle?: string;
+  quizId?: string; // Individual quiz ID
+  quizTitle?: string; // Individual quiz title
   grade: string;
   medium: string;
   subject: string;
   paperType: string;
+  quizType?: string;
+  language?: string;
+  topic?: string;
 }
 
 const Quiz = () => {
@@ -49,6 +54,7 @@ const Quiz = () => {
   const [initialQuestionCount, setInitialQuestionCount] = useState(0);
   const [initialTimeLimit, setInitialTimeLimit] = useState(0); // in minutes
   const [loadingQuizInfo, setLoadingQuizInfo] = useState(true);
+  const [quizStartTime, setQuizStartTime] = useState<Date | null>(null);
 
   const currentQuestion = questions[currentQuestionIndex];
   const totalQuestions = questions.length > 0 ? questions.length : initialQuestionCount;
@@ -62,20 +68,28 @@ const Quiz = () => {
       try {
         setLoadingQuizInfo(true);
         
-        // Get the bundle to find the quiz details
-        const bundles = await apiService.getQuizBundles(
-          quizData.grade || "",
-          quizData.medium || "",
-          quizData.subject || "",
-          quizData.paperType || ""
-        );
-
-        const bundle = bundles.find(b => b.id === quizData.bundleId);
-        if (bundle && bundle.quizzes && bundle.quizzes.length > 0) {
-          const quiz = bundle.quizzes[0];
+        // If we have a quizId, load the quiz directly
+        if (quizData.quizId) {
+          const quiz = await apiService.getQuiz(quizData.quizId);
           setInitialQuestionCount(quiz.questionCount || 0);
           setInitialTimeLimit(quiz.timeLimit || 0);
-          setQuizTitle(quiz.title || quizData.bundleTitle);
+          setQuizTitle(quiz.title || quizData.quizTitle || "");
+        } else if (quizData.bundleId) {
+          // Fallback: Get the bundle to find the quiz details (for backward compatibility)
+          const bundles = await apiService.getQuizBundles(
+            quizData.grade || "",
+            quizData.medium || "",
+            quizData.subject || "",
+            quizData.paperType || ""
+          );
+
+          const bundle = bundles.find(b => b.id === quizData.bundleId);
+          if (bundle && bundle.quizzes && bundle.quizzes.length > 0) {
+            const quiz = bundle.quizzes[0];
+            setInitialQuestionCount(quiz.questionCount || 0);
+            setInitialTimeLimit(quiz.timeLimit || 0);
+            setQuizTitle(quiz.title || quizData.bundleTitle || "");
+          }
         }
       } catch (err: any) {
         console.error("Error loading quiz info:", err);
@@ -135,22 +149,32 @@ const Quiz = () => {
       setLoading(true);
       setError("");
 
-      // Get the first quiz from the bundle
-      const bundles = await apiService.getQuizBundles(
-        quizData.grade || "",
-        quizData.medium || "",
-        quizData.subject || "",
-        quizData.paperType || ""
-      );
+      // Use quizId directly if available, otherwise get from bundle
+      let quizId: string;
+      
+      if (quizData.quizId) {
+        quizId = quizData.quizId;
+      } else if (quizData.bundleId) {
+        // Fallback: Get the first quiz from the bundle (for backward compatibility)
+        const bundles = await apiService.getQuizBundles(
+          quizData.grade || "",
+          quizData.medium || "",
+          quizData.subject || "",
+          quizData.paperType || ""
+        );
 
-      const bundle = bundles.find(b => b.id === quizData.bundleId);
-      if (!bundle || !bundle.quizzes || bundle.quizzes.length === 0) {
-        setError("No quizzes found in this bundle");
+        const bundle = bundles.find(b => b.id === quizData.bundleId);
+        if (!bundle || !bundle.quizzes || bundle.quizzes.length === 0) {
+          setError("No quizzes found in this bundle");
+          return;
+        }
+
+        // Get the first quiz ID from the bundle
+        quizId = bundle.quizzes[0].id;
+      } else {
+        setError("No quiz ID or bundle ID provided");
         return;
       }
-
-      // Get the first quiz ID from the bundle
-      const quizId = bundle.quizzes[0].id;
 
       // Start the quiz and get questions and time limit from database
       const response = await apiService.startQuiz(quizId);
@@ -161,6 +185,7 @@ const Quiz = () => {
       setTimeRemaining(response.timeLimit * 60); // Convert minutes to seconds
       setAttemptId(response.attemptId);
       setQuizTitle(response.title);
+      setQuizStartTime(new Date()); // Record when quiz started
       setIsQuizStarted(true);
       setIsTimerRunning(true);
     } catch (err: any) {
@@ -206,7 +231,25 @@ const Quiz = () => {
     try {
       // Complete the quiz on backend and get results
       if (attemptId) {
-        const result = await apiService.completeQuiz(attemptId);
+        // Calculate time spent in seconds
+        let timeSpentInSeconds = 0;
+        
+        if (quizStartTime) {
+          // Calculate based on actual elapsed time
+          const endTime = new Date();
+          timeSpentInSeconds = Math.max(0, Math.floor((endTime.getTime() - quizStartTime.getTime()) / 1000));
+        } else {
+          // Fallback: Calculate based on timer (initial time limit - time remaining)
+          const totalTimeInSeconds = initialTimeLimit * 60;
+          timeSpentInSeconds = Math.max(0, totalTimeInSeconds - timeRemaining);
+        }
+        
+        // Ensure at least 1 second if quiz was started (to avoid 0)
+        if (timeSpentInSeconds === 0 && isQuizStarted) {
+          timeSpentInSeconds = 1;
+        }
+        
+        const result = await apiService.completeQuiz(attemptId, timeSpentInSeconds);
         setQuizResult(result);
       }
       setShowResults(true);

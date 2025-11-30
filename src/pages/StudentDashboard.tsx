@@ -5,11 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { GraduationCap, BookOpen, Trophy, Clock, TrendingUp, LogOut, Search, FileText, Award, School, X, Info, Play, Calendar, CheckCircle, Eye, ChevronRight } from "lucide-react";
+import { GraduationCap, BookOpen, Trophy, Clock, TrendingUp, LogOut, Search, FileText, Award, School, X, Info, Play, Calendar, CheckCircle, Eye, ChevronRight, Sparkles, Atom, Globe, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { apiService, QuizBundle, QuizAttempt, TimeAnalytics } from "@/lib/api";
+import { DarkModeToggle } from "@/components/DarkModeToggle";
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
@@ -27,6 +28,13 @@ const StudentDashboard = () => {
   const [completedQuizzes, setCompletedQuizzes] = useState<QuizAttempt[]>([]);
   const [timeAnalytics, setTimeAnalytics] = useState<TimeAnalytics | null>(null);
   const [statsLoading, setStatsLoading] = useState<boolean>(true);
+  
+  // New states for enhanced quiz selection
+  const [selectedQuizType, setSelectedQuizType] = useState<string>(""); // "scholarship", "al", "ol", or "" for regular
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("");
+  const [showSubjectSelection, setShowSubjectSelection] = useState<boolean>(false);
+  const [showLessonwiseTopics, setShowLessonwiseTopics] = useState<boolean>(false);
+  const [selectedTopic, setSelectedTopic] = useState<string>("");
 
   const handleLogout = () => {
     logout();
@@ -54,7 +62,22 @@ const StudentDashboard = () => {
     setIsLoading(true);
     setError("");
     try {
-      const bundles = await apiService.getQuizBundles(selectedGrade, selectedMedium, selectedSubject, paperTypeId);
+      // Determine grade and medium based on quiz type
+      let grade = selectedGrade;
+      let medium = selectedMedium;
+      
+      if (selectedQuizType === "scholarship") {
+        grade = "grade-5";
+        medium = selectedLanguage;
+      } else if (selectedQuizType === "al") {
+        grade = "grade-12";
+        medium = selectedLanguage;
+      } else if (selectedQuizType === "ol") {
+        grade = "grade-11";
+        medium = selectedLanguage;
+      }
+      
+      const bundles = await apiService.getQuizBundles(grade, medium, selectedSubject, paperTypeId);
       setPaperBundles(bundles);
       setShowPaperBundles(true);
     } catch (err: any) {
@@ -74,6 +97,95 @@ const StudentDashboard = () => {
     setShowPaperBundles(false);
     setSelectedPaperType("");
     setSearchQuery("");
+    setSelectedQuizType("");
+    setSelectedLanguage("");
+    setShowSubjectSelection(false);
+    setShowLessonwiseTopics(false);
+    setSelectedTopic("");
+  };
+
+  const handleBackToSubjectSelection = () => {
+    setShowPaperTypes(false);
+    setShowPaperBundles(false);
+    setSelectedPaperType("");
+    setShowSubjectSelection(true);
+    setShowLessonwiseTopics(false);
+    setSelectedTopic("");
+  };
+
+  const handleBackToQuizTypeSelection = () => {
+    setSelectedQuizType("");
+    setShowSubjectSelection(false);
+    setShowPaperTypes(false);
+    setShowPaperBundles(false);
+    setSelectedPaperType("");
+    setSelectedSubject("");
+    setSelectedLanguage("");
+    setShowLessonwiseTopics(false);
+    setSelectedTopic("");
+  };
+
+  const handleQuizTypeSelect = (quizType: string) => {
+    setSelectedQuizType(quizType);
+    setSelectedSubject("");
+    setSelectedPaperType("");
+    setShowPaperTypes(false);
+    setShowPaperBundles(false);
+    setShowLessonwiseTopics(false);
+    setSelectedTopic("");
+    
+    if (quizType === "scholarship") {
+      // For scholarship, go directly to paper types
+      setShowPaperTypes(true);
+    } else if (quizType === "al" || quizType === "ol") {
+      // For A/L and O/L, show subject selection
+      setShowSubjectSelection(true);
+    }
+  };
+
+  const handleSubjectSelect = (subject: string) => {
+    setSelectedSubject(subject);
+    setShowSubjectSelection(false);
+    setShowPaperTypes(true);
+  };
+
+  const handlePaperTypeSelect = async (paperTypeId: string) => {
+    setSelectedPaperType(paperTypeId);
+    
+    if (paperTypeId === "lessonwise") {
+      // Show lessonwise topic selection (only for A/L and O/L with subjects)
+      if (selectedSubject && (selectedQuizType === "al" || selectedQuizType === "ol")) {
+        setShowLessonwiseTopics(true);
+      }
+    } else {
+      // For scholarship, we need to set a default subject or handle it differently
+      if (selectedQuizType === "scholarship") {
+        // Scholarship doesn't have subjects, so we'll use a default or handle it in the API call
+        setSelectedSubject("scholarship");
+      }
+      // Load paper bundles for other paper types
+      await handlePaperTypeClick(paperTypeId);
+    }
+  };
+
+  const handleTopicSelect = async (topic: string) => {
+    setSelectedTopic(topic);
+    setShowLessonwiseTopics(false);
+    // Load bundles for the selected topic
+    setIsLoading(true);
+    setError("");
+    try {
+      const grade = selectedQuizType === "al" ? "grade-12" : selectedQuizType === "ol" ? "grade-11" : selectedGrade;
+      const bundles = await apiService.getQuizBundles(grade, selectedLanguage, selectedSubject, "lessonwise");
+      // Filter by topic if needed - you may need to add topic filtering logic here
+      // For now, we'll show all lessonwise bundles
+      setPaperBundles(bundles);
+      setShowPaperBundles(true);
+    } catch (err: any) {
+      setError(err.message || "Failed to load quiz bundles");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSearchChange = async (value: string) => {
@@ -125,16 +237,34 @@ const StudentDashboard = () => {
     fetchStats();
   }, []);
 
-  const handleStartQuiz = (bundleId: string, bundleTitle: string) => {
-    // Navigate to quiz page with bundle information
+  const handleStartQuiz = (quizId: string, quizTitle: string) => {
+    // Determine grade and medium based on quiz type
+    let grade = selectedGrade;
+    let medium = selectedMedium;
+    
+    if (selectedQuizType === "scholarship") {
+      grade = "grade-5";
+      medium = selectedLanguage;
+    } else if (selectedQuizType === "al") {
+      grade = "grade-12";
+      medium = selectedLanguage;
+    } else if (selectedQuizType === "ol") {
+      grade = "grade-11";
+      medium = selectedLanguage;
+    }
+    
+    // Navigate to quiz page with quiz information
     navigate('/quiz', { 
       state: { 
-        bundleId, 
-        bundleTitle,
-        grade: selectedGrade,
-        medium: selectedMedium,
+        quizId, // Pass the individual quiz ID
+        quizTitle, // Pass the individual quiz title
+        grade: grade,
+        medium: medium,
         subject: selectedSubject,
-        paperType: selectedPaperType
+        paperType: selectedPaperType,
+        quizType: selectedQuizType,
+        language: selectedLanguage,
+        topic: selectedTopic
       } 
     });
   };
@@ -208,8 +338,111 @@ const StudentDashboard = () => {
       color: "text-purple-600",
       bgColor: "bg-purple-50",
       borderColor: "border-purple-200"
+    },
+    {
+      id: "lessonwise",
+      title: "Lessonwise Select",
+      description: "Select specific topics to practice",
+      icon: BookOpen,
+      color: "text-orange-600",
+      bgColor: "bg-orange-50",
+      borderColor: "border-orange-200"
     }
   ];
+
+  const scholarshipPaperTypes = [
+    {
+      id: "past-papers",
+      title: "Past Papers",
+      description: "Official past papers from previous years",
+      icon: FileText,
+      color: "text-blue-600",
+      bgColor: "bg-blue-50",
+      borderColor: "border-blue-200"
+    },
+    {
+      id: "model-papers",
+      title: "Model Papers",
+      description: "Practice papers designed by experts",
+      icon: Award,
+      color: "text-green-600",
+      bgColor: "bg-green-50",
+      borderColor: "border-green-200"
+    }
+  ];
+
+  const olSubjects = [
+    { value: "mother-language-sinhala", label: "Mother Language (Sinhala)" },
+    { value: "mother-language-tamil", label: "Mother Language (Tamil)" },
+    { value: "religion-buddhism", label: "Religion (Buddhism)" },
+    { value: "religion-christianity", label: "Religion (Catholicism / Christianity)" },
+    { value: "religion-islam", label: "Religion (Islam)" },
+    { value: "religion-hinduism", label: "Religion (Hinduism)" },
+    { value: "english", label: "English Language" },
+    { value: "mathematics", label: "Mathematics" },
+    { value: "science", label: "Science" },
+    { value: "history", label: "History" }
+  ];
+
+  const alSubjects = [
+    { value: "physics", label: "Physics" },
+    { value: "chemistry", label: "Chemistry" },
+    { value: "combined-mathematics", label: "Combined Mathematics" },
+    { value: "biology", label: "Biology" }
+  ];
+
+  const physicsTopics = [
+    { value: "waves", label: "Waves Related Questions" },
+    { value: "mechanics", label: "Mechanics" },
+    { value: "thermodynamics", label: "Thermodynamics" },
+    { value: "optics", label: "Optics" },
+    { value: "electricity", label: "Electricity & Magnetism" },
+    { value: "modern-physics", label: "Modern Physics" }
+  ];
+
+  const chemistryTopics = [
+    { value: "organic", label: "Organic Chemistry" },
+    { value: "inorganic", label: "Inorganic Chemistry" },
+    { value: "physical", label: "Physical Chemistry" },
+    { value: "analytical", label: "Analytical Chemistry" }
+  ];
+
+  const combinedMathTopics = [
+    { value: "algebra", label: "Algebra" },
+    { value: "geometry", label: "Geometry" },
+    { value: "trigonometry", label: "Trigonometry" },
+    { value: "calculus", label: "Calculus" },
+    { value: "statistics", label: "Statistics & Probability" }
+  ];
+
+  const biologyTopics = [
+    { value: "cell-biology", label: "Cell Biology" },
+    { value: "genetics", label: "Genetics" },
+    { value: "ecology", label: "Ecology" },
+    { value: "human-biology", label: "Human Biology" },
+    { value: "plant-biology", label: "Plant Biology" }
+  ];
+
+  const languages = [
+    { value: "sinhala", label: "Sinhala" },
+    { value: "english", label: "English" },
+    { value: "tamil", label: "Tamil" }
+  ];
+
+  const getTopicsForSubject = (subject: string) => {
+    switch (subject) {
+      case "physics":
+        return physicsTopics;
+      case "chemistry":
+        return chemistryTopics;
+      case "combined-mathematics":
+        return combinedMathTopics;
+      case "biology":
+        return biologyTopics;
+      default:
+        return [];
+    }
+  };
 
   // Calculate statistics from fetched data
   const formatTime = (minutes: number) => {
@@ -262,7 +495,19 @@ const StudentDashboard = () => {
       {/* Header */}
       <header className="border-b border-border/50 backdrop-blur-sm bg-background/80 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div 
+            className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => {
+              // Navigate to dashboard based on user role
+              if (user?.role === 'Admin' || user?.role === 2) {
+                navigate('/admin-dashboard');
+              } else if (user?.role === 'Teacher' || user?.role === 1) {
+                navigate('/teacher-dashboard');
+              } else {
+                navigate('/student-dashboard');
+              }
+            }}
+          >
             <div className="p-2 bg-gradient-hero rounded-xl shadow-elegant">
               <GraduationCap className="h-8 w-8 text-white" />
             </div>
@@ -280,6 +525,7 @@ const StudentDashboard = () => {
                 Welcome, {user?.firstName}!
               </span>
             </div>
+            <DarkModeToggle />
             <Button variant="outline" onClick={handleLogout} className="btn-modern">
               <LogOut className="h-4 w-4 mr-2" />
               Logout
@@ -344,8 +590,13 @@ const StudentDashboard = () => {
           ))}
         </div>
 
-        {/* Recently Completed Quizzes */}
-        {completedQuizzes.length > 0 && (
+        {/* Recently Completed Quizzes - Only show in dashboard view */}
+        {completedQuizzes.length > 0 && 
+         !selectedQuizType && 
+         !showPaperTypes && 
+         !showPaperBundles && 
+         !showSubjectSelection && 
+         !showLessonwiseTopics && (
           <Card className="border-2 shadow-elegant bg-gradient-card mb-12">
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -514,81 +765,261 @@ const StudentDashboard = () => {
             </div>
           </CardHeader>
           <CardContent>
-            {!showPaperTypes ? (
-              <div className="space-y-6">
-                {/* Selection Form */}
-                <div className="grid md:grid-cols-3 gap-6">
-                  {/* Grade Selection */}
-                  <div className="space-y-3 group">
-                    <label className="text-sm font-semibold text-foreground flex items-center gap-2">
-                      <div className="w-2 h-2 bg-primary rounded-full"></div>
-                      Grade
-                    </label>
-                    <Select value={selectedGrade} onValueChange={setSelectedGrade}>
-                      <SelectTrigger className="w-full input-modern border-2 focus:border-primary/50">
-                        <SelectValue placeholder="Select Grade" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {grades.map((grade) => (
-                          <SelectItem key={grade.value} value={grade.value}>
-                            {grade.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+            {!selectedQuizType && !showPaperTypes ? (
+              <div className="space-y-8">
+                {/* New Quiz Type Selection Cards */}
+                <div>
+                  <h3 className="text-xl font-semibold mb-4 text-center">Choose Your Exam Type</h3>
+                  <div className="grid md:grid-cols-3 gap-6 mb-8">
+                    {/* Scholarship Grade 5 Card */}
+                    <Card 
+                      className="cursor-pointer transition-all hover:shadow-lg border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 hover:scale-105 hover:border-amber-300"
+                      onClick={() => handleQuizTypeSelect("scholarship")}
+                    >
+                      <CardContent className="p-6 text-center">
+                        <div className="p-4 bg-gradient-to-br from-amber-400 to-yellow-500 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                          <Sparkles className="h-10 w-10 text-white" />
+                        </div>
+                        <h4 className="font-bold text-xl mb-2 text-amber-900">Scholarship Grade 5</h4>
+                        <p className="text-sm text-amber-700 mb-3">Practice for Grade 5 Scholarship Exam</p>
+                        <div className="text-xs text-amber-600 bg-amber-100 px-3 py-1 rounded-full inline-block">
+                          Past & Model Papers
+                        </div>
+                      </CardContent>
+                    </Card>
 
-                  {/* Medium Selection */}
-                  <div className="space-y-3 group">
-                    <label className="text-sm font-semibold text-foreground flex items-center gap-2">
-                      <div className="w-2 h-2 bg-secondary rounded-full"></div>
-                      Medium
-                    </label>
-                    <Select value={selectedMedium} onValueChange={setSelectedMedium}>
-                      <SelectTrigger className="w-full input-modern border-2 focus:border-secondary/50">
-                        <SelectValue placeholder="Select Medium" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {mediums.map((medium) => (
-                          <SelectItem key={medium.value} value={medium.value}>
-                            {medium.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                    {/* A/L Card */}
+                    <Card 
+                      className="cursor-pointer transition-all hover:shadow-lg border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 hover:scale-105 hover:border-blue-300"
+                      onClick={() => handleQuizTypeSelect("al")}
+                    >
+                      <CardContent className="p-6 text-center">
+                        <div className="p-4 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                          <Atom className="h-10 w-10 text-white" />
+                        </div>
+                        <h4 className="font-bold text-xl mb-2 text-blue-900">A/L</h4>
+                        <p className="text-sm text-blue-700 mb-3">Advanced Level Examination</p>
+                        <div className="text-xs text-blue-600 bg-blue-100 px-3 py-1 rounded-full inline-block">
+                          Physics, Chemistry, Math, Biology
+                        </div>
+                      </CardContent>
+                    </Card>
 
-                  {/* Subject Selection */}
-                  <div className="space-y-3 group">
-                    <label className="text-sm font-semibold text-foreground flex items-center gap-2">
-                      <div className="w-2 h-2 bg-accent rounded-full"></div>
-                      Subject
-                    </label>
-                    <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-                      <SelectTrigger className="w-full input-modern border-2 focus:border-accent/50">
-                        <SelectValue placeholder="Select Subject" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {subjects.map((subject) => (
-                          <SelectItem key={subject.value} value={subject.value}>
-                            {subject.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    {/* O/L Card */}
+                    <Card 
+                      className="cursor-pointer transition-all hover:shadow-lg border-2 border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 hover:scale-105 hover:border-green-300"
+                      onClick={() => handleQuizTypeSelect("ol")}
+                    >
+                      <CardContent className="p-6 text-center">
+                        <div className="p-4 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                          <Globe className="h-10 w-10 text-white" />
+                        </div>
+                        <h4 className="font-bold text-xl mb-2 text-green-900">O/L</h4>
+                        <p className="text-sm text-green-700 mb-3">Ordinary Level Examination</p>
+                        <div className="text-xs text-green-600 bg-green-100 px-3 py-1 rounded-full inline-block">
+                          Multiple Subjects Available
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
                 </div>
 
-                {/* Go Button */}
-                <div className="flex justify-center pt-6">
+                {/* Divider */}
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-border"></div>
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-4 bg-background text-muted-foreground">OR</span>
+                  </div>
+                </div>
+
+                {/* Regular Grade Selection Form */}
+                <div>
+                  <h3 className="text-xl font-semibold mb-4 text-center">Select by Grade</h3>
+                  <div className="grid md:grid-cols-3 gap-6">
+                    {/* Grade Selection */}
+                    <div className="space-y-3 group">
+                      <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                        <div className="w-2 h-2 bg-primary rounded-full"></div>
+                        Grade
+                      </label>
+                      <Select value={selectedGrade} onValueChange={setSelectedGrade}>
+                        <SelectTrigger className="w-full input-modern border-2 focus:border-primary/50">
+                          <SelectValue placeholder="Select Grade" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {grades.map((grade) => (
+                            <SelectItem key={grade.value} value={grade.value}>
+                              {grade.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Medium Selection */}
+                    <div className="space-y-3 group">
+                      <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                        <div className="w-2 h-2 bg-secondary rounded-full"></div>
+                        Medium
+                      </label>
+                      <Select value={selectedMedium} onValueChange={setSelectedMedium}>
+                        <SelectTrigger className="w-full input-modern border-2 focus:border-secondary/50">
+                          <SelectValue placeholder="Select Medium" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {mediums.map((medium) => (
+                            <SelectItem key={medium.value} value={medium.value}>
+                              {medium.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Subject Selection */}
+                    <div className="space-y-3 group">
+                      <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                        <div className="w-2 h-2 bg-accent rounded-full"></div>
+                        Subject
+                      </label>
+                      <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                        <SelectTrigger className="w-full input-modern border-2 focus:border-accent/50">
+                          <SelectValue placeholder="Select Subject" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {subjects.map((subject) => (
+                            <SelectItem key={subject.value} value={subject.value}>
+                              {subject.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Go Button */}
+                  <div className="flex justify-center pt-6">
+                    <Button 
+                      onClick={handleGoClick}
+                      disabled={!selectedGrade || !selectedMedium || !selectedSubject}
+                      className="bg-gradient-hero hover:opacity-90 transition-opacity px-12 py-6 text-lg font-semibold btn-modern shadow-elegant hover:shadow-hover"
+                      size="lg"
+                    >
+                      <Search className="h-5 w-5 mr-3" />
+                      Start Your Journey
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : showSubjectSelection ? (
+              <div className="space-y-6">
+                {/* Language Selection */}
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <h3 className="font-semibold mb-3">Select Language</h3>
+                  <div className="grid grid-cols-3 gap-3">
+                    {languages.map((lang) => (
+                      <Button
+                        key={lang.value}
+                        variant={selectedLanguage === lang.value ? "default" : "outline"}
+                        onClick={() => setSelectedLanguage(lang.value)}
+                        className={`transition-all ${
+                          selectedLanguage === lang.value 
+                            ? "bg-gradient-hero text-white" 
+                            : "hover:bg-primary/10"
+                        }`}
+                      >
+                        {lang.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Subject Selection */}
+                {selectedLanguage && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">
+                      Select Subject for {selectedQuizType === "al" ? "A/L" : "O/L"}
+                    </h3>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {(selectedQuizType === "al" ? alSubjects : olSubjects).map((subject) => (
+                        <Card
+                          key={subject.value}
+                          className="cursor-pointer transition-all hover:shadow-lg border-2 hover:scale-105 hover:border-primary"
+                          onClick={() => handleSubjectSelect(subject.value)}
+                        >
+                          <CardContent className="p-6 text-center">
+                            <BookOpen className="h-8 w-8 mx-auto mb-3 text-primary" />
+                            <h4 className="font-semibold">{subject.label}</h4>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Back Button */}
+                <div className="flex justify-center">
                   <Button 
-                    onClick={handleGoClick}
-                    disabled={!selectedGrade || !selectedMedium || !selectedSubject}
-                    className="bg-gradient-hero hover:opacity-90 transition-opacity px-12 py-6 text-lg font-semibold btn-modern shadow-elegant hover:shadow-hover"
-                    size="lg"
+                    variant="outline" 
+                    onClick={handleBackToQuizTypeSelection}
+                    className="px-6"
                   >
-                    <Search className="h-5 w-5 mr-3" />
-                    Start Your Journey
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back to Quiz Types
+                  </Button>
+                </div>
+              </div>
+            ) : showLessonwiseTopics ? (
+              <div className="space-y-6">
+                {/* Selection Summary */}
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <h3 className="font-semibold mb-2">Selected Options:</h3>
+                  <div className="flex flex-wrap gap-2 text-sm">
+                    <span className="bg-primary/10 text-primary px-2 py-1 rounded">
+                      {selectedQuizType === "al" ? "A/L" : selectedQuizType === "ol" ? "O/L" : "Scholarship"}
+                    </span>
+                    <span className="bg-secondary/10 text-secondary px-2 py-1 rounded">
+                      {languages.find(l => l.value === selectedLanguage)?.label}
+                    </span>
+                    <span className="bg-accent/10 text-accent px-2 py-1 rounded">
+                      {(selectedQuizType === "al" ? alSubjects : olSubjects).find(s => s.value === selectedSubject)?.label}
+                    </span>
+                    <span className="bg-orange-100 text-orange-600 px-2 py-1 rounded">
+                      Lessonwise Select
+                    </span>
+                  </div>
+                </div>
+
+                {/* Topic Selection */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Select Topic</h3>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {getTopicsForSubject(selectedSubject).map((topic) => (
+                      <Card
+                        key={topic.value}
+                        className="cursor-pointer transition-all hover:shadow-lg border-2 hover:scale-105 hover:border-primary"
+                        onClick={() => handleTopicSelect(topic.value)}
+                      >
+                        <CardContent className="p-6 text-center">
+                          <BookOpen className="h-8 w-8 mx-auto mb-3 text-primary" />
+                          <h4 className="font-semibold">{topic.label}</h4>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Back Button */}
+                <div className="flex justify-center">
+                  <Button 
+                    variant="outline" 
+                    onClick={handleBackToSubjectSelection}
+                    className="px-6"
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back to Paper Types
                   </Button>
                 </div>
               </div>
@@ -598,18 +1029,47 @@ const StudentDashboard = () => {
                 <div className="bg-muted/50 rounded-lg p-4">
                   <h3 className="font-semibold mb-2">Selected Options:</h3>
                   <div className="flex flex-wrap gap-2 text-sm">
-                    <span className="bg-primary/10 text-primary px-2 py-1 rounded">
-                      {grades.find(g => g.value === selectedGrade)?.label}
-                    </span>
-                    <span className="bg-secondary/10 text-secondary px-2 py-1 rounded">
-                      {mediums.find(m => m.value === selectedMedium)?.label}
-                    </span>
-                    <span className="bg-accent/10 text-accent px-2 py-1 rounded">
-                      {subjects.find(s => s.value === selectedSubject)?.label}
-                    </span>
-                    <span className="bg-orange-100 text-orange-600 px-2 py-1 rounded">
-                      {paperTypes.find(p => p.id === selectedPaperType)?.title}
-                    </span>
+                    {selectedQuizType ? (
+                      <>
+                        <span className="bg-primary/10 text-primary px-2 py-1 rounded">
+                          {selectedQuizType === "scholarship" ? "Scholarship Grade 5" : 
+                           selectedQuizType === "al" ? "A/L" : "O/L"}
+                        </span>
+                        {selectedLanguage && (
+                          <span className="bg-secondary/10 text-secondary px-2 py-1 rounded">
+                            {languages.find(l => l.value === selectedLanguage)?.label}
+                          </span>
+                        )}
+                        {selectedSubject && (
+                          <span className="bg-accent/10 text-accent px-2 py-1 rounded">
+                            {(selectedQuizType === "al" ? alSubjects : olSubjects).find(s => s.value === selectedSubject)?.label}
+                          </span>
+                        )}
+                        {selectedTopic && (
+                          <span className="bg-purple-100 text-purple-600 px-2 py-1 rounded">
+                            {getTopicsForSubject(selectedSubject).find(t => t.value === selectedTopic)?.label}
+                          </span>
+                        )}
+                        <span className="bg-orange-100 text-orange-600 px-2 py-1 rounded">
+                          {(selectedQuizType === "scholarship" ? scholarshipPaperTypes : paperTypes).find(p => p.id === selectedPaperType)?.title}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="bg-primary/10 text-primary px-2 py-1 rounded">
+                          {grades.find(g => g.value === selectedGrade)?.label}
+                        </span>
+                        <span className="bg-secondary/10 text-secondary px-2 py-1 rounded">
+                          {mediums.find(m => m.value === selectedMedium)?.label}
+                        </span>
+                        <span className="bg-accent/10 text-accent px-2 py-1 rounded">
+                          {subjects.find(s => s.value === selectedSubject)?.label}
+                        </span>
+                        <span className="bg-orange-100 text-orange-600 px-2 py-1 rounded">
+                          {paperTypes.find(p => p.id === selectedPaperType)?.title}
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -676,118 +1136,167 @@ const StudentDashboard = () => {
                     <>
                       {getFilteredBundles().length > 0 ? (
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {getFilteredBundles().map((bundle) => (
-                      <Card 
-                        key={bundle.id}
-                        className={`cursor-pointer transition-all hover:shadow-lg border-2 ${bundle.borderColor} ${bundle.bgColor} hover:scale-105`}
-                        onClick={() => {
-                          // TODO: Navigate to specific bundle or show papers
-                          console.log(`Selected bundle: ${bundle.title}`);
-                        }}
-                      >
-                        <CardContent className="p-6">
-                          {/* Thumbnail placeholder - future implementation */}
-                          {bundle.thumbnail ? (
-                            <div className="aspect-video bg-muted rounded-lg mb-4 flex items-center justify-center">
-                              <img 
-                                src={bundle.thumbnail} 
-                                alt={bundle.title}
-                                className="w-full h-full object-cover rounded-lg"
-                              />
-                            </div>
-                          ) : (
-                            <div className="aspect-video bg-muted rounded-lg mb-4 flex items-center justify-center">
-                              <FileText className="h-12 w-12 text-muted-foreground" />
-                            </div>
-                          )}
-                          
-                          <div className="space-y-2">
-                            <h4 className="font-semibold text-lg">{bundle.title}</h4>
-                            <p className="text-sm text-muted-foreground">{bundle.description}</p>
+                          {getFilteredBundles().map((bundle) => {
+                            // Get colors based on paper type
+                            const paperType = paperTypes.find(p => p.id === selectedPaperType) || paperTypes[0];
+                            const bundleBorderColor = paperType?.borderColor || "border-blue-200";
+                            const bundleBgColor = paperType?.bgColor || "bg-blue-50";
                             
-                            <div className="flex justify-between items-center text-xs text-muted-foreground">
-                              <span>Year: {bundle.year}</span>
-                              <span>{bundle.paperCount} papers</span>
-                            </div>
-                            
-                            <div className="space-y-3">
-                              <div className="flex items-center justify-between">
-                                <span className={`text-xs px-2 py-1 rounded-full ${
-                                  bundle.difficulty === 'Beginner' ? 'bg-green-100 text-green-600' :
-                                  bundle.difficulty === 'Intermediate' ? 'bg-yellow-100 text-yellow-600' :
-                                  bundle.difficulty === 'Advanced' ? 'bg-red-100 text-red-600' :
-                                  'bg-gray-100 text-gray-600'
-                                }`}>
-                                  {bundle.difficulty}
-                                </span>
-                              </div>
-                              
-                              <div className="flex gap-2">
-                                <Button 
-                                  size="sm" 
-                                  className="text-xs flex-1"
-                                  onClick={() => handleStartQuiz(bundle.id, bundle.title)}
+                            // Render each quiz in the bundle
+                            return bundle.quizzes && bundle.quizzes.length > 0 ? (
+                              bundle.quizzes.map((quiz) => (
+                                <Card 
+                                  key={quiz.id}
+                                  className={`cursor-pointer transition-all hover:shadow-lg border-2 ${bundleBorderColor} ${bundleBgColor} hover:scale-105`}
                                 >
-                                  <Play className="h-3 w-3 mr-1" />
-                                  Start Quiz
-                                </Button>
-                                
-                                <Dialog>
-                                  <DialogTrigger asChild>
-                                    <Button size="sm" variant="outline" className="text-xs">
-                                      <Info className="h-3 w-3" />
-                                    </Button>
-                                  </DialogTrigger>
-                                  <DialogContent className="max-w-md">
-                                    <DialogHeader>
-                                      <DialogTitle>{bundle.title}</DialogTitle>
-                                      <DialogDescription>
-                                        Quiz Information
-                                      </DialogDescription>
-                                    </DialogHeader>
-                                    <div className="space-y-4">
-                                      <div>
-                                        <h4 className="font-semibold text-sm mb-2">Description</h4>
-                                        <p className="text-sm text-muted-foreground">{bundle.description}</p>
+                                  <CardContent className="p-6">
+                                    {/* Thumbnail placeholder - future implementation */}
+                                    {bundle.thumbnail ? (
+                                      <div className="aspect-video bg-muted rounded-lg mb-4 flex items-center justify-center">
+                                        <img 
+                                          src={bundle.thumbnail} 
+                                          alt={quiz.title}
+                                          className="w-full h-full object-cover rounded-lg"
+                                        />
+                                      </div>
+                                    ) : (
+                                      <div className="aspect-video bg-muted rounded-lg mb-4 flex items-center justify-center">
+                                        <FileText className="h-12 w-12 text-muted-foreground" />
+                                      </div>
+                                    )}
+                                    
+                                    <div className="space-y-2">
+                                      <h4 className="font-semibold text-lg">{quiz.title}</h4>
+                                      <p className="text-sm text-muted-foreground">{quiz.description || bundle.description}</p>
+                                      
+                                      <div className="flex justify-between items-center text-xs text-muted-foreground">
+                                        <span>Year: {bundle.year}</span>
+                                        <span className={`text-xs px-2 py-1 rounded-full ${
+                                          bundle.difficulty === 'Beginner' ? 'bg-green-100 text-green-600' :
+                                          bundle.difficulty === 'Intermediate' ? 'bg-yellow-100 text-yellow-600' :
+                                          bundle.difficulty === 'Advanced' ? 'bg-red-100 text-red-600' :
+                                          'bg-gray-100 text-gray-600'
+                                        }`}>
+                                          {bundle.difficulty}
+                                        </span>
                                       </div>
                                       
-                                      <div className="grid grid-cols-2 gap-4 text-sm">
-                                        <div>
-                                          <span className="font-medium">Year:</span>
-                                          <p className="text-muted-foreground">{bundle.year}</p>
+                                      <div className="space-y-3 pt-2">
+                                        <div className="flex gap-2">
+                                          <Button 
+                                            size="sm" 
+                                            className="text-xs flex-1"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleStartQuiz(quiz.id, quiz.title);
+                                            }}
+                                          >
+                                            <Play className="h-3 w-3 mr-1" />
+                                            Start Quiz
+                                          </Button>
+                                          
+                                          <Dialog>
+                                            <DialogTrigger asChild>
+                                              <Button 
+                                                size="sm" 
+                                                variant="outline" 
+                                                className="text-xs"
+                                                onClick={(e) => e.stopPropagation()}
+                                              >
+                                                <Info className="h-3 w-3" />
+                                              </Button>
+                                            </DialogTrigger>
+                                            <DialogContent className="max-w-md">
+                                              <DialogHeader>
+                                                <DialogTitle>{quiz.title}</DialogTitle>
+                                                <DialogDescription>
+                                                  Quiz Information
+                                                </DialogDescription>
+                                              </DialogHeader>
+                                              <div className="space-y-4">
+                                                <div>
+                                                  <h4 className="font-semibold text-sm mb-2">Description</h4>
+                                                  <p className="text-sm text-muted-foreground">{quiz.description || bundle.description}</p>
+                                                </div>
+                                                
+                                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                                  <div>
+                                                    <span className="font-medium">Year:</span>
+                                                    <p className="text-muted-foreground">{bundle.year}</p>
+                                                  </div>
+                                                  <div>
+                                                    <span className="font-medium">Difficulty:</span>
+                                                    <p className="text-muted-foreground">{bundle.difficulty}</p>
+                                                  </div>
+                                                  <div>
+                                                    <span className="font-medium">Time Limit:</span>
+                                                    <p className="text-muted-foreground">{quiz.timeLimit || 60} minutes</p>
+                                                  </div>
+                                                  <div>
+                                                    <span className="font-medium">Questions:</span>
+                                                    <p className="text-muted-foreground">{quiz.questionCount || 'N/A'}</p>
+                                                  </div>
+                                                </div>
+                                                
+                                                <div className="pt-4 border-t">
+                                                  <h4 className="font-semibold text-sm mb-2">Instructions</h4>
+                                                  <ul className="text-sm text-muted-foreground space-y-1">
+                                                    <li>• Read each question carefully</li>
+                                                    <li>• Select the best answer</li>
+                                                    <li>• You can review your answers before submitting</li>
+                                                    <li>• Timer will start when you begin the quiz</li>
+                                                  </ul>
+                                                </div>
+                                              </div>
+                                            </DialogContent>
+                                          </Dialog>
                                         </div>
-                                        <div>
-                                          <span className="font-medium">Papers:</span>
-                                          <p className="text-muted-foreground">{bundle.paperCount} papers</p>
-                                        </div>
-                                        <div>
-                                          <span className="font-medium">Difficulty:</span>
-                                          <p className="text-muted-foreground">{bundle.difficulty}</p>
-                                        </div>
-                                        <div>
-                                          <span className="font-medium">Duration:</span>
-                                          <p className="text-muted-foreground">60 minutes</p>
-                                        </div>
-                                      </div>
-                                      
-                                      <div className="pt-4 border-t">
-                                        <h4 className="font-semibold text-sm mb-2">Instructions</h4>
-                                        <ul className="text-sm text-muted-foreground space-y-1">
-                                          <li>• Read each question carefully</li>
-                                          <li>• Select the best answer</li>
-                                          <li>• You can review your answers before submitting</li>
-                                          <li>• Timer will start when you begin the quiz</li>
-                                        </ul>
                                       </div>
                                     </div>
-                                  </DialogContent>
-                                </Dialog>
-                              </div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                          ))}
+                                  </CardContent>
+                                </Card>
+                              ))
+                            ) : (
+                              // Fallback: show bundle if no quizzes
+                              <Card 
+                                key={bundle.id}
+                                className={`cursor-pointer transition-all hover:shadow-lg border-2 ${bundleBorderColor} ${bundleBgColor} hover:scale-105`}
+                              >
+                                <CardContent className="p-6">
+                                  <div className="aspect-video bg-muted rounded-lg mb-4 flex items-center justify-center">
+                                    <FileText className="h-12 w-12 text-muted-foreground" />
+                                  </div>
+                                  
+                                  <div className="space-y-2">
+                                    <h4 className="font-semibold text-lg">{bundle.title}</h4>
+                                    <p className="text-sm text-muted-foreground">{bundle.description}</p>
+                                    
+                                    <div className="flex justify-between items-center text-xs text-muted-foreground">
+                                      <span>Year: {bundle.year}</span>
+                                      <span>{bundle.paperCount} papers</span>
+                                    </div>
+                                    
+                                    <div className="space-y-3 pt-2">
+                                      <div className="flex items-center justify-between">
+                                        <span className={`text-xs px-2 py-1 rounded-full ${
+                                          bundle.difficulty === 'Beginner' ? 'bg-green-100 text-green-600' :
+                                          bundle.difficulty === 'Intermediate' ? 'bg-yellow-100 text-yellow-600' :
+                                          bundle.difficulty === 'Advanced' ? 'bg-red-100 text-red-600' :
+                                          'bg-gray-100 text-gray-600'
+                                        }`}>
+                                          {bundle.difficulty}
+                                        </span>
+                                      </div>
+                                      
+                                      <p className="text-xs text-muted-foreground text-center">
+                                        No quizzes available in this bundle
+                                      </p>
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            );
+                          })}
                         </div>
                       ) : (
                         <div className="text-center py-12 text-muted-foreground">
@@ -820,53 +1329,99 @@ const StudentDashboard = () => {
               </div>
             ) : (
               <div className="space-y-6">
+                {/* Language Selection for Scholarship */}
+                {selectedQuizType === "scholarship" && !selectedLanguage && (
+                  <div className="bg-muted/50 rounded-lg p-4">
+                    <h3 className="font-semibold mb-3">Select Language</h3>
+                    <div className="grid grid-cols-3 gap-3">
+                      {languages.map((lang) => (
+                        <Button
+                          key={lang.value}
+                          variant={selectedLanguage === lang.value ? "default" : "outline"}
+                          onClick={() => setSelectedLanguage(lang.value)}
+                          className={`transition-all ${
+                            selectedLanguage === lang.value 
+                              ? "bg-gradient-hero text-white" 
+                              : "hover:bg-primary/10"
+                          }`}
+                        >
+                          {lang.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Selection Summary */}
                 <div className="bg-muted/50 rounded-lg p-4">
                   <h3 className="font-semibold mb-2">Selected Options:</h3>
                   <div className="flex flex-wrap gap-2 text-sm">
-                    <span className="bg-primary/10 text-primary px-2 py-1 rounded">
-                      {grades.find(g => g.value === selectedGrade)?.label}
-                    </span>
-                    <span className="bg-secondary/10 text-secondary px-2 py-1 rounded">
-                      {mediums.find(m => m.value === selectedMedium)?.label}
-                    </span>
-                    <span className="bg-accent/10 text-accent px-2 py-1 rounded">
-                      {subjects.find(s => s.value === selectedSubject)?.label}
-                    </span>
+                    {selectedQuizType ? (
+                      <>
+                        <span className="bg-primary/10 text-primary px-2 py-1 rounded">
+                          {selectedQuizType === "scholarship" ? "Scholarship Grade 5" : 
+                           selectedQuizType === "al" ? "A/L" : "O/L"}
+                        </span>
+                        {selectedLanguage && (
+                          <span className="bg-secondary/10 text-secondary px-2 py-1 rounded">
+                            {languages.find(l => l.value === selectedLanguage)?.label}
+                          </span>
+                        )}
+                        {selectedSubject && (
+                          <span className="bg-accent/10 text-accent px-2 py-1 rounded">
+                            {(selectedQuizType === "al" ? alSubjects : olSubjects).find(s => s.value === selectedSubject)?.label}
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <span className="bg-primary/10 text-primary px-2 py-1 rounded">
+                          {grades.find(g => g.value === selectedGrade)?.label}
+                        </span>
+                        <span className="bg-secondary/10 text-secondary px-2 py-1 rounded">
+                          {mediums.find(m => m.value === selectedMedium)?.label}
+                        </span>
+                        <span className="bg-accent/10 text-accent px-2 py-1 rounded">
+                          {subjects.find(s => s.value === selectedSubject)?.label}
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
 
                 {/* Paper Type Selection */}
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Choose Paper Type</h3>
-                  <div className="grid md:grid-cols-3 gap-4">
-                    {paperTypes.map((paperType) => (
-                      <Card 
-                        key={paperType.id}
-                        className={`cursor-pointer transition-all hover:shadow-lg border-2 ${paperType.borderColor} ${paperType.bgColor} hover:scale-105`}
-                        onClick={() => handlePaperTypeClick(paperType.id)}
-                      >
-                        <CardContent className="p-6 text-center">
-                          <paperType.icon className={`h-12 w-12 mx-auto mb-3 ${paperType.color}`} />
-                          <h4 className="font-semibold text-lg mb-2">{paperType.title}</h4>
-                          <p className="text-sm text-muted-foreground mb-3">{paperType.description}</p>
-                          <div className="text-xs text-muted-foreground">
-                            {paperType.count} papers available
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                {((selectedQuizType === "scholarship" && selectedLanguage) || 
+                  ((selectedQuizType === "al" || selectedQuizType === "ol") && selectedSubject) || 
+                  (!selectedQuizType && selectedGrade && selectedMedium && selectedSubject)) && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Choose Paper Type</h3>
+                    <div className={`grid gap-4 ${selectedQuizType === "scholarship" ? "md:grid-cols-2" : "md:grid-cols-3"}`}>
+                      {(selectedQuizType === "scholarship" ? scholarshipPaperTypes : paperTypes).map((paperType) => (
+                        <Card 
+                          key={paperType.id}
+                          className={`cursor-pointer transition-all hover:shadow-lg border-2 ${paperType.borderColor} ${paperType.bgColor} hover:scale-105`}
+                          onClick={() => handlePaperTypeSelect(paperType.id)}
+                        >
+                          <CardContent className="p-6 text-center">
+                            <paperType.icon className={`h-12 w-12 mx-auto mb-3 ${paperType.color}`} />
+                            <h4 className="font-semibold text-lg mb-2">{paperType.title}</h4>
+                            <p className="text-sm text-muted-foreground mb-3">{paperType.description}</p>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Back Button */}
                 <div className="flex justify-center">
                   <Button 
                     variant="outline" 
-                    onClick={handleBackToSelection}
+                    onClick={selectedQuizType ? (selectedSubject ? handleBackToSubjectSelection : handleBackToQuizTypeSelection) : handleBackToSelection}
                     className="px-6"
                   >
-                    Back to Selection
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    {selectedQuizType ? (selectedSubject ? "Back to Subjects" : "Back to Quiz Types") : "Back to Selection"}
                   </Button>
                 </div>
             </div>

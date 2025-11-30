@@ -385,9 +385,10 @@ class ApiService {
     });
   }
 
-  async completeQuiz(attemptId: string): Promise<QuizAttempt> {
+  async completeQuiz(attemptId: string, timeSpent: number): Promise<QuizAttempt> {
     return this.request<QuizAttempt>(`/quizattempt/${attemptId}/complete`, {
       method: 'POST',
+      body: JSON.stringify({ timeSpent }),
     });
   }
 

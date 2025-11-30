@@ -49,6 +49,9 @@ const CreateQuiz = () => {
     thumbnail: "",
   });
 
+  const [quizType, setQuizType] = useState<string>(""); // "scholarship", "al", "ol", or "" for regular
+  const [selectedTopic, setSelectedTopic] = useState<string>(""); // For lessonwise topics
+
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
 
@@ -194,6 +197,34 @@ const CreateQuiz = () => {
     setActiveTab(`question-${questions.length}`);
   };
 
+  const addOption = (questionIndex: number) => {
+    if (questions[questionIndex].options.length < 5) {
+      setQuestions((prev) => {
+        const updated = [...prev];
+        updated[questionIndex].options.push("");
+        updated[questionIndex].optionImageFiles.push(null);
+        updated[questionIndex].optionImageUrls.push(null);
+        return updated;
+      });
+    }
+  };
+
+  const removeOption = (questionIndex: number, optionIndex: number) => {
+    if (questions[questionIndex].options.length > 4) {
+      setQuestions((prev) => {
+        const updated = [...prev];
+        updated[questionIndex].options.splice(optionIndex, 1);
+        updated[questionIndex].optionImageFiles.splice(optionIndex, 1);
+        updated[questionIndex].optionImageUrls.splice(optionIndex, 1);
+        // Adjust correct answer index if needed
+        if (updated[questionIndex].correctAnswerIndex >= optionIndex) {
+          updated[questionIndex].correctAnswerIndex = Math.max(0, updated[questionIndex].correctAnswerIndex - 1);
+        }
+        return updated;
+      });
+    }
+  };
+
   const removeQuestion = (index: number) => {
     if (questions.length > 1) {
       setQuestions((prev) => prev.filter((_, i) => i !== index));
@@ -202,10 +233,11 @@ const CreateQuiz = () => {
 
   const validateQuiz = (): string | null => {
     if (!quizData.title.trim()) return "Quiz title is required";
-    if (!quizData.grade) return "Grade is required";
+    if (!quizType && !quizData.grade) return "Grade is required (or select a quiz type)";
     if (!quizData.medium) return "Medium is required";
     if (!quizData.subject) return "Subject is required";
     if (!quizData.type) return "Paper type is required";
+    if (quizData.type === "lessonwise" && !selectedTopic) return "Topic is required for lessonwise papers";
     if (quizData.timeLimit <= 0) return "Time limit must be greater than 0";
     if (questions.length === 0) return "At least one question is required";
 
@@ -214,8 +246,14 @@ const CreateQuiz = () => {
       if (!q.questionText.trim() && !q.questionImageUrl) {
         return `Question ${i + 1}: Either question text or image is required`;
       }
+      if (q.options.length < 4 || q.options.length > 5) {
+        return `Question ${i + 1}: Must have 4 or 5 options`;
+      }
       if (q.options.some((opt, idx) => !opt.trim() && !q.optionImageUrls[idx])) {
         return `Question ${i + 1}: All options must have either text or image`;
+      }
+      if (q.correctAnswerIndex < 0 || q.correctAnswerIndex >= q.options.length) {
+        return `Question ${i + 1}: Invalid correct answer index`;
       }
     }
 
@@ -272,11 +310,27 @@ const CreateQuiz = () => {
         thumbnailUrl = await apiService.uploadImageToBlob(thumbnailFile);
       }
 
+      // Determine grade based on quiz type
+      let finalGrade = quizData.grade;
+      if (quizType === "scholarship") {
+        finalGrade = "grade-5";
+      } else if (quizType === "al") {
+        finalGrade = "grade-12";
+      } else if (quizType === "ol") {
+        finalGrade = "grade-11";
+      }
+
       const quizRequest: CreateQuizRequest = {
         ...quizData,
+        grade: finalGrade,
         thumbnail: thumbnailUrl || undefined,
         questions: createQuestions,
       };
+
+      // Add topic to description if lessonwise
+      if (quizData.type === "lessonwise" && selectedTopic) {
+        quizRequest.description = `${quizRequest.description || ""} [Topic: ${selectedTopic}]`.trim();
+      }
 
       await apiService.createQuiz(quizRequest);
 
@@ -430,15 +484,51 @@ const CreateQuiz = () => {
                   </div>
 
                   <div className="space-y-2">
+                    <Label htmlFor="quizType">Quiz Type *</Label>
+                    <Select
+                      value={quizType || "regular"}
+                      onValueChange={(value) => {
+                        const newQuizType = value === "regular" ? "" : value;
+                        setQuizType(newQuizType);
+                        // Auto-set grade based on quiz type
+                        if (value === "scholarship") {
+                          handleQuizDataChange("grade", "grade-5");
+                        } else if (value === "al") {
+                          handleQuizDataChange("grade", "grade-12");
+                        } else if (value === "ol") {
+                          handleQuizDataChange("grade", "grade-11");
+                        } else {
+                          handleQuizDataChange("grade", "");
+                        }
+                        // Reset subject when changing quiz type
+                        handleQuizDataChange("subject", "");
+                        setSelectedTopic("");
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select quiz type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="regular">Regular (Select Grade)</SelectItem>
+                        <SelectItem value="scholarship">Scholarship Grade 5</SelectItem>
+                        <SelectItem value="al">A/L (Advanced Level)</SelectItem>
+                        <SelectItem value="ol">O/L (Ordinary Level)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
                     <Label htmlFor="grade">Grade *</Label>
                     <Select
                       value={quizData.grade}
                       onValueChange={(value) => handleQuizDataChange("grade", value)}
+                      disabled={!!quizType} // Disable if quiz type is selected
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select grade" />
+                        <SelectValue placeholder={quizType ? "Auto-selected" : "Select grade"} />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="grade-5">Grade 5</SelectItem>
                         <SelectItem value="grade-6">Grade 6</SelectItem>
                         <SelectItem value="grade-7">Grade 7</SelectItem>
                         <SelectItem value="grade-8">Grade 8</SelectItem>
@@ -449,6 +539,11 @@ const CreateQuiz = () => {
                         <SelectItem value="grade-13">Grade 13</SelectItem>
                       </SelectContent>
                     </Select>
+                    {quizType && (
+                      <p className="text-xs text-muted-foreground">
+                        Grade is automatically set based on quiz type
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -472,20 +567,55 @@ const CreateQuiz = () => {
                     <Label htmlFor="subject">Subject *</Label>
                     <Select
                       value={quizData.subject}
-                      onValueChange={(value) => handleQuizDataChange("subject", value)}
+                      onValueChange={(value) => {
+                        handleQuizDataChange("subject", value);
+                        setSelectedTopic(""); // Reset topic when subject changes
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select subject" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="mathematics">Mathematics</SelectItem>
-                        <SelectItem value="science">Science</SelectItem>
-                        <SelectItem value="english">English</SelectItem>
-                        <SelectItem value="sinhala">Sinhala</SelectItem>
-                        <SelectItem value="history">History</SelectItem>
-                        <SelectItem value="geography">Geography</SelectItem>
-                        <SelectItem value="ict">ICT</SelectItem>
-                        <SelectItem value="commerce">Commerce</SelectItem>
+                        {!quizType ? (
+                          // Regular subjects
+                          <>
+                            <SelectItem value="mathematics">Mathematics</SelectItem>
+                            <SelectItem value="science">Science</SelectItem>
+                            <SelectItem value="english">English</SelectItem>
+                            <SelectItem value="sinhala">Sinhala</SelectItem>
+                            <SelectItem value="history">History</SelectItem>
+                            <SelectItem value="geography">Geography</SelectItem>
+                            <SelectItem value="ict">ICT</SelectItem>
+                            <SelectItem value="commerce">Commerce</SelectItem>
+                          </>
+                        ) : quizType === "scholarship" ? (
+                          // Scholarship subjects (general)
+                          <>
+                            <SelectItem value="scholarship">Scholarship (General)</SelectItem>
+                          </>
+                        ) : quizType === "al" ? (
+                          // A/L subjects
+                          <>
+                            <SelectItem value="physics">Physics</SelectItem>
+                            <SelectItem value="chemistry">Chemistry</SelectItem>
+                            <SelectItem value="combined-mathematics">Combined Mathematics</SelectItem>
+                            <SelectItem value="biology">Biology</SelectItem>
+                          </>
+                        ) : (
+                          // O/L subjects
+                          <>
+                            <SelectItem value="mother-language-sinhala">Mother Language (Sinhala)</SelectItem>
+                            <SelectItem value="mother-language-tamil">Mother Language (Tamil)</SelectItem>
+                            <SelectItem value="religion-buddhism">Religion (Buddhism)</SelectItem>
+                            <SelectItem value="religion-christianity">Religion (Catholicism / Christianity)</SelectItem>
+                            <SelectItem value="religion-islam">Religion (Islam)</SelectItem>
+                            <SelectItem value="religion-hinduism">Religion (Hinduism)</SelectItem>
+                            <SelectItem value="english">English Language</SelectItem>
+                            <SelectItem value="mathematics">Mathematics</SelectItem>
+                            <SelectItem value="science">Science</SelectItem>
+                            <SelectItem value="history">History</SelectItem>
+                          </>
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
@@ -494,18 +624,88 @@ const CreateQuiz = () => {
                     <Label htmlFor="type">Paper Type *</Label>
                     <Select
                       value={quizData.type}
-                      onValueChange={(value) => handleQuizDataChange("type", value)}
+                      onValueChange={(value) => {
+                        handleQuizDataChange("type", value);
+                        if (value !== "lessonwise") {
+                          setSelectedTopic(""); // Reset topic if not lessonwise
+                        }
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select paper type" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="past-papers">Past Papers</SelectItem>
-                        <SelectItem value="model-papers">Model Papers</SelectItem>
-                        <SelectItem value="school-papers">School Papers</SelectItem>
+                        {quizType === "scholarship" ? (
+                          // Scholarship paper types
+                          <>
+                            <SelectItem value="past-papers">Past Papers</SelectItem>
+                            <SelectItem value="model-papers">Model Papers</SelectItem>
+                          </>
+                        ) : (
+                          // Regular, A/L, O/L paper types
+                          <>
+                            <SelectItem value="past-papers">Past Papers</SelectItem>
+                            <SelectItem value="model-papers">Model Papers</SelectItem>
+                            <SelectItem value="school-papers">School Papers</SelectItem>
+                            <SelectItem value="lessonwise">Lessonwise Select</SelectItem>
+                          </>
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
+
+                  {/* Topic Selection for Lessonwise A/L Subjects */}
+                  {quizData.type === "lessonwise" && quizType === "al" && quizData.subject && (
+                    <div className="space-y-2">
+                      <Label htmlFor="topic">Topic *</Label>
+                      <Select
+                        value={selectedTopic}
+                        onValueChange={setSelectedTopic}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select topic" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {quizData.subject === "physics" && (
+                            <>
+                              <SelectItem value="waves">Waves Related Questions</SelectItem>
+                              <SelectItem value="mechanics">Mechanics</SelectItem>
+                              <SelectItem value="thermodynamics">Thermodynamics</SelectItem>
+                              <SelectItem value="optics">Optics</SelectItem>
+                              <SelectItem value="electricity">Electricity & Magnetism</SelectItem>
+                              <SelectItem value="modern-physics">Modern Physics</SelectItem>
+                            </>
+                          )}
+                          {quizData.subject === "chemistry" && (
+                            <>
+                              <SelectItem value="organic">Organic Chemistry</SelectItem>
+                              <SelectItem value="inorganic">Inorganic Chemistry</SelectItem>
+                              <SelectItem value="physical">Physical Chemistry</SelectItem>
+                              <SelectItem value="analytical">Analytical Chemistry</SelectItem>
+                            </>
+                          )}
+                          {quizData.subject === "combined-mathematics" && (
+                            <>
+                              <SelectItem value="algebra">Algebra</SelectItem>
+                              <SelectItem value="geometry">Geometry</SelectItem>
+                              <SelectItem value="trigonometry">Trigonometry</SelectItem>
+                              <SelectItem value="calculus">Calculus</SelectItem>
+                              <SelectItem value="statistics">Statistics & Probability</SelectItem>
+                            </>
+                          )}
+                          {quizData.subject === "biology" && (
+                            <>
+                              <SelectItem value="cell-biology">Cell Biology</SelectItem>
+                              <SelectItem value="genetics">Genetics</SelectItem>
+                              <SelectItem value="ecology">Ecology</SelectItem>
+                              <SelectItem value="human-biology">Human Biology</SelectItem>
+                              <SelectItem value="plant-biology">Plant Biology</SelectItem>
+                            </>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
 
                   <div className="space-y-2">
                     <Label htmlFor="difficulty">Difficulty *</Label>
@@ -611,25 +811,51 @@ const CreateQuiz = () => {
                   </div>
 
                   <div className="space-y-4">
-                    <Label>Answer Options *</Label>
+                    <div className="flex items-center justify-between">
+                      <Label>Answer Options * (4-5 options required)</Label>
+                      {question.options.length < 5 && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => addOption(questionIndex)}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Option
+                        </Button>
+                      )}
+                    </div>
                     {question.options.map((option, optionIndex) => (
                       <div key={optionIndex} className="space-y-2 p-4 border-2 rounded-lg">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Label className="font-semibold">
-                            Option {String.fromCharCode(65 + optionIndex)} {optionIndex === question.correctAnswerIndex && (
-                              <CheckCircle className="inline h-4 w-4 text-green-600 ml-1" />
-                            )}
-                          </Label>
-                          <Button
-                            type="button"
-                            variant={question.correctAnswerIndex === optionIndex ? "default" : "outline"}
-                            size="sm"
-                            onClick={() =>
-                              handleQuestionChange(questionIndex, "correctAnswerIndex", optionIndex)
-                            }
-                          >
-                            {question.correctAnswerIndex === optionIndex ? "Correct Answer" : "Set as Correct"}
-                          </Button>
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <Label className="font-semibold">
+                              Option {String.fromCharCode(65 + optionIndex)} {optionIndex === question.correctAnswerIndex && (
+                                <CheckCircle className="inline h-4 w-4 text-green-600 ml-1" />
+                              )}
+                            </Label>
+                            <Button
+                              type="button"
+                              variant={question.correctAnswerIndex === optionIndex ? "default" : "outline"}
+                              size="sm"
+                              onClick={() =>
+                                handleQuestionChange(questionIndex, "correctAnswerIndex", optionIndex)
+                              }
+                            >
+                              {question.correctAnswerIndex === optionIndex ? "Correct Answer" : "Set as Correct"}
+                            </Button>
+                          </div>
+                          {question.options.length > 4 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeOption(questionIndex, optionIndex)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          )}
                         </div>
                         <Input
                           value={option}

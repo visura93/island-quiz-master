@@ -24,6 +24,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { apiService, StudentActivity } from "@/lib/api";
+import { DarkModeToggle } from "@/components/DarkModeToggle";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -111,7 +112,19 @@ const AdminDashboard = () => {
       {/* Header */}
       <header className="border-b border-border/50 backdrop-blur-sm bg-background/80">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div 
+            className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => {
+              // Navigate to dashboard based on user role
+              if (user?.role === 'Admin' || user?.role === 2) {
+                navigate('/admin-dashboard');
+              } else if (user?.role === 'Teacher' || user?.role === 1) {
+                navigate('/teacher-dashboard');
+              } else {
+                navigate('/student-dashboard');
+              }
+            }}
+          >
             <GraduationCap className="h-8 w-8 text-primary" />
             <span className="text-2xl font-bold bg-gradient-hero bg-clip-text text-transparent">
               Island First
@@ -121,6 +134,7 @@ const AdminDashboard = () => {
             <span className="text-sm text-muted-foreground">
               Welcome, {user?.firstName}!
             </span>
+            <DarkModeToggle />
             <Button variant="outline" onClick={handleLogout}>
               <LogOut className="h-4 w-4 mr-2" />
               Logout
