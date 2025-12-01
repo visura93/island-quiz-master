@@ -27,28 +27,7 @@ const Auth = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
 
-  // Show loading while auth context is initializing
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Debug authentication state
-  console.log('Auth component render:', { 
-    isAuthenticated, 
-    user, 
-    userRole: user?.role, 
-    authLoading,
-    isLoading 
-  });
-
-  // Redirect if already authenticated
+  // Redirect if already authenticated - MUST be called before any conditional returns
   useEffect(() => {
     console.log('Auth useEffect triggered:', { isAuthenticated, user, userRole: user?.role });
     
@@ -77,6 +56,27 @@ const Auth = () => {
       navigate(from, { replace: true });
     }
   }, [isAuthenticated, user, navigate, location.state?.from?.pathname]);
+
+  // Show loading while auth context is initializing
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Debug authentication state
+  console.log('Auth component render:', { 
+    isAuthenticated, 
+    user, 
+    userRole: user?.role, 
+    authLoading,
+    isLoading 
+  });
 
   if (isAuthenticated) {
     console.log('User is authenticated, should redirect...');

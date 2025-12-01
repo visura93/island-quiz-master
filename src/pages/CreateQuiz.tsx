@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -363,6 +363,73 @@ const CreateQuiz = () => {
     disabled?: boolean;
   }) => {
     const [inputRef, setInputRef] = useState<HTMLInputElement | null>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [isPasteFocused, setIsPasteFocused] = useState(false);
+    const { toast } = useToast();
+    const lastClickTimeRef = useRef<number>(0);
+
+    // Handle clipboard paste
+    useEffect(() => {
+      const handlePaste = async (e: ClipboardEvent) => {
+        // Only handle paste if this component is available and focused/clicked
+        if (disabled || currentImage) return;
+        
+        // Check if container is focused or was recently clicked (within 2 seconds)
+        const isContainerFocused = containerRef.current === document.activeElement || 
+                                   containerRef.current?.contains(document.activeElement);
+        const wasRecentlyClicked = Date.now() - lastClickTimeRef.current < 2000;
+        
+        if (!isContainerFocused && !wasRecentlyClicked) return;
+        
+        const items = e.clipboardData?.items;
+        if (!items) return;
+
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+          
+          // Check if the pasted item is an image
+          if (item.type.indexOf('image') !== -1) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const blob = item.getAsFile();
+            if (blob) {
+              // Convert blob to File
+              const file = new File([blob], `pasted-image-${Date.now()}.png`, {
+                type: blob.type || 'image/png',
+              });
+              
+              onUpload(file);
+              toast({
+                title: "Image pasted",
+                description: "Image has been pasted successfully",
+              });
+            }
+            break;
+          }
+        }
+      };
+
+      // Add paste event listener to the document
+      document.addEventListener('paste', handlePaste, true);
+      
+      return () => {
+        document.removeEventListener('paste', handlePaste, true);
+      };
+    }, [disabled, currentImage, onUpload, toast]);
+
+    const handleContainerClick = () => {
+      lastClickTimeRef.current = Date.now();
+      containerRef.current?.focus();
+    };
+
+    const handleContainerFocus = () => {
+      setIsPasteFocused(true);
+    };
+
+    const handleContainerBlur = () => {
+      setIsPasteFocused(false);
+    };
 
     return (
       <div className="space-y-2">
@@ -385,7 +452,18 @@ const CreateQuiz = () => {
             </Button>
           </div>
         ) : (
-          <div className="border-2 border-dashed border-border rounded-lg p-4">
+          <div 
+            ref={containerRef}
+            className={`border-2 border-dashed rounded-lg p-4 transition-colors cursor-pointer ${
+              isPasteFocused 
+                ? 'border-primary bg-primary/5' 
+                : 'border-border'
+            }`}
+            onFocus={handleContainerFocus}
+            onBlur={handleContainerBlur}
+            onClick={handleContainerClick}
+            tabIndex={0}
+          >
             <input
               ref={setInputRef}
               type="file"
@@ -397,16 +475,21 @@ const CreateQuiz = () => {
               }}
               disabled={disabled}
             />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => inputRef?.click()}
-              disabled={disabled || uploading}
-              className="w-full"
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              Upload Image
-            </Button>
+            <div className="space-y-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => inputRef?.click()}
+                disabled={disabled || uploading}
+                className="w-full"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Upload Image
+              </Button>
+              <p className="text-xs text-center text-muted-foreground">
+                or press <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">Ctrl+V</kbd> to paste from clipboard
+              </p>
+            </div>
           </div>
         )}
       </div>

@@ -45,9 +45,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setUser(JSON.parse(storedUser));
           
           // Verify token is still valid by fetching current user
-          await apiService.getCurrentUser();
+          // Add timeout to prevent hanging
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Request timeout')), 5000)
+          );
+          
+          await Promise.race([apiService.getCurrentUser(), timeoutPromise]);
         } catch (error) {
-          // Token is invalid, clear storage
+          // Token is invalid or request failed, clear storage
+          console.error('Auth initialization error:', error);
           localStorage.removeItem('token');
           localStorage.removeItem('user');
           localStorage.removeItem('refreshToken');
@@ -55,6 +61,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setUser(null);
         }
       }
+      // Always set loading to false, even if there was an error
       setIsLoading(false);
     };
 
