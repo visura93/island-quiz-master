@@ -16,7 +16,9 @@ import {
   Save,
   Image as ImageIcon,
   FileText,
-  CheckCircle
+  CheckCircle,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { apiService, CreateQuizRequest, CreateQuestionRequest } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
@@ -228,6 +230,43 @@ const CreateQuiz = () => {
   const removeQuestion = (index: number) => {
     if (questions.length > 1) {
       setQuestions((prev) => prev.filter((_, i) => i !== index));
+      // Navigate to a valid tab after deletion
+      if (activeTab === `question-${index}`) {
+        if (index > 0) {
+          setActiveTab(`question-${index - 1}`);
+        } else if (questions.length > 1) {
+          setActiveTab(`question-0`);
+        } else {
+          setActiveTab("quiz");
+        }
+      }
+    }
+  };
+
+  const getCurrentQuestionIndex = () => {
+    if (activeTab.startsWith("question-")) {
+      return parseInt(activeTab.replace("question-", ""));
+    }
+    return -1;
+  };
+
+  const navigateToQuestion = (index: number) => {
+    if (index >= 0 && index < questions.length) {
+      setActiveTab(`question-${index}`);
+    }
+  };
+
+  const navigateToPreviousQuestion = () => {
+    const currentIndex = getCurrentQuestionIndex();
+    if (currentIndex > 0) {
+      navigateToQuestion(currentIndex - 1);
+    }
+  };
+
+  const navigateToNextQuestion = () => {
+    const currentIndex = getCurrentQuestionIndex();
+    if (currentIndex >= 0 && currentIndex < questions.length - 1) {
+      navigateToQuestion(currentIndex + 1);
     }
   };
 
@@ -520,23 +559,61 @@ const CreateQuiz = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-auto">
-            <TabsTrigger value="quiz">Quiz Details</TabsTrigger>
-            {questions.map((_, index) => (
-              <TabsTrigger key={index} value={`question-${index}`}>
-                Question {index + 1}
-              </TabsTrigger>
-            ))}
-            <Button
-              type="button"
-              variant="outline"
-              onClick={addQuestion}
-              className="ml-2"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Question
-            </Button>
-          </TabsList>
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            <TabsList>
+              <TabsTrigger value="quiz">Quiz Details</TabsTrigger>
+            </TabsList>
+            <div className="flex gap-2 w-full sm:w-auto">
+              {activeTab.startsWith("question-") && (
+                <>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={navigateToPreviousQuestion}
+                    disabled={getCurrentQuestionIndex() <= 0}
+                    className="flex-1 sm:flex-initial"
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1" />
+                    Previous
+                  </Button>
+                  <Select
+                    value={getCurrentQuestionIndex() >= 0 ? getCurrentQuestionIndex().toString() : ""}
+                    onValueChange={(value) => navigateToQuestion(parseInt(value))}
+                  >
+                    <SelectTrigger className="w-[140px]">
+                      <SelectValue placeholder="Jump to..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {questions.map((_, index) => (
+                        <SelectItem key={index} value={index.toString()}>
+                          Question {index + 1}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={navigateToNextQuestion}
+                    disabled={getCurrentQuestionIndex() >= questions.length - 1}
+                    className="flex-1 sm:flex-initial"
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={addQuestion}
+                className="flex-1 sm:flex-initial"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Question
+              </Button>
+            </div>
+          </div>
 
           <TabsContent value="quiz">
             <Card className="border-2 shadow-elegant bg-gradient-card">
