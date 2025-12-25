@@ -45,6 +45,7 @@ const CreateQuiz = () => {
     medium: "",
     subject: "",
     type: "",
+    term: "",
     timeLimit: 60,
     difficulty: "Medium",
     year: new Date().getFullYear(),
@@ -277,6 +278,12 @@ const CreateQuiz = () => {
     if (!quizData.subject) return "Subject is required";
     if (!quizData.type) return "Paper type is required";
     if (quizData.type === "lessonwise" && !selectedTopic) return "Topic is required for lessonwise papers";
+    // Validate term for grades 1-13, model-papers and school-papers
+    if (!quizType && quizData.grade && 
+        (quizData.type === "model-papers" || quizData.type === "school-papers") && 
+        !quizData.term) {
+      return "Term is required for model papers and school papers";
+    }
     if (quizData.timeLimit <= 0) return "Time limit must be greater than 0";
     if (questions.length === 0) return "At least one question is required";
 
@@ -813,6 +820,27 @@ const CreateQuiz = () => {
                       </SelectContent>
                     </Select>
                   </div>
+
+                  {/* Term Selection for Grades 1-13, Model Papers and School Papers */}
+                  {!quizType && quizData.grade && 
+                   (quizData.type === "model-papers" || quizData.type === "school-papers") && (
+                    <div className="space-y-2">
+                      <Label htmlFor="term">Term *</Label>
+                      <Select
+                        value={quizData.term}
+                        onValueChange={(value) => handleQuizDataChange("term", value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select term" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1st-term">1st Term</SelectItem>
+                          <SelectItem value="2nd-term">2nd Term</SelectItem>
+                          <SelectItem value="3rd-term">3rd Term</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
 
                   {/* Topic Selection for Lessonwise A/L Subjects */}
                   {quizData.type === "lessonwise" && quizType === "al" && quizData.subject && (

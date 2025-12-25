@@ -215,6 +215,7 @@ export interface CreateQuizRequest {
   medium: string;
   subject: string;
   type: string;
+  term?: string;
   timeLimit: number;
   difficulty: string;
   year: number;
@@ -344,13 +345,16 @@ class ApiService {
   }
 
   // Quiz endpoints
-  async getQuizBundles(grade: string, medium: string, subject: string, type: string): Promise<QuizBundle[]> {
+  async getQuizBundles(grade: string, medium: string, subject: string, type: string, term?: string): Promise<QuizBundle[]> {
     const params = new URLSearchParams({
       grade,
       medium,
       subject,
       type
     });
+    if (term) {
+      params.append('term', term);
+    }
     return this.request<QuizBundle[]>(`/quiz/bundles?${params}`);
   }
 

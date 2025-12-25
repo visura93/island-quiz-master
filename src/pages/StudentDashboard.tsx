@@ -35,6 +35,8 @@ const StudentDashboard = () => {
   const [showSubjectSelection, setShowSubjectSelection] = useState<boolean>(false);
   const [showLessonwiseTopics, setShowLessonwiseTopics] = useState<boolean>(false);
   const [selectedTopic, setSelectedTopic] = useState<string>("");
+  const [showTermSelection, setShowTermSelection] = useState<boolean>(false);
+  const [selectedTerm, setSelectedTerm] = useState<string>("");
 
   const handleLogout = () => {
     logout();
@@ -57,7 +59,7 @@ const StudentDashboard = () => {
     }
   };
 
-  const handlePaperTypeClick = async (paperTypeId: string) => {
+  const handlePaperTypeClick = async (paperTypeId: string, term?: string) => {
     setSelectedPaperType(paperTypeId);
     setIsLoading(true);
     setError("");
@@ -77,7 +79,19 @@ const StudentDashboard = () => {
         medium = selectedLanguage;
       }
       
-      const bundles = await apiService.getQuizBundles(grade, medium, selectedSubject, paperTypeId);
+      // Build query parameters including term if provided
+      const queryParams: any = {
+        grade,
+        medium,
+        subject: selectedSubject,
+        type: paperTypeId
+      };
+      
+      if (term) {
+        queryParams.term = term;
+      }
+      
+      const bundles = await apiService.getQuizBundles(grade, medium, selectedSubject, paperTypeId, term);
       setPaperBundles(bundles);
       setShowPaperBundles(true);
     } catch (err: any) {
@@ -90,6 +104,13 @@ const StudentDashboard = () => {
   const handleBackToPaperTypes = () => {
     setShowPaperBundles(false);
     setSelectedPaperType("");
+    setSelectedTerm("");
+  };
+
+  const handleBackToTermSelection = () => {
+    setShowPaperBundles(false);
+    setShowTermSelection(true);
+    setSelectedTerm("");
   };
 
   const handleBackToSelection = () => {
@@ -101,7 +122,9 @@ const StudentDashboard = () => {
     setSelectedLanguage("");
     setShowSubjectSelection(false);
     setShowLessonwiseTopics(false);
+    setShowTermSelection(false);
     setSelectedTopic("");
+    setSelectedTerm("");
   };
 
   const handleBackToSubjectSelection = () => {
@@ -110,7 +133,9 @@ const StudentDashboard = () => {
     setSelectedPaperType("");
     setShowSubjectSelection(true);
     setShowLessonwiseTopics(false);
+    setShowTermSelection(false);
     setSelectedTopic("");
+    setSelectedTerm("");
   };
 
   const handleBackToQuizTypeSelection = () => {
@@ -163,9 +188,26 @@ const StudentDashboard = () => {
         // Scholarship doesn't have subjects, so we'll use a default or handle it in the API call
         setSelectedSubject("scholarship");
       }
-      // Load paper bundles for other paper types
-      await handlePaperTypeClick(paperTypeId);
+      
+      // Check if term selection is needed (grades 1-13, model-papers or school-papers)
+      const needsTermSelection = !selectedQuizType && selectedGrade && 
+        (paperTypeId === "model-papers" || paperTypeId === "school-papers");
+      
+      if (needsTermSelection) {
+        // Show term selection
+        setShowTermSelection(true);
+      } else {
+        // Load paper bundles directly
+        await handlePaperTypeClick(paperTypeId);
+      }
     }
+  };
+
+  const handleTermSelect = async (term: string) => {
+    setSelectedTerm(term);
+    setShowTermSelection(false);
+    // Load paper bundles with selected term
+    await handlePaperTypeClick(selectedPaperType, term);
   };
 
   const handleTopicSelect = async (topic: string) => {
@@ -264,7 +306,8 @@ const StudentDashboard = () => {
         paperType: selectedPaperType,
         quizType: selectedQuizType,
         language: selectedLanguage,
-        topic: selectedTopic
+        topic: selectedTopic,
+        term: selectedTerm
       } 
     });
   };
@@ -300,16 +343,68 @@ const StudentDashboard = () => {
     { value: "tamil", label: "Tamil" },
   ];
 
-  const subjects = [
-    { value: "mathematics", label: "Mathematics" },
-    { value: "science", label: "Science" },
-    { value: "english", label: "English" },
-    { value: "sinhala", label: "Sinhala" },
-    { value: "history", label: "History" },
-    { value: "geography", label: "Geography" },
+  // Grade-specific subject lists
+  const subjectsGrade6To9 = [
     { value: "ict", label: "ICT" },
+    { value: "science", label: "Science" },
+    { value: "mathematics", label: "Maths" },
+    { value: "sinhala", label: "Sinhala" },
+    { value: "buddhism", label: "Buddhism" },
+    { value: "geography", label: "Geography" },
+    { value: "civil-studies", label: "Civil Studies" },
+    { value: "tamil", label: "Tamil" },
+    { value: "health", label: "Health" },
+    { value: "art", label: "Art" },
+    { value: "dancing", label: "Dancing" },
+    { value: "eastern-music", label: "Eastern Music" },
+    { value: "history", label: "History" },
+  ];
+
+  const subjectsGrade10To11 = [
+    { value: "ict", label: "ICT" },
+    { value: "science", label: "Science" },
+    { value: "mathematics", label: "Maths" },
+    { value: "sinhala", label: "Sinhala" },
+    { value: "buddhism", label: "Buddhism" },
+    { value: "geography", label: "Geography" },
+    { value: "civil-studies", label: "Civil Studies" },
+    { value: "tamil", label: "Tamil" },
+    { value: "health", label: "Health" },
+    { value: "art", label: "Art" },
+    { value: "dancing", label: "Dancing" },
+    { value: "eastern-music", label: "Eastern Music" },
+    { value: "history", label: "History" },
+    { value: "english", label: "English" },
     { value: "commerce", label: "Commerce" },
   ];
+
+  const subjectsGrade12To13 = [
+    { value: "combined-mathematics", label: "Combined Maths" },
+    { value: "physics", label: "Physics" },
+    { value: "chemistry", label: "Chemistry" },
+    { value: "biology", label: "Bio" },
+    { value: "ict", label: "ICT" },
+    { value: "economics", label: "Economics" },
+    { value: "business-studies", label: "Business Studies" },
+    { value: "political-science", label: "Political Science" },
+  ];
+
+  // Get subjects based on selected grade
+  const getSubjectsForGrade = (grade: string) => {
+    if (!grade) return [];
+    
+    const gradeNumber = parseInt(grade.replace('grade-', ''));
+    
+    if (gradeNumber >= 6 && gradeNumber <= 9) {
+      return subjectsGrade6To9;
+    } else if (gradeNumber >= 10 && gradeNumber <= 11) {
+      return subjectsGrade10To11;
+    } else if (gradeNumber >= 12 && gradeNumber <= 13) {
+      return subjectsGrade12To13;
+    }
+    
+    return [];
+  };
 
   const paperTypes = [
     {
@@ -317,36 +412,36 @@ const StudentDashboard = () => {
       title: "Past Papers",
       description: "Official past papers from previous years",
       icon: FileText,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
-      borderColor: "border-blue-200"
+      color: "text-blue-600 dark:text-blue-400",
+      bgColor: "bg-blue-50 dark:bg-blue-950/30",
+      borderColor: "border-blue-200 dark:border-blue-800"
     },
     {
       id: "model-papers",
       title: "Model Papers",
       description: "Practice papers designed by experts",
       icon: Award,
-      color: "text-green-600",
-      bgColor: "bg-green-50",
-      borderColor: "border-green-200"
+      color: "text-green-600 dark:text-green-400",
+      bgColor: "bg-green-50 dark:bg-green-950/30",
+      borderColor: "border-green-200 dark:border-green-800"
     },
     {
       id: "school-papers",
       title: "School Papers",
       description: "Papers from various schools",
       icon: School,
-      color: "text-purple-600",
-      bgColor: "bg-purple-50",
-      borderColor: "border-purple-200"
+      color: "text-purple-600 dark:text-purple-400",
+      bgColor: "bg-purple-50 dark:bg-purple-950/30",
+      borderColor: "border-purple-200 dark:border-purple-800"
     },
     {
       id: "lessonwise",
       title: "Lessonwise Select",
       description: "Select specific topics to practice",
       icon: BookOpen,
-      color: "text-orange-600",
-      bgColor: "bg-orange-50",
-      borderColor: "border-orange-200"
+      color: "text-orange-600 dark:text-orange-400",
+      bgColor: "bg-orange-50 dark:bg-orange-950/30",
+      borderColor: "border-orange-200 dark:border-orange-800"
     }
   ];
 
@@ -356,18 +451,18 @@ const StudentDashboard = () => {
       title: "Past Papers",
       description: "Official past papers from previous years",
       icon: FileText,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
-      borderColor: "border-blue-200"
+      color: "text-blue-600 dark:text-blue-400",
+      bgColor: "bg-blue-50 dark:bg-blue-950/30",
+      borderColor: "border-blue-200 dark:border-blue-800"
     },
     {
       id: "model-papers",
       title: "Model Papers",
       description: "Practice papers designed by experts",
       icon: Award,
-      color: "text-green-600",
-      bgColor: "bg-green-50",
-      borderColor: "border-green-200"
+      color: "text-green-600 dark:text-green-400",
+      bgColor: "bg-green-50 dark:bg-green-950/30",
+      borderColor: "border-green-200 dark:border-green-800"
     }
   ];
 
@@ -385,10 +480,14 @@ const StudentDashboard = () => {
   ];
 
   const alSubjects = [
+    { value: "combined-mathematics", label: "Combined Maths" },
     { value: "physics", label: "Physics" },
     { value: "chemistry", label: "Chemistry" },
-    { value: "combined-mathematics", label: "Combined Mathematics" },
-    { value: "biology", label: "Biology" }
+    { value: "biology", label: "Bio" },
+    { value: "ict", label: "ICT" },
+    { value: "economics", label: "Economics" },
+    { value: "business-studies", label: "Business Studies" },
+    { value: "political-science", label: "Political Science" },
   ];
 
   const physicsTopics = [
@@ -442,6 +541,24 @@ const StudentDashboard = () => {
       default:
         return [];
     }
+  };
+
+  // Get filtered paper types based on grade selection
+  const getFilteredPaperTypes = () => {
+    // If selecting by grade (not scholarship/A/L/O/L), filter for grades 6-13
+    if (!selectedQuizType && selectedGrade) {
+      const gradeNumber = parseInt(selectedGrade.replace('grade-', ''));
+      if (gradeNumber >= 6 && gradeNumber <= 13) {
+        // For grades 6-13, only show Model Papers and School Papers
+        return paperTypes.filter(pt => pt.id === "model-papers" || pt.id === "school-papers");
+      }
+    }
+    // For scholarship, return scholarship paper types
+    if (selectedQuizType === "scholarship") {
+      return scholarshipPaperTypes;
+    }
+    // For A/L, O/L, or other cases, return all paper types
+    return paperTypes;
   };
 
   // Calculate statistics from fetched data
@@ -844,7 +961,13 @@ const StudentDashboard = () => {
                         <div className="w-2 h-2 bg-primary rounded-full"></div>
                         Grade
                       </label>
-                      <Select value={selectedGrade} onValueChange={setSelectedGrade}>
+                      <Select 
+                        value={selectedGrade} 
+                        onValueChange={(value) => {
+                          setSelectedGrade(value);
+                          setSelectedSubject(""); // Reset subject when grade changes
+                        }}
+                      >
                         <SelectTrigger className="w-full input-modern border-2 focus:border-primary/50">
                           <SelectValue placeholder="Select Grade" />
                         </SelectTrigger>
@@ -884,12 +1007,16 @@ const StudentDashboard = () => {
                         <div className="w-2 h-2 bg-accent rounded-full"></div>
                         Subject
                       </label>
-                      <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                      <Select 
+                        value={selectedSubject} 
+                        onValueChange={setSelectedSubject}
+                        disabled={!selectedGrade}
+                      >
                         <SelectTrigger className="w-full input-modern border-2 focus:border-accent/50">
-                          <SelectValue placeholder="Select Subject" />
+                          <SelectValue placeholder={selectedGrade ? "Select Subject" : "Select Grade First"} />
                         </SelectTrigger>
                         <SelectContent>
-                          {subjects.map((subject) => (
+                          {getSubjectsForGrade(selectedGrade).map((subject) => (
                             <SelectItem key={subject.value} value={subject.value}>
                               {subject.label}
                             </SelectItem>
@@ -1063,11 +1190,16 @@ const StudentDashboard = () => {
                           {mediums.find(m => m.value === selectedMedium)?.label}
                         </span>
                         <span className="bg-accent/10 text-accent px-2 py-1 rounded">
-                          {subjects.find(s => s.value === selectedSubject)?.label}
+                          {getSubjectsForGrade(selectedGrade).find(s => s.value === selectedSubject)?.label}
                         </span>
                         <span className="bg-orange-100 text-orange-600 px-2 py-1 rounded">
                           {paperTypes.find(p => p.id === selectedPaperType)?.title}
                         </span>
+                        {selectedTerm && (
+                          <span className="bg-indigo-100 text-indigo-600 px-2 py-1 rounded">
+                            {selectedTerm === "1st-term" ? "1st Term" : selectedTerm === "2nd-term" ? "2nd Term" : "3rd Term"}
+                          </span>
+                        )}
                       </>
                     )}
                   </div>
@@ -1320,10 +1452,10 @@ const StudentDashboard = () => {
                 <div className="flex justify-center">
                   <Button 
                     variant="outline" 
-                    onClick={handleBackToPaperTypes}
+                    onClick={selectedTerm ? handleBackToTermSelection : handleBackToPaperTypes}
                     className="px-6"
                   >
-                    Back to Paper Types
+                    {selectedTerm ? "Back to Term Selection" : "Back to Paper Types"}
                   </Button>
                 </div>
               </div>
@@ -1382,7 +1514,7 @@ const StudentDashboard = () => {
                           {mediums.find(m => m.value === selectedMedium)?.label}
                         </span>
                         <span className="bg-accent/10 text-accent px-2 py-1 rounded">
-                          {subjects.find(s => s.value === selectedSubject)?.label}
+                          {getSubjectsForGrade(selectedGrade).find(s => s.value === selectedSubject)?.label}
                         </span>
                       </>
                     )}
@@ -1390,13 +1522,13 @@ const StudentDashboard = () => {
                 </div>
 
                 {/* Paper Type Selection */}
-                {((selectedQuizType === "scholarship" && selectedLanguage) || 
+                {!showTermSelection && ((selectedQuizType === "scholarship" && selectedLanguage) || 
                   ((selectedQuizType === "al" || selectedQuizType === "ol") && selectedSubject) || 
                   (!selectedQuizType && selectedGrade && selectedMedium && selectedSubject)) && (
                   <div>
                     <h3 className="text-lg font-semibold mb-4">Choose Paper Type</h3>
-                    <div className={`grid gap-4 ${selectedQuizType === "scholarship" ? "md:grid-cols-2" : "md:grid-cols-3"}`}>
-                      {(selectedQuizType === "scholarship" ? scholarshipPaperTypes : paperTypes).map((paperType) => (
+                    <div className={`grid gap-4 ${getFilteredPaperTypes().length === 2 ? "md:grid-cols-2" : "md:grid-cols-3"}`}>
+                      {getFilteredPaperTypes().map((paperType) => (
                         <Card 
                           key={paperType.id}
                           className={`cursor-pointer transition-all hover:shadow-lg border-2 ${paperType.borderColor} ${paperType.bgColor} hover:scale-105`}
@@ -1404,11 +1536,58 @@ const StudentDashboard = () => {
                         >
                           <CardContent className="p-6 text-center">
                             <paperType.icon className={`h-12 w-12 mx-auto mb-3 ${paperType.color}`} />
-                            <h4 className="font-semibold text-lg mb-2">{paperType.title}</h4>
-                            <p className="text-sm text-muted-foreground mb-3">{paperType.description}</p>
+                            <h4 className="font-semibold text-lg mb-2 text-foreground">{paperType.title}</h4>
+                            <p className="text-sm text-muted-foreground dark:text-muted-foreground/80 mb-3">{paperType.description}</p>
                           </CardContent>
                         </Card>
                       ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Term Selection */}
+                {showTermSelection && (
+                  <div className="space-y-6">
+                    {/* Selection Summary */}
+                    <div className="bg-muted/50 rounded-lg p-4">
+                      <h3 className="font-semibold mb-2">Selected Options:</h3>
+                      <div className="flex flex-wrap gap-2 text-sm">
+                        <span className="bg-primary/10 text-primary px-2 py-1 rounded">
+                          {grades.find(g => g.value === selectedGrade)?.label}
+                        </span>
+                        <span className="bg-secondary/10 text-secondary px-2 py-1 rounded">
+                          {mediums.find(m => m.value === selectedMedium)?.label}
+                        </span>
+                        <span className="bg-accent/10 text-accent px-2 py-1 rounded">
+                          {getSubjectsForGrade(selectedGrade).find(s => s.value === selectedSubject)?.label}
+                        </span>
+                        <span className="bg-orange-100 text-orange-600 px-2 py-1 rounded">
+                          {paperTypes.find(p => p.id === selectedPaperType)?.title}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Term Selection Cards */}
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4">Select Term</h3>
+                      <div className="grid md:grid-cols-3 gap-4">
+                        {[
+                          { value: "1st-term", label: "1st Term", icon: "1️⃣", color: "text-blue-600 dark:text-blue-400", bgColor: "bg-blue-50 dark:bg-blue-950/30", borderColor: "border-blue-200 dark:border-blue-800" },
+                          { value: "2nd-term", label: "2nd Term", icon: "2️⃣", color: "text-green-600 dark:text-green-400", bgColor: "bg-green-50 dark:bg-green-950/30", borderColor: "border-green-200 dark:border-green-800" },
+                          { value: "3rd-term", label: "3rd Term", icon: "3️⃣", color: "text-purple-600 dark:text-purple-400", bgColor: "bg-purple-50 dark:bg-purple-950/30", borderColor: "border-purple-200 dark:border-purple-800" }
+                        ].map((term) => (
+                          <Card 
+                            key={term.value}
+                            className={`cursor-pointer transition-all hover:shadow-lg border-2 ${term.borderColor} ${term.bgColor} hover:scale-105`}
+                            onClick={() => handleTermSelect(term.value)}
+                          >
+                            <CardContent className="p-6 text-center">
+                              <div className="text-4xl mb-3">{term.icon}</div>
+                              <h4 className="font-semibold text-lg mb-2 text-foreground">{term.label}</h4>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1417,11 +1596,14 @@ const StudentDashboard = () => {
                 <div className="flex justify-center">
                   <Button 
                     variant="outline" 
-                    onClick={selectedQuizType ? (selectedSubject ? handleBackToSubjectSelection : handleBackToQuizTypeSelection) : handleBackToSelection}
+                    onClick={showTermSelection ? () => {
+                      setShowTermSelection(false);
+                      setSelectedPaperType("");
+                    } : selectedQuizType ? (selectedSubject ? handleBackToSubjectSelection : handleBackToQuizTypeSelection) : handleBackToSelection}
                     className="px-6"
                   >
                     <ArrowLeft className="h-4 w-4 mr-2" />
-                    {selectedQuizType ? (selectedSubject ? "Back to Subjects" : "Back to Quiz Types") : "Back to Selection"}
+                    {showTermSelection ? "Back to Paper Types" : selectedQuizType ? (selectedSubject ? "Back to Subjects" : "Back to Quiz Types") : "Back to Selection"}
                   </Button>
                 </div>
             </div>
