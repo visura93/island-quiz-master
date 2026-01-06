@@ -14,10 +14,19 @@ import {
   Pause,
   RotateCcw,
   BookOpen,
-  XCircle
+  XCircle,
+  RotateCw
 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { formatTimeRemaining, formatLastSavedTime } from "@/lib/quizProgress";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiService, Question, QuizAnswer } from "@/lib/api";
+import { 
+  saveQuizProgress, 
+  loadQuizProgress, 
+  clearQuizProgress,
+  QuizProgress 
+} from "@/lib/quizProgress";
 
 interface QuizState {
   bundleId?: string;
@@ -55,18 +64,29 @@ const Quiz = () => {
   const [initialTimeLimit, setInitialTimeLimit] = useState(0); // in minutes
   const [loadingQuizInfo, setLoadingQuizInfo] = useState(true);
   const [quizStartTime, setQuizStartTime] = useState<Date | null>(null);
+  const [shouldResume, setShouldResume] = useState(false);
+  const [savedProgress, setSavedProgress] = useState<QuizProgress | null>(null);
 
   const currentQuestion = questions[currentQuestionIndex];
   const totalQuestions = questions.length > 0 ? questions.length : initialQuestionCount;
   const progress = totalQuestions > 0 ? ((currentQuestionIndex + 1) / totalQuestions) * 100 : 0;
 
-  // Load quiz information when component mounts
+  // Check for saved progress and load quiz information when component mounts
   useEffect(() => {
     const loadQuizInfo = async () => {
       if (!quizData) return;
       
       try {
         setLoadingQuizInfo(true);
+        
+        // Check for saved progress
+        if (quizData.quizId) {
+          const saved = loadQuizProgress(quizData.quizId);
+          if (saved) {
+            setSavedProgress(saved);
+            // Don't auto-resume, let user decide via dialog
+          }
+        }
         
         // If we have a quizId, load the quiz directly
         if (quizData.quizId) {
@@ -122,6 +142,73 @@ const Quiz = () => {
     return () => clearInterval(interval);
   }, [isTimerRunning, timeRemaining]);
 
+  // Save progress periodically while quiz is in progress
+  useEffect(() => {
+    if (!isQuizStarted || !attemptId || !quizData.quizId) return;
+
+    const saveInterval = setInterval(() => {
+      const progress: QuizProgress = {
+        quizId: quizData.quizId!,
+        attemptId,
+        quizTitle,
+        currentQuestionIndex,
+        selectedAnswers,
+        timeRemaining,
+        initialTimeLimit,
+        totalQuestions,
+        quizStartTime: quizStartTime?.toISOString() || new Date().toISOString(),
+        lastSavedAt: new Date().toISOString(),
+        quizData: {
+          grade: quizData.grade,
+          medium: quizData.medium,
+          subject: quizData.subject,
+          paperType: quizData.paperType,
+          quizType: quizData.quizType,
+          language: quizData.language,
+          topic: quizData.topic,
+          term: (quizData as any).term,
+        },
+      };
+      saveQuizProgress(progress);
+    }, 30000); // Save every 30 seconds
+
+    return () => clearInterval(saveInterval);
+  }, [isQuizStarted, attemptId, quizData, quizTitle, currentQuestionIndex, selectedAnswers, timeRemaining, initialTimeLimit, totalQuestions, quizStartTime]);
+
+  // Save progress on page unload
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (isQuizStarted && attemptId && quizData.quizId) {
+        const progress: QuizProgress = {
+          quizId: quizData.quizId,
+          attemptId,
+          quizTitle,
+          currentQuestionIndex,
+          selectedAnswers,
+          timeRemaining,
+          initialTimeLimit,
+          totalQuestions,
+          quizStartTime: quizStartTime?.toISOString() || new Date().toISOString(),
+          lastSavedAt: new Date().toISOString(),
+          quizData: {
+            grade: quizData.grade,
+            medium: quizData.medium,
+            subject: quizData.subject,
+            paperType: quizData.paperType,
+            quizType: quizData.quizType,
+            language: quizData.language,
+            topic: quizData.topic,
+            term: (quizData as any).term,
+          },
+        };
+        saveQuizProgress(progress);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isQuizStarted, attemptId, quizData, quizTitle, currentQuestionIndex, selectedAnswers, timeRemaining, initialTimeLimit, totalQuestions, quizStartTime]);
+
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -144,7 +231,7 @@ const Quiz = () => {
     }
   };
 
-  const handleStartQuiz = async () => {
+  const handleStartQuiz = async (resumeFromSaved: boolean = false) => {
     try {
       setLoading(true);
       setError("");
@@ -176,18 +263,61 @@ const Quiz = () => {
         return;
       }
 
-      // Start the quiz and get questions and time limit from database
-      const response = await apiService.startQuiz(quizId);
+      // If resuming, restore from saved progress
+      if (resumeFromSaved && savedProgress) {
+        // Start the quiz to get fresh questions and new attemptId
+        const response = await apiService.startQuiz(quizId);
+        setQuestions(response.questions);
+        
+        // Restore saved state (use new attemptId from response, but restore progress)
+        setAttemptId(response.attemptId); // Use new attemptId
+        // Restore question index (clamp to valid range)
+        const savedIndex = Math.min(savedProgress.currentQuestionIndex, response.questions.length - 1);
+        setCurrentQuestionIndex(savedIndex);
+        
+        // Restore selected answers (only if question IDs match)
+        const restoredAnswers: { [key: string]: number } = {};
+        savedProgress.selectedAnswers && Object.entries(savedProgress.selectedAnswers).forEach(([questionId, answerIndex]) => {
+          // Try to find matching question by checking if the question at the saved index matches
+          // For simplicity, we'll restore answers that match question IDs in the new question set
+          const question = response.questions.find(q => q.id === questionId);
+          if (question) {
+            restoredAnswers[questionId] = answerIndex;
+          }
+        });
+        setSelectedAnswers(restoredAnswers);
+        
+        // Restore time remaining (but don't exceed the new time limit)
+        const newTimeLimit = response.timeLimit * 60; // Convert to seconds
+        const savedTimeRemaining = Math.min(savedProgress.timeRemaining, newTimeLimit);
+        setTimeRemaining(savedTimeRemaining);
+        setInitialTimeLimit(response.timeLimit);
+        setQuizStartTime(new Date(savedProgress.quizStartTime));
+        setQuizTitle(response.title);
+        setIsQuizStarted(true);
+        setIsTimerRunning(true);
+        setShouldResume(false);
+        setSavedProgress(null);
+      } else {
+        // Start fresh quiz
+        // Clear any existing progress
+        if (quizId) {
+          clearQuizProgress(quizId);
+        }
 
-      // Set the quiz data (already sorted by backend)
-      setQuestions(response.questions);
-      setInitialTimeLimit(response.timeLimit || 0); // Store time limit in minutes
-      setTimeRemaining(response.timeLimit * 60); // Convert minutes to seconds
-      setAttemptId(response.attemptId);
-      setQuizTitle(response.title);
-      setQuizStartTime(new Date()); // Record when quiz started
-      setIsQuizStarted(true);
-      setIsTimerRunning(true);
+        // Start the quiz and get questions and time limit from database
+        const response = await apiService.startQuiz(quizId);
+
+        // Set the quiz data (already sorted by backend)
+        setQuestions(response.questions);
+        setInitialTimeLimit(response.timeLimit || 0); // Store time limit in minutes
+        setTimeRemaining(response.timeLimit * 60); // Convert minutes to seconds
+        setAttemptId(response.attemptId);
+        setQuizTitle(response.title);
+        setQuizStartTime(new Date()); // Record when quiz started
+        setIsQuizStarted(true);
+        setIsTimerRunning(true);
+      }
     } catch (err: any) {
       setError(err.message || "Failed to start quiz");
       console.error("Error starting quiz:", err);
@@ -251,6 +381,11 @@ const Quiz = () => {
         
         const result = await apiService.completeQuiz(attemptId, timeSpentInSeconds);
         setQuizResult(result);
+        
+        // Clear saved progress when quiz is completed
+        if (quizData.quizId) {
+          clearQuizProgress(quizData.quizId);
+        }
       }
       setShowResults(true);
     } catch (err) {
@@ -560,16 +695,104 @@ const Quiz = () => {
                 </div>
               </div>
 
+              {/* Resume Quiz Dialog */}
+              {savedProgress && (
+                <AlertDialog open={!!savedProgress && !shouldResume} onOpenChange={(open) => {
+                  if (!open) {
+                    setSavedProgress(null);
+                  }
+                }}>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Continue Your Quiz?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        You have an incomplete quiz attempt. Would you like to continue from where you left off?
+                        <div className="mt-4 space-y-2 text-sm">
+                          <div className="flex items-center justify-between">
+                            <span className="text-muted-foreground">Progress:</span>
+                            <span className="font-semibold">
+                              Question {savedProgress.currentQuestionIndex + 1} of {savedProgress.totalQuestions}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-muted-foreground">Time Remaining:</span>
+                            <span className="font-semibold">
+                              {formatTimeRemaining(savedProgress.timeRemaining)}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-muted-foreground">Last Saved:</span>
+                            <span className="font-semibold">
+                              {formatLastSavedTime(savedProgress.lastSavedAt)}
+                            </span>
+                          </div>
+                        </div>
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel onClick={() => {
+                        if (quizData.quizId) {
+                          clearQuizProgress(quizData.quizId);
+                        }
+                        setSavedProgress(null);
+                      }}>
+                        Start Fresh
+                      </AlertDialogCancel>
+                      <AlertDialogAction onClick={() => {
+                        setShouldResume(true);
+                        handleStartQuiz(true);
+                      }}>
+                        <RotateCw className="h-4 w-4 mr-2" />
+                        Continue Quiz
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+
               <div className="space-y-4">
-                <Button 
-                  onClick={handleStartQuiz}
-                  disabled={loading}
-                  className="w-full bg-gradient-hero hover:opacity-90 btn-modern shadow-elegant hover:shadow-hover"
-                  size="lg"
-                >
-                  <Play className="h-5 w-5 mr-2" />
-                  {loading ? "Starting Quiz..." : "Start Quiz"}
-                </Button>
+                {savedProgress ? (
+                  <>
+                    <Button 
+                      onClick={() => {
+                        setShouldResume(true);
+                        handleStartQuiz(true);
+                      }}
+                      disabled={loading}
+                      className="w-full bg-gradient-hero hover:opacity-90 btn-modern shadow-elegant hover:shadow-hover"
+                      size="lg"
+                    >
+                      <RotateCw className="h-5 w-5 mr-2" />
+                      {loading ? "Resuming Quiz..." : "Continue Quiz"}
+                    </Button>
+                    <Button 
+                      onClick={() => {
+                        if (quizData.quizId) {
+                          clearQuizProgress(quizData.quizId);
+                        }
+                        setSavedProgress(null);
+                        handleStartQuiz(false);
+                      }}
+                      disabled={loading}
+                      variant="outline"
+                      className="w-full btn-modern"
+                      size="lg"
+                    >
+                      <Play className="h-5 w-5 mr-2" />
+                      {loading ? "Starting..." : "Start Fresh Quiz"}
+                    </Button>
+                  </>
+                ) : (
+                  <Button 
+                    onClick={() => handleStartQuiz(false)}
+                    disabled={loading}
+                    className="w-full bg-gradient-hero hover:opacity-90 btn-modern shadow-elegant hover:shadow-hover"
+                    size="lg"
+                  >
+                    <Play className="h-5 w-5 mr-2" />
+                    {loading ? "Starting Quiz..." : "Start Quiz"}
+                  </Button>
+                )}
                 <Button 
                   variant="outline" 
                   onClick={() => navigate('/student-dashboard')} 

@@ -5,12 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { GraduationCap, BookOpen, Trophy, Clock, TrendingUp, LogOut, Search, FileText, Award, School, X, Info, Play, Calendar, CheckCircle, Eye, ChevronRight, Sparkles, Atom, Globe, ArrowLeft } from "lucide-react";
+import { GraduationCap, BookOpen, Trophy, Clock, TrendingUp, LogOut, Search, FileText, Award, School, X, Info, Play, Calendar, CheckCircle, Eye, ChevronRight, Sparkles, Atom, Globe, ArrowLeft, RotateCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { apiService, QuizBundle, QuizAttempt, TimeAnalytics } from "@/lib/api";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
+import { getIncompleteQuizzes, formatTimeRemaining, formatLastSavedTime, IncompleteQuiz } from "@/lib/quizProgress";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
@@ -28,6 +30,8 @@ const StudentDashboard = () => {
   const [completedQuizzes, setCompletedQuizzes] = useState<QuizAttempt[]>([]);
   const [timeAnalytics, setTimeAnalytics] = useState<TimeAnalytics | null>(null);
   const [statsLoading, setStatsLoading] = useState<boolean>(true);
+  const [incompleteQuizzes, setIncompleteQuizzes] = useState<IncompleteQuiz[]>([]);
+  const [resumeQuizDialog, setResumeQuizDialog] = useState<{ open: boolean; quiz: IncompleteQuiz | null }>({ open: false, quiz: null });
   
   // New states for enhanced quiz selection
   const [selectedQuizType, setSelectedQuizType] = useState<string>(""); // "scholarship", "al", "ol", or "" for regular
@@ -257,7 +261,7 @@ const StudentDashboard = () => {
     setSearchQuery("");
   };
 
-  // Fetch student statistics on component mount
+  // Fetch student statistics and incomplete quizzes on component mount
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -277,9 +281,13 @@ const StudentDashboard = () => {
     };
 
     fetchStats();
+    
+    // Load incomplete quizzes from localStorage
+    const incomplete = getIncompleteQuizzes();
+    setIncompleteQuizzes(incomplete);
   }, []);
 
-  const handleStartQuiz = (quizId: string, quizTitle: string) => {
+  const handleStartQuiz = (quizId: string, quizTitle: string, resume: boolean = false) => {
     // Determine grade and medium based on quiz type
     let grade = selectedGrade;
     let medium = selectedMedium;
@@ -310,6 +318,19 @@ const StudentDashboard = () => {
         term: selectedTerm
       } 
     });
+  };
+
+  const handleQuizClick = (quiz: any) => {
+    // Check if this quiz has incomplete progress
+    const incomplete = incompleteQuizzes.find(iq => iq.quizId === quiz.id);
+    
+    if (incomplete) {
+      // Show resume dialog
+      setResumeQuizDialog({ open: true, quiz: incomplete });
+    } else {
+      // Start normally
+      handleStartQuiz(quiz.id, quiz.title);
+    }
   };
 
   // Filter paper bundles based on search query
@@ -1276,10 +1297,15 @@ const StudentDashboard = () => {
                             
                             // Render each quiz in the bundle
                             return bundle.quizzes && bundle.quizzes.length > 0 ? (
-                              bundle.quizzes.map((quiz) => (
+                              bundle.quizzes.map((quiz) => {
+                                const incomplete = incompleteQuizzes.find(iq => iq.quizId === quiz.id);
+                                const isIncomplete = !!incomplete;
+                                
+                                return (
                                 <Card 
                                   key={quiz.id}
-                                  className={`cursor-pointer transition-all hover:shadow-lg border-2 ${bundleBorderColor} ${bundleBgColor} hover:scale-105`}
+                                  className={`cursor-pointer transition-all hover:shadow-lg border-2 ${bundleBorderColor} ${bundleBgColor} hover:scale-105 ${isIncomplete ? 'border-orange-400 border-2' : ''}`}
+                                  onClick={() => handleQuizClick(quiz)}
                                 >
                                   <CardContent className="p-6">
                                     {/* Thumbnail placeholder - future implementation */}
@@ -1298,7 +1324,41 @@ const StudentDashboard = () => {
                                     )}
                                     
                                     <div className="space-y-2">
-                                      <h4 className="font-semibold text-lg">{quiz.title}</h4>
+                                      <div className="flex items-start justify-between gap-2">
+                                        <h4 className={`font-semibold text-lg ${isIncomplete ? 'font-bold' : ''}`}>
+                                          {quiz.title}
+                                        </h4>
+                                        {isIncomplete && (
+                                          <Badge variant="outline" className="bg-orange-100 text-orange-700 border-orange-300 text-xs whitespace-nowrap">
+                                            In Progress
+                                          </Badge>
+                                        )}
+                                      </div>
+                                      {isIncomplete && incomplete && (
+                                        <div className="space-y-1 text-sm bg-orange-50 p-2 rounded border border-orange-200">
+                                          <div className="flex items-center justify-between">
+                                            <span className="text-muted-foreground">Progress:</span>
+                                            <span className="font-semibold text-orange-700">
+                                              Q{incomplete.currentQuestionIndex + 1}/{incomplete.totalQuestions}
+                                            </span>
+                                          </div>
+                                          <div className="flex items-center justify-between">
+                                            <span className="text-muted-foreground flex items-center gap-1">
+                                              <Clock className="h-3 w-3" />
+                                              Time:
+                                            </span>
+                                            <span className="font-semibold text-orange-700">
+                                              {formatTimeRemaining(incomplete.timeRemaining)}
+                                            </span>
+                                          </div>
+                                          <div className="flex items-center justify-between">
+                                            <span className="text-muted-foreground">Last saved:</span>
+                                            <span className="text-xs text-orange-600">
+                                              {formatLastSavedTime(incomplete.lastSavedAt)}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      )}
                                       <p className="text-sm text-muted-foreground">{quiz.description || bundle.description}</p>
                                       
                                       <div className="flex justify-between items-center text-xs text-muted-foreground">
@@ -1320,11 +1380,20 @@ const StudentDashboard = () => {
                                             className="text-xs flex-1"
                                             onClick={(e) => {
                                               e.stopPropagation();
-                                              handleStartQuiz(quiz.id, quiz.title);
+                                              handleQuizClick(quiz);
                                             }}
                                           >
-                                            <Play className="h-3 w-3 mr-1" />
-                                            Start Quiz
+                                            {isIncomplete ? (
+                                              <>
+                                                <RotateCw className="h-3 w-3 mr-1" />
+                                                Continue
+                                              </>
+                                            ) : (
+                                              <>
+                                                <Play className="h-3 w-3 mr-1" />
+                                                Start Quiz
+                                              </>
+                                            )}
                                           </Button>
                                           
                                           <Dialog>
@@ -1387,7 +1456,8 @@ const StudentDashboard = () => {
                                     </div>
                                   </CardContent>
                                 </Card>
-                              ))
+                                );
+                              })
                             ) : (
                               // Fallback: show bundle if no quizzes
                               <Card 
@@ -1610,6 +1680,62 @@ const StudentDashboard = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Resume Quiz Dialog */}
+        <AlertDialog 
+          open={resumeQuizDialog.open} 
+          onOpenChange={(open) => setResumeQuizDialog({ open, quiz: null })}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Continue Your Quiz?</AlertDialogTitle>
+              <AlertDialogDescription>
+                You have an incomplete quiz attempt. Would you like to continue from where you left off?
+                {resumeQuizDialog.quiz && (
+                  <div className="mt-4 space-y-2 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Progress:</span>
+                      <span className="font-semibold">
+                        Question {resumeQuizDialog.quiz.currentQuestionIndex + 1} of {resumeQuizDialog.quiz.totalQuestions}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Time Remaining:</span>
+                      <span className="font-semibold">
+                        {formatTimeRemaining(resumeQuizDialog.quiz.timeRemaining)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Last Saved:</span>
+                      <span className="font-semibold">
+                        {formatLastSavedTime(resumeQuizDialog.quiz.lastSavedAt)}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => {
+                if (resumeQuizDialog.quiz) {
+                  handleStartQuiz(resumeQuizDialog.quiz.quizId, resumeQuizDialog.quiz.quizTitle, false);
+                }
+                setResumeQuizDialog({ open: false, quiz: null });
+              }}>
+                Start Fresh
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={() => {
+                if (resumeQuizDialog.quiz) {
+                  handleStartQuiz(resumeQuizDialog.quiz.quizId, resumeQuizDialog.quiz.quizTitle, true);
+                }
+                setResumeQuizDialog({ open: false, quiz: null });
+              }}>
+                <RotateCw className="h-4 w-4 mr-2" />
+                Continue Quiz
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
