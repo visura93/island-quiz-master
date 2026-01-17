@@ -51,6 +51,7 @@ const Quiz = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<{ [key: string]: number }>({});
+  const [selectedMultipleAnswers, setSelectedMultipleAnswers] = useState<{ [key: string]: number[] }>({}); // For multiple answers
   const [isQuizStarted, setIsQuizStarted] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(0); // in seconds
   const [isTimerRunning, setIsTimerRunning] = useState(false);
@@ -329,6 +330,8 @@ const Quiz = () => {
   const handleAnswerSelect = async (answerIndex: number) => {
     if (!currentQuestion || !attemptId) return;
 
+    // For now, treat all questions as single answer
+    // In a real implementation, the backend would indicate if multiple answers are allowed
     setSelectedAnswers(prev => ({
       ...prev,
       [currentQuestion.id]: answerIndex
@@ -340,6 +343,45 @@ const Quiz = () => {
     } catch (err) {
       console.error("Error submitting answer:", err);
       // Don't block UI on submit error, just log it
+    }
+  };
+
+  const handleMultipleAnswerToggle = async (answerIndex: number) => {
+    if (!currentQuestion || !attemptId) return;
+
+    setSelectedMultipleAnswers(prev => {
+      const currentAnswers = prev[currentQuestion.id] || [];
+      let newAnswers: number[];
+      
+      if (currentAnswers.includes(answerIndex)) {
+        // Remove answer
+        newAnswers = currentAnswers.filter(idx => idx !== answerIndex);
+      } else {
+        // Add answer
+        newAnswers = [...currentAnswers, answerIndex].sort((a, b) => a - b);
+      }
+      
+      return {
+        ...prev,
+        [currentQuestion.id]: newAnswers
+      };
+    });
+
+    // Submit multiple answers to backend
+    try {
+      const currentAnswers = selectedMultipleAnswers[currentQuestion.id] || [];
+      const newAnswers = currentAnswers.includes(answerIndex)
+        ? currentAnswers.filter(idx => idx !== answerIndex)
+        : [...currentAnswers, answerIndex].sort((a, b) => a - b);
+      
+      await apiService.submitAnswer(
+        attemptId, 
+        currentQuestion.id, 
+        newAnswers[0] || 0, // First answer as primary (for backward compatibility)
+        newAnswers
+      );
+    } catch (err) {
+      console.error("Error submitting answer:", err);
     }
   };
 
@@ -524,8 +566,12 @@ const Quiz = () => {
                           
                           <div className="space-y-2">
                             {questionResult.options.map((option, optionIndex) => {
-                              const isSelected = questionResult.selectedAnswerIndex === optionIndex;
-                              const isCorrect = questionResult.correctAnswerIndex === optionIndex;
+                              // Support both single and multiple correct answers
+                              const correctIndexes = questionResult.correctAnswerIndexes || [questionResult.correctAnswerIndex];
+                              const selectedIndexes = questionResult.selectedAnswerIndexes || [questionResult.selectedAnswerIndex];
+                              
+                              const isSelected = selectedIndexes.includes(optionIndex);
+                              const isCorrect = correctIndexes.includes(optionIndex);
                               const optionImage = questionResult.optionImages?.[optionIndex];
                               
                               return (
@@ -575,7 +621,9 @@ const Quiz = () => {
                                     )}
                                   </div>
                                   {isCorrect && (
-                                    <Badge className="bg-green-600 ml-auto flex-shrink-0">Correct Answer</Badge>
+                                    <Badge className="bg-green-600 ml-auto flex-shrink-0">
+                                      {correctIndexes.length > 1 ? `Correct (${correctIndexes.indexOf(optionIndex) + 1}/${correctIndexes.length})` : 'Correct Answer'}
+                                    </Badge>
                                   )}
                                   {isSelected && !isCorrect && (
                                     <Badge variant="destructive" className="ml-auto flex-shrink-0">Your Answer</Badge>
@@ -907,6 +955,9 @@ const Quiz = () => {
                   )}
                 </div>
                 <div className="space-y-4">
+                  {/* Note: Currently showing single-answer selection UI
+                      For multiple-answer questions, backend would need to indicate allowMultipleAnswers flag
+                      and UI would show checkboxes instead of radio-style selection */}
                   {currentQuestion.options.map((option, index) => {
                     const optionImage = currentQuestion.optionImages?.[index];
                     return (

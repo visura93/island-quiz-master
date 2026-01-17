@@ -31,6 +31,7 @@ interface QuestionFormData {
   optionImageFiles: (File | null)[];
   optionImageUrls: (string | null)[];
   correctAnswerIndex: number;
+  correctAnswerIndexes: number[]; // For multiple correct answers
   explanation: string;
 }
 
@@ -67,6 +68,7 @@ const CreateQuiz = () => {
       optionImageFiles: [null, null, null, null],
       optionImageUrls: [null, null, null, null],
       correctAnswerIndex: 0,
+      correctAnswerIndexes: [], // For multiple correct answers
       explanation: "",
     },
   ]);
@@ -194,6 +196,7 @@ const CreateQuiz = () => {
         optionImageFiles: [null, null, null, null],
         optionImageUrls: [null, null, null, null],
         correctAnswerIndex: 0,
+        correctAnswerIndexes: [], // For multiple correct answers
         explanation: "",
       },
     ]);
@@ -223,9 +226,43 @@ const CreateQuiz = () => {
         if (updated[questionIndex].correctAnswerIndex >= optionIndex) {
           updated[questionIndex].correctAnswerIndex = Math.max(0, updated[questionIndex].correctAnswerIndex - 1);
         }
+        // Adjust multiple correct answer indexes
+        updated[questionIndex].correctAnswerIndexes = updated[questionIndex].correctAnswerIndexes
+          .filter(idx => idx !== optionIndex)
+          .map(idx => idx > optionIndex ? idx - 1 : idx);
         return updated;
       });
     }
+  };
+
+  const toggleCorrectAnswer = (questionIndex: number, optionIndex: number) => {
+    setQuestions((prev) => {
+      const updated = [...prev];
+      const correctAnswers = updated[questionIndex].correctAnswerIndexes;
+      
+      if (correctAnswers.includes(optionIndex)) {
+        // Remove from multiple correct answers
+        updated[questionIndex].correctAnswerIndexes = correctAnswers.filter(idx => idx !== optionIndex);
+        // If no multiple answers left, set single correct answer
+        if (updated[questionIndex].correctAnswerIndexes.length === 0) {
+          updated[questionIndex].correctAnswerIndex = 0;
+        }
+      } else {
+        // Add to multiple correct answers
+        updated[questionIndex].correctAnswerIndexes = [...correctAnswers, optionIndex].sort((a, b) => a - b);
+      }
+      
+      return updated;
+    });
+  };
+
+  const setSingleCorrectAnswer = (questionIndex: number, optionIndex: number) => {
+    setQuestions((prev) => {
+      const updated = [...prev];
+      updated[questionIndex].correctAnswerIndex = optionIndex;
+      updated[questionIndex].correctAnswerIndexes = [];
+      return updated;
+    });
   };
 
   const removeQuestion = (index: number) => {
@@ -298,8 +335,17 @@ const CreateQuiz = () => {
       if (q.options.some((opt, idx) => !opt.trim() && !q.optionImageUrls[idx])) {
         return `Question ${i + 1}: All options must have either text or image`;
       }
-      if (q.correctAnswerIndex < 0 || q.correctAnswerIndex >= q.options.length) {
-        return `Question ${i + 1}: Invalid correct answer index`;
+      // Check if using multiple correct answers or single
+      if (q.correctAnswerIndexes.length > 0) {
+        // Multiple correct answers - validate all indexes are valid
+        if (q.correctAnswerIndexes.some(idx => idx < 0 || idx >= q.options.length)) {
+          return `Question ${i + 1}: Invalid correct answer index`;
+        }
+      } else {
+        // Single correct answer
+        if (q.correctAnswerIndex < 0 || q.correctAnswerIndex >= q.options.length) {
+          return `Question ${i + 1}: Invalid correct answer index`;
+        }
       }
     }
 
@@ -343,7 +389,8 @@ const CreateQuiz = () => {
             questionImage: questionImageUrl || undefined,
             options: q.options.map((opt) => opt.trim()),
             optionImages: optionImageUrls.filter((url) => url !== null) || undefined,
-            correctAnswerIndex: q.correctAnswerIndex,
+            correctAnswerIndex: q.correctAnswerIndexes.length > 0 ? q.correctAnswerIndexes[0] : q.correctAnswerIndex,
+            correctAnswerIndexes: q.correctAnswerIndexes.length > 0 ? q.correctAnswerIndexes : undefined,
             explanation: q.explanation.trim() || undefined,
             order: index + 1,
           };
@@ -1000,7 +1047,12 @@ const CreateQuiz = () => {
 
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <Label>Answer Options * (4-5 options required)</Label>
+                      <div className="space-y-1">
+                        <Label>Answer Options * (4-5 options required)</Label>
+                        <p className="text-sm text-muted-foreground">
+                          Click checkboxes for multiple correct answers, or use single button for one answer
+                        </p>
+                      </div>
                       {question.options.length < 5 && (
                         <Button
                           type="button"
@@ -1013,25 +1065,49 @@ const CreateQuiz = () => {
                         </Button>
                       )}
                     </div>
-                    {question.options.map((option, optionIndex) => (
+                    {question.options.map((option, optionIndex) => {
+                      const isMultipleMode = question.correctAnswerIndexes.length > 0;
+                      const isCorrectInMultiple = question.correctAnswerIndexes.includes(optionIndex);
+                      const isCorrectSingle = question.correctAnswerIndex === optionIndex && !isMultipleMode;
+                      
+                      return (
                       <div key={optionIndex} className="space-y-2 p-4 border-2 rounded-lg">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
                             <Label className="font-semibold">
-                              Option {String.fromCharCode(65 + optionIndex)} {optionIndex === question.correctAnswerIndex && (
+                              Option {String.fromCharCode(65 + optionIndex)} 
+                              {(isCorrectInMultiple || isCorrectSingle) && (
                                 <CheckCircle className="inline h-4 w-4 text-green-600 ml-1" />
                               )}
                             </Label>
-                            <Button
-                              type="button"
-                              variant={question.correctAnswerIndex === optionIndex ? "default" : "outline"}
-                              size="sm"
-                              onClick={() =>
-                                handleQuestionChange(questionIndex, "correctAnswerIndex", optionIndex)
-                              }
-                            >
-                              {question.correctAnswerIndex === optionIndex ? "Correct Answer" : "Set as Correct"}
-                            </Button>
+                            <div className="flex items-center gap-2">
+                              {/* Multiple Answer Mode - Checkbox */}
+                              <Button
+                                type="button"
+                                variant={isCorrectInMultiple ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => toggleCorrectAnswer(questionIndex, optionIndex)}
+                                title="Toggle for multiple correct answers"
+                              >
+                                <input 
+                                  type="checkbox" 
+                                  checked={isCorrectInMultiple}
+                                  onChange={() => {}}
+                                  className="mr-1 pointer-events-none"
+                                />
+                                {isCorrectInMultiple ? "Correct" : "Mark Correct"}
+                              </Button>
+                              {/* Single Answer Mode - Radio */}
+                              <Button
+                                type="button"
+                                variant={isCorrectSingle ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setSingleCorrectAnswer(questionIndex, optionIndex)}
+                                title="Set as single correct answer"
+                              >
+                                {isCorrectSingle ? "Single Answer" : "Set Single"}
+                              </Button>
+                            </div>
                           </div>
                           {question.options.length > 4 && (
                             <Button
@@ -1060,7 +1136,8 @@ const CreateQuiz = () => {
                           />
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   <div className="space-y-2">

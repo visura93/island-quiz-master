@@ -76,7 +76,9 @@ export interface QuizAnswer {
   options: string[];
   optionImages?: string[];
   selectedAnswerIndex: number;
+  selectedAnswerIndexes?: number[]; // For multiple answer support
   correctAnswerIndex: number;
+  correctAnswerIndexes?: number[]; // For multiple answer support
   isCorrect: boolean;
   explanation?: string;
   answeredAt: string;
@@ -194,12 +196,14 @@ export interface Question {
 
 export interface QuestionWithAnswer extends Question {
   correctAnswerIndex: number;
+  correctAnswerIndexes?: number[]; // For multiple answer support
   explanation?: string;
 }
 
 export interface SubmitAnswerRequest {
   questionId: string;
   selectedAnswerIndex: number;
+  selectedAnswerIndexes?: number[]; // For multiple answer support
 }
 
 export interface BlobUploadResponse {
@@ -229,6 +233,7 @@ export interface CreateQuestionRequest {
   options: string[];
   optionImages?: string[];
   correctAnswerIndex: number;
+  correctAnswerIndexes?: number[]; // For multiple answer support
   explanation?: string;
   order: number;
 }
@@ -382,10 +387,10 @@ class ApiService {
     return this.request<{ quiz: Quiz; questions: QuestionWithAnswer[] }>(`/admin/quiz/${quizId}/edit`);
   }
 
-  async submitAnswer(attemptId: string, questionId: string, selectedAnswerIndex: number): Promise<void> {
+  async submitAnswer(attemptId: string, questionId: string, selectedAnswerIndex: number, selectedAnswerIndexes?: number[]): Promise<void> {
     await this.request(`/quizattempt/${attemptId}/answer`, {
       method: 'POST',
-      body: JSON.stringify({ questionId, selectedAnswerIndex }),
+      body: JSON.stringify({ questionId, selectedAnswerIndex, selectedAnswerIndexes }),
     });
   }
 

@@ -485,8 +485,12 @@ const CompletedQuizzes = () => {
 
                         <div className="space-y-2">
                           {question.options && question.options.map((option, optionIndex) => {
-                            const isSelected = question.selectedAnswerIndex === optionIndex;
-                            const isCorrect = question.correctAnswerIndex === optionIndex;
+                            // Support both single and multiple correct answers
+                            const correctIndexes = question.correctAnswerIndexes || [question.correctAnswerIndex];
+                            const selectedIndexes = question.selectedAnswerIndexes || [question.selectedAnswerIndex];
+                            
+                            const isSelected = selectedIndexes.includes(optionIndex);
+                            const isCorrect = correctIndexes.includes(optionIndex);
                             const optionImage = question.optionImages?.[optionIndex];
 
                             return (
@@ -530,7 +534,9 @@ const CompletedQuizzes = () => {
                                   )}
                                 </div>
                                 {isCorrect && (
-                                  <Badge className="bg-green-600 ml-auto flex-shrink-0">Correct</Badge>
+                                  <Badge className="bg-green-600 ml-auto flex-shrink-0">
+                                    {correctIndexes.length > 1 ? `Correct (${correctIndexes.indexOf(optionIndex) + 1}/${correctIndexes.length})` : 'Correct'}
+                                  </Badge>
                                 )}
                                 {isSelected && !isCorrect && (
                                   <Badge variant="destructive" className="ml-auto flex-shrink-0">
