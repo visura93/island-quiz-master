@@ -11,13 +11,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { apiService, QuizBundle, QuizAttempt, TimeAnalytics, Subject, SystemSettings } from "@/lib/api";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
+import { WelcomeTutorial } from "@/components/WelcomeTutorial";
 import { getIncompleteQuizzes, formatTimeRemaining, formatLastSavedTime, IncompleteQuiz } from "@/lib/quizProgress";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
-  const { user, logout, refreshUser } = useAuth();
+  const { user, logout, refreshUser, isNewUser, setIsNewUser } = useAuth();
   const { toast } = useToast();
   const [selectedGrade, setSelectedGrade] = useState<string>("");
   const [selectedMedium, setSelectedMedium] = useState<string>("");
@@ -34,6 +35,7 @@ const StudentDashboard = () => {
   const [statsLoading, setStatsLoading] = useState<boolean>(true);
   const [incompleteQuizzes, setIncompleteQuizzes] = useState<IncompleteQuiz[]>([]);
   const [resumeQuizDialog, setResumeQuizDialog] = useState<{ open: boolean; quiz: IncompleteQuiz | null }>({ open: false, quiz: null });
+  const [showWelcomeTutorial, setShowWelcomeTutorial] = useState<boolean>(false);
   
   // New states for enhanced quiz selection
   const [selectedQuizType, setSelectedQuizType] = useState<string>(""); // "scholarship", "al", "ol", or "" for regular
@@ -49,6 +51,18 @@ const StudentDashboard = () => {
   // System settings state
   const [systemSettings, setSystemSettings] = useState<SystemSettings | null>(null);
   const [settingsLoading, setSettingsLoading] = useState<boolean>(true);
+
+  // Show welcome tutorial for new users
+  useEffect(() => {
+    if (isNewUser) {
+      setShowWelcomeTutorial(true);
+    }
+  }, [isNewUser]);
+
+  const handleCloseTutorial = () => {
+    setShowWelcomeTutorial(false);
+    setIsNewUser(false);
+  };
 
   const handleLogout = () => {
     logout();
@@ -2048,6 +2062,13 @@ const StudentDashboard = () => {
           </AlertDialogContent>
         </AlertDialog>
       </div>
+      
+      {/* Welcome Tutorial for New Users */}
+      <WelcomeTutorial 
+        isOpen={showWelcomeTutorial}
+        onClose={handleCloseTutorial}
+        userName={user?.firstName}
+      />
     </div>
   );
 };

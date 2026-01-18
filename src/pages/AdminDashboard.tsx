@@ -25,15 +25,29 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { apiService, StudentActivity } from "@/lib/api";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
+import { WelcomeTutorial } from "@/components/WelcomeTutorial";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, isNewUser, setIsNewUser } = useAuth();
   const [students, setStudents] = useState<StudentActivity[]>([]);
   const [filteredStudents, setFilteredStudents] = useState<StudentActivity[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
+  const [showWelcomeTutorial, setShowWelcomeTutorial] = useState<boolean>(false);
+
+  // Show welcome tutorial for new users
+  useEffect(() => {
+    if (isNewUser) {
+      setShowWelcomeTutorial(true);
+    }
+  }, [isNewUser]);
+
+  const handleCloseTutorial = () => {
+    setShowWelcomeTutorial(false);
+    setIsNewUser(false);
+  };
 
   useEffect(() => {
     loadStudents();
@@ -383,6 +397,13 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
       </div>
+      
+      {/* Welcome Tutorial for New Users */}
+      <WelcomeTutorial 
+        isOpen={showWelcomeTutorial}
+        onClose={handleCloseTutorial}
+        userName={user?.firstName}
+      />
     </div>
   );
 };

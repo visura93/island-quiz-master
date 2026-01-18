@@ -4,10 +4,25 @@ import { GraduationCap, Plus, Users, FileText, DollarSign, LogOut } from "lucide
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
+import { WelcomeTutorial } from "@/components/WelcomeTutorial";
+import { useState, useEffect } from "react";
 
 const TeacherDashboard = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, isNewUser, setIsNewUser } = useAuth();
+  const [showWelcomeTutorial, setShowWelcomeTutorial] = useState<boolean>(false);
+
+  // Show welcome tutorial for new users
+  useEffect(() => {
+    if (isNewUser) {
+      setShowWelcomeTutorial(true);
+    }
+  }, [isNewUser]);
+
+  const handleCloseTutorial = () => {
+    setShowWelcomeTutorial(false);
+    setIsNewUser(false);
+  };
 
   const handleLogout = () => {
     logout();
@@ -105,6 +120,13 @@ const TeacherDashboard = () => {
           </CardContent>
         </Card>
       </div>
+      
+      {/* Welcome Tutorial for New Users */}
+      <WelcomeTutorial 
+        isOpen={showWelcomeTutorial}
+        onClose={handleCloseTutorial}
+        userName={user?.firstName}
+      />
     </div>
   );
 };

@@ -6,11 +6,13 @@ interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  isNewUser: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (firstName: string, lastName: string, email: string, password: string, role: 'Student' | 'Teacher' | 'Admin') => Promise<void>;
   logout: () => void;
   refreshToken: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  setIsNewUser: (isNew: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,6 +33,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isNewUser, setIsNewUser] = useState(false);
 
   const isAuthenticated = !!user && !!token;
 
@@ -107,6 +110,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       setToken(response.token);
       setUser(response.user);
+      setIsNewUser(true); // Mark as new user after successful registration
       
       localStorage.setItem('token', response.token);
       localStorage.setItem('refreshToken', response.refreshToken);
@@ -176,11 +180,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     token,
     isLoading,
     isAuthenticated,
+    isNewUser,
     login,
     register,
     logout,
     refreshToken,
     refreshUser,
+    setIsNewUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
