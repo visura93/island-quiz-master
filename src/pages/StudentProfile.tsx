@@ -3,6 +3,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { 
   ArrowLeft,
   GraduationCap,
@@ -16,24 +20,51 @@ import {
   XCircle,
   UserCheck,
   UserX,
-  Clock as ClockIcon
+  Clock as ClockIcon,
+  CreditCard,
+  Plus,
+  DollarSign,
+  Crown
 } from "lucide-react";
-import { apiService, StudentDetail, QuizAttempt } from "@/lib/api";
+import { apiService, StudentDetail, QuizAttempt, PaymentRecord, UpdateStudentPremiumRequest, CreatePaymentRequest } from "@/lib/api";
 import { 
   Dialog, 
   DialogContent, 
   DialogDescription, 
   DialogHeader, 
-  DialogTitle 
+  DialogTitle,
+  DialogFooter 
 } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 
 const StudentProfile = () => {
   const { studentId } = useParams<{ studentId: string }>();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [student, setStudent] = useState<StudentDetail | null>(null);
   const [selectedQuiz, setSelectedQuiz] = useState<QuizAttempt | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
+  
+  // Premium Management State
+  const [isPremiumToggle, setIsPremiumToggle] = useState<boolean>(false);
+  const [savingPremium, setSavingPremium] = useState<boolean>(false);
+
+  // Payment Management State
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState<boolean>(false);
+  const [paymentAmount, setPaymentAmount] = useState<number>(0);
+  const [paymentCurrency, setPaymentCurrency] = useState<string>("LKR");
+  const [paymentMethod, setPaymentMethod] = useState<string>("Cash");
+  const [paymentMonths, setPaymentMonths] = useState<number>(3);
+  const [paymentNotes, setPaymentNotes] = useState<string>("");
+  const [savingPayment, setSavingPayment] = useState<boolean>(false);
 
   useEffect(() => {
     if (studentId) {
@@ -47,6 +78,7 @@ const StudentProfile = () => {
       setError("");
       const data = await apiService.getStudentDetail(studentId!);
       setStudent(data);
+      setIsPremiumToggle(data.isPremium || false);
     } catch (err: any) {
       setError(err.message || "Failed to load student details");
       console.error("Error loading student detail:", err);
@@ -87,6 +119,116 @@ const StudentProfile = () => {
     if (score >= 80) return "default";
     if (score >= 60) return "secondary";
     return "destructive";
+  };
+
+  const handlePremiumToggle = async (enabled: boolean) => {
+    if (!student || !studentId) return;
+
+    try {
+      setSavingPremium(true);
+      const request: UpdateStudentPremiumRequest = {
+        isPremium: enabled,
+        subscriptionMonths: enabled ? 3 : 0, // Default 3 months when enabling
+      };
+
+      const updated = await apiService.updateStudentPremium(studentId, request);
+      setStudent(updated);
+      setIsPremiumToggle(enabled);
+      
+      toast({
+        title: "Success",
+        description: enabled ? "Premium access enabled for 3 months" : "Premium access disabled",
+      });
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to update premium status",
+        variant: "destructive",
+      });
+      // Revert toggle on error
+      setIsPremiumToggle(!enabled);
+    } finally {
+      setSavingPremium(false);
+    }
+  };
+
+  const handleOpenPaymentDialog = () => {
+    setPaymentAmount(0);
+    setPaymentCurrency("LKR");
+    setPaymentMethod("Cash");
+    setPaymentMonths(3);
+    setPaymentNotes("");
+    setPaymentDialogOpen(true);
+  };
+
+  const handleSavePayment = async () => {
+    if (!student || !studentId) return;
+
+    if (paymentAmount <= 0) {
+      toast({
+        title: "Validation Error",
+        description: "Payment amount must be greater than 0",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setSavingPayment(true);
+      const request: CreatePaymentRequest = {
+        studentId: studentId,
+        amount: paymentAmount,
+        currency: paymentCurrency,
+        paymentMethod: paymentMethod,
+        subscriptionMonths: paymentMonths,
+        notes: paymentNotes || undefined,
+      };
+
+      await apiService.createPaymentRecord(request);
+      
+      toast({
+        title: "Success",
+        description: "Payment recorded successfully",
+      });
+
+      setPaymentDialogOpen(false);
+      loadStudentDetail(); // Reload student data
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to record payment",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingPayment(false);
+    }
+  };
+
+  const getPremiumStatus = () => {
+    if (!student?.isPremium || !student.subscriptionEndDate) {
+      return { badge: <Badge variant="outline">Regular Account</Badge>, color: "text-gray-600" };
+    }
+
+    const endDate = new Date(student.subscriptionEndDate);
+    const now = new Date();
+    const daysRemaining = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (daysRemaining > 30) {
+      return { 
+        badge: <Badge className="bg-green-600"><Crown className="h-3 w-3 mr-1" />Premium - {daysRemaining} days left</Badge>, 
+        color: "text-green-600" 
+      };
+    } else if (daysRemaining > 0) {
+      return { 
+        badge: <Badge className="bg-yellow-600"><Crown className="h-3 w-3 mr-1" />Premium - Expiring ({daysRemaining}d)</Badge>, 
+        color: "text-yellow-600" 
+      };
+    } else {
+      return { 
+        badge: <Badge variant="destructive">Expired</Badge>, 
+        color: "text-red-600" 
+      };
+    }
   };
 
   if (loading) {
@@ -198,6 +340,155 @@ const StudentProfile = () => {
                 </div>
                 <div className="text-sm text-muted-foreground">Last Activity</div>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Premium Management Card */}
+        <Card className="mb-8 border-2 shadow-elegant bg-gradient-card">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-2xl flex items-center gap-2">
+                  <Crown className="h-6 w-6 text-primary" />
+                  Premium Status Management
+                </CardTitle>
+                <CardDescription>
+                  Manage student's premium access and payment history
+                </CardDescription>
+              </div>
+              <Button onClick={handleOpenPaymentDialog} className="bg-gradient-hero">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Payment
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {/* Premium Toggle Section */}
+            <div className="mb-6 p-6 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 rounded-lg border-2">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Crown className="h-6 w-6 text-primary" />
+                    <h3 className="text-xl font-semibold">Premium Access</h3>
+                    {getPremiumStatus().badge}
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {isPremiumToggle 
+                      ? "Student has unlimited quiz access until subscription expires" 
+                      : "Enable premium to grant unlimited access for 3 months"}
+                  </p>
+                  {student?.subscriptionEndDate && isPremiumToggle && (
+                    <div className="flex items-center gap-6 text-sm">
+                      <div>
+                        <span className="font-medium">Start Date:</span>{" "}
+                        <span className="text-muted-foreground">
+                          {student.subscriptionStartDate ? formatDate(student.subscriptionStartDate) : "N/A"}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="font-medium">End Date:</span>{" "}
+                        <span className="text-muted-foreground">
+                          {formatDate(student.subscriptionEndDate)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center gap-3">
+                  <Label htmlFor="premium-toggle" className="text-base font-medium">
+                    {isPremiumToggle ? "Enabled" : "Disabled"}
+                  </Label>
+                  <Switch
+                    id="premium-toggle"
+                    checked={isPremiumToggle}
+                    onCheckedChange={handlePremiumToggle}
+                    disabled={savingPremium}
+                    className="data-[state=checked]:bg-green-600"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-6 mb-6">
+              <div className="text-center p-4 bg-blue-500/10 rounded-lg">
+                <CreditCard className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-blue-600">
+                  {student.paymentHistory?.length || 0}
+                </div>
+                <div className="text-sm text-muted-foreground">Total Payments</div>
+              </div>
+              <div className="text-center p-4 bg-green-500/10 rounded-lg">
+                <Calendar className="h-8 w-8 text-green-600 mx-auto mb-2" />
+                <div className="text-sm font-bold text-green-600">
+                  {student.subscriptionStartDate ? formatDate(student.subscriptionStartDate) : "N/A"}
+                </div>
+                <div className="text-sm text-muted-foreground">Premium Since</div>
+              </div>
+              <div className="text-center p-4 bg-orange-500/10 rounded-lg">
+                <Calendar className="h-8 w-8 text-orange-600 mx-auto mb-2" />
+                <div className="text-sm font-bold text-orange-600">
+                  {student.subscriptionEndDate ? formatDate(student.subscriptionEndDate) : "N/A"}
+                </div>
+                <div className="text-sm text-muted-foreground">Premium Until</div>
+              </div>
+            </div>
+
+            {/* Payment History */}
+            <div className="border-t pt-6">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <DollarSign className="h-5 w-5 text-primary" />
+                Payment History
+              </h3>
+              {!student.paymentHistory || student.paymentHistory.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <DollarSign className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p className="text-lg font-medium">No payment records</p>
+                  <p className="text-sm">This student hasn't made any payments yet.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {student.paymentHistory
+                    .sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime())
+                    .map((payment) => (
+                      <Card key={payment.id} className="border">
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                              <div className="p-2 bg-green-500/10 rounded">
+                                <DollarSign className="h-5 w-5 text-green-600" />
+                              </div>
+                              <div>
+                                <div className="font-semibold text-lg">
+                                  {payment.currency} {payment.amount.toLocaleString()}
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                  {payment.paymentMethod} • {payment.subscriptionMonths} month{payment.subscriptionMonths !== 1 ? "s" : ""} premium access
+                                </div>
+                                {payment.notes && (
+                                  <div className="text-sm text-muted-foreground mt-1">
+                                    Note: {payment.notes}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <Badge 
+                                variant={payment.status === "completed" ? "default" : "secondary"}
+                                className="mb-2"
+                              >
+                                {payment.status}
+                              </Badge>
+                              <div className="text-sm text-muted-foreground">
+                                {formatDate(payment.paymentDate)}
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -431,6 +722,97 @@ const StudentProfile = () => {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Payment Dialog */}
+      <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Record Payment</DialogTitle>
+            <DialogDescription>
+              Add a new payment record and extend premium access
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="amount">Payment Amount</Label>
+              <Input
+                id="amount"
+                type="number"
+                min="0"
+                step="0.01"
+                value={paymentAmount}
+                onChange={(e) => setPaymentAmount(parseFloat(e.target.value) || 0)}
+                placeholder="Enter payment amount"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="currency">Currency</Label>
+              <Select value={paymentCurrency} onValueChange={setPaymentCurrency}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="LKR">LKR (Sri Lankan Rupee)</SelectItem>
+                  <SelectItem value="USD">USD (US Dollar)</SelectItem>
+                  <SelectItem value="EUR">EUR (Euro)</SelectItem>
+                  <SelectItem value="GBP">GBP (British Pound)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="paymentMethod">Payment Method</Label>
+              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Cash">Cash</SelectItem>
+                  <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                  <SelectItem value="Credit Card">Credit Card</SelectItem>
+                  <SelectItem value="Debit Card">Debit Card</SelectItem>
+                  <SelectItem value="Online Payment">Online Payment</SelectItem>
+                  <SelectItem value="Mobile Payment">Mobile Payment</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="paymentMonths">Premium Duration (Months)</Label>
+              <Select
+                value={paymentMonths.toString()}
+                onValueChange={(value) => setPaymentMonths(parseInt(value))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1 Month</SelectItem>
+                  <SelectItem value="3">3 Months</SelectItem>
+                  <SelectItem value="6">6 Months</SelectItem>
+                  <SelectItem value="12">12 Months</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="paymentNotes">Notes (Optional)</Label>
+              <Textarea
+                id="paymentNotes"
+                value={paymentNotes}
+                onChange={(e) => setPaymentNotes(e.target.value)}
+                placeholder="Add any notes about this payment"
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPaymentDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSavePayment} disabled={savingPayment}>
+              {savingPayment ? "Recording..." : "Record Payment"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

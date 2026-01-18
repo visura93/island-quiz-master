@@ -22,6 +22,8 @@ export interface User {
   role: 'Student' | 'Teacher' | 'Admin' | number;
   createdAt: string;
   isActive: boolean;
+  isPremium?: boolean;
+  subscriptionEndDate?: string;
 }
 
 export interface AuthResponse {
@@ -226,6 +228,9 @@ export interface StudentActivity {
   lastActivityDate: string;
   createdAt: string;
   isActive: boolean;
+  isPremium: boolean;
+  subscriptionStatus?: string;
+  subscriptionEndDate?: string;
 }
 
 export interface StudentDetail extends User {
@@ -234,6 +239,37 @@ export interface StudentDetail extends User {
   averageScore: number;
   lastActivityDate: string;
   quizAttempts: QuizAttempt[];
+  isPremium: boolean;
+  subscriptionStatus?: string;
+  subscriptionStartDate?: string;
+  subscriptionEndDate?: string;
+  paymentHistory: PaymentRecord[];
+}
+
+export interface PaymentRecord {
+  id: string;
+  amount: number;
+  currency: string;
+  paymentDate: string;
+  paymentMethod: string;
+  status: string;
+  subscriptionMonths: number;
+  notes?: string;
+}
+
+export interface UpdateStudentPremiumRequest {
+  isPremium: boolean;
+  subscriptionMonths?: number;
+  notes?: string;
+}
+
+export interface CreatePaymentRequest {
+  studentId: string;
+  amount: number;
+  currency: string;
+  paymentMethod: string;
+  subscriptionMonths: number;
+  notes?: string;
 }
 
 export interface StartQuizRequest {
@@ -487,6 +523,24 @@ class ApiService {
 
   async getStudentQuizAttempts(studentId: string): Promise<QuizAttempt[]> {
     return this.request<QuizAttempt[]>(`/admin/students/${studentId}/quiz-attempts`);
+  }
+
+  async updateStudentPremium(studentId: string, data: UpdateStudentPremiumRequest): Promise<StudentDetail> {
+    return this.request<StudentDetail>(`/admin/students/${studentId}/premium`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async createPaymentRecord(data: CreatePaymentRequest): Promise<PaymentRecord> {
+    return this.request<PaymentRecord>('/admin/payments', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getStudentPaymentHistory(studentId: string): Promise<PaymentRecord[]> {
+    return this.request<PaymentRecord[]>(`/admin/students/${studentId}/payments`);
   }
 
   // Blob storage endpoints

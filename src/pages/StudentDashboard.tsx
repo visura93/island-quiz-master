@@ -1529,7 +1529,14 @@ const StudentDashboard = () => {
                               bundle.quizzes.map((quiz, quizIndex) => {
                                 const incomplete = incompleteQuizzes.find(iq => iq.quizId === quiz.id);
                                 const isIncomplete = !!incomplete;
-                                const isLocked = quiz.isLocked || false;
+                                
+                                // Check if user has active premium
+                                const hasPremium = user?.isPremium && 
+                                  user?.subscriptionEndDate && 
+                                  new Date(user.subscriptionEndDate) > new Date();
+                                
+                                // Quiz is locked if marked as locked AND user doesn't have premium
+                                const isLocked = (quiz.isLocked || false) && !hasPremium;
                                 const isFree = quiz.isFree !== undefined ? quiz.isFree : true;
                                 
                                 return (

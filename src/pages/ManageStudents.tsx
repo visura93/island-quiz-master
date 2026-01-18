@@ -3,37 +3,34 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { 
-  GraduationCap, 
   Users, 
-  BookOpen, 
-  Settings, 
-  Shield, 
-  LogOut, 
+  ArrowLeft, 
   Search,
   Eye,
-  TrendingUp,
-  Clock,
-  Award,
   Mail,
   Calendar,
   UserCheck,
   UserX,
-  Plus
+  GraduationCap,
+  Award,
+  Clock,
+  CreditCard
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { apiService, StudentActivity } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
 
-const AdminDashboard = () => {
+const ManageStudents = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { toast } = useToast();
   const [students, setStudents] = useState<StudentActivity[]>([]);
   const [filteredStudents, setFilteredStudents] = useState<StudentActivity[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
+  const [filterStatus, setFilterStatus] = useState<string>("all"); // all, active, inactive, subscribed
 
   useEffect(() => {
     loadStudents();
@@ -41,7 +38,7 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     filterStudents();
-  }, [searchQuery, students]);
+  }, [searchQuery, students, filterStatus]);
 
   const loadStudents = async () => {
     try {
@@ -52,51 +49,46 @@ const AdminDashboard = () => {
       setFilteredStudents(data);
     } catch (err: any) {
       setError(err.message || "Failed to load students");
-      console.error("Error loading students:", err);
+      toast({
+        title: "Error",
+        description: err.message || "Failed to load students",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
 
   const filterStudents = () => {
-    if (!searchQuery.trim()) {
-      setFilteredStudents(students);
-      return;
+    let filtered = students;
+
+    // Filter by status
+    if (filterStatus === "active") {
+      filtered = filtered.filter(s => s.isActive);
+    } else if (filterStatus === "inactive") {
+      filtered = filtered.filter(s => !s.isActive);
+    } else if (filterStatus === "subscribed") {
+      filtered = filtered.filter(s => s.isPremium && s.subscriptionEndDate && new Date(s.subscriptionEndDate) > new Date());
     }
 
-    const query = searchQuery.toLowerCase();
-    const filtered = students.filter(
-      (student) =>
-        student.fullName.toLowerCase().includes(query) ||
-        student.email.toLowerCase().includes(query) ||
-        student.firstName.toLowerCase().includes(query) ||
-        student.lastName.toLowerCase().includes(query)
-    );
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (student) =>
+          student.fullName.toLowerCase().includes(query) ||
+          student.email.toLowerCase().includes(query) ||
+          student.firstName.toLowerCase().includes(query) ||
+          student.lastName.toLowerCase().includes(query)
+      );
+    }
+
     setFilteredStudents(filtered);
   };
 
   const handleViewStudent = (studentId: string) => {
     navigate(`/admin/student/${studentId}`);
   };
-
-  const handleLogout = () => {
-    logout();
-    navigate("/");
-  };
-
-  const totalStudents = students.length;
-  const activeStudents = students.filter((s) => s.isActive).length;
-  const totalQuizzes = students.reduce((sum, s) => sum + s.totalQuizzes, 0);
-  const averageScore = students.length > 0
-    ? students.reduce((sum, s) => sum + s.averageScore, 0) / students.length
-    : 0;
-
-  const stats = [
-    { label: "Total Students", value: totalStudents.toString(), icon: Users, color: "text-primary" },
-    { label: "Active Students", value: activeStudents.toString(), icon: UserCheck, color: "text-green-600" },
-    { label: "Total Quizzes", value: totalQuizzes.toString(), icon: BookOpen, color: "text-secondary" },
-    { label: "Avg Score", value: averageScore.toFixed(1) + "%", icon: TrendingUp, color: "text-accent" },
-  ];
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -107,80 +99,74 @@ const AdminDashboard = () => {
     });
   };
 
+  const getSubscriptionBadge = (student: StudentActivity) => {
+    if (!student.isPremium || !student.subscriptionEndDate) {
+      return <Badge variant="outline">Regular</Badge>;
+    }
+
+    const endDate = new Date(student.subscriptionEndDate);
+    const now = new Date();
+    const daysRemaining = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (daysRemaining > 30) {
+      return <Badge className="bg-green-600">Premium ({daysRemaining}d)</Badge>;
+    } else if (daysRemaining > 0) {
+      return <Badge className="bg-yellow-600">Premium - Expiring ({daysRemaining}d)</Badge>;
+    } else {
+      return <Badge variant="destructive">Expired</Badge>;
+    }
+  };
+
+  const totalStudents = students.length;
+  const activeStudents = students.filter(s => s.isActive).length;
+  const premiumStudents = students.filter(s => 
+    s.isPremium && 
+    s.subscriptionEndDate && 
+    new Date(s.subscriptionEndDate) > new Date()
+  ).length;
+  const averageScore = students.length > 0
+    ? students.reduce((sum, s) => sum + s.averageScore, 0) / students.length
+    : 0;
+
+  const stats = [
+    { label: "Total Students", value: totalStudents.toString(), icon: Users, color: "text-primary" },
+    { label: "Active Students", value: activeStudents.toString(), icon: UserCheck, color: "text-green-600" },
+    { label: "Premium", value: premiumStudents.toString(), icon: CreditCard, color: "text-blue-600" },
+    { label: "Avg Score", value: averageScore.toFixed(1) + "%", icon: Award, color: "text-accent" },
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-mesh">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       {/* Header */}
-      <header className="border-b border-border/50 backdrop-blur-sm bg-background/80">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div 
-            className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
-            onClick={() => {
-              // Navigate to dashboard based on user role
-              if (user?.role === 'Admin' || user?.role === 2) {
-                navigate('/admin-dashboard');
-              } else if (user?.role === 'Teacher' || user?.role === 1) {
-                navigate('/teacher-dashboard');
-              } else {
-                navigate('/student-dashboard');
-              }
-            }}
-          >
-            <GraduationCap className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold bg-gradient-hero bg-clip-text text-transparent">
-              Island First
-            </span>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">
-              Welcome, {user?.firstName}!
-            </span>
+      <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-b shadow-sm sticky top-0 z-10">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                onClick={() => navigate("/admin-dashboard")}
+                className="gap-2"
+              >
+                <ArrowLeft className="h-5 w-5" />
+                Back to Dashboard
+              </Button>
+              <div className="h-8 w-px bg-border" />
+              <div className="flex items-center gap-3">
+                <Users className="h-6 w-6 text-primary" />
+                <h1 className="text-2xl font-bold">Manage Students</h1>
+              </div>
+            </div>
             <DarkModeToggle />
-            <Button variant="outline" onClick={handleLogout}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
           </div>
         </div>
-      </header>
+      </div>
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-4xl font-bold mb-2">Admin Dashboard</h1>
-            <p className="text-muted-foreground text-lg">Manage students and view their activity</p>
-          </div>
-          <div className="flex gap-3">
-            <Button 
-              onClick={() => navigate("/admin/create-quiz")}
-              className="bg-gradient-hero hover:opacity-90 transition-opacity"
-            >
-              <Plus className="h-5 w-5 mr-2" />
-              Create Quiz
-            </Button>
-            <Button variant="outline">
-              <Settings className="h-5 w-5 mr-2" />
-              Settings
-            </Button>
-          </div>
-        </div>
-
-        {/* Stats Grid */}
+        {/* Statistics */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
           {stats.map((stat, index) => (
-            <Card 
-              key={index} 
-              className={`border-2 hover:shadow-hover transition-all bg-gradient-card ${
-                (stat.label === "Total Quizzes" || stat.label === "Total Students") ? "cursor-pointer hover:scale-105" : ""
-              }`}
-              onClick={() => {
-                if (stat.label === "Total Quizzes") {
-                  navigate("/admin/quizzes");
-                } else if (stat.label === "Total Students") {
-                  navigate("/admin/manage-students");
-                }
-              }}
-            >
+            <Card key={index} className="border-2 shadow-lg bg-gradient-card">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -194,88 +180,11 @@ const AdminDashboard = () => {
           ))}
         </div>
 
-        {/* Quick Actions Grid */}
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
-          <Card 
-            className="border-2 hover:shadow-lg transition-all cursor-pointer bg-gradient-card hover:scale-105"
-            onClick={() => navigate("/admin/manage-subjects")}
-          >
-            <CardHeader>
-              <CardTitle className="text-xl flex items-center gap-3">
-                <BookOpen className="h-6 w-6 text-primary" />
-                Manage Subjects
-              </CardTitle>
-              <CardDescription>
-                Configure subjects, free quiz counts, and payment settings
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-sm text-muted-foreground">
-                <ul className="space-y-2">
-                  <li className="flex items-center gap-2">
-                    <Plus className="h-4 w-4 text-green-500" />
-                    Add, edit, or remove subjects
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Settings className="h-4 w-4 text-blue-500" />
-                    Configure free quiz counts per subject
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-purple-500" />
-                    Control quiz access and payment requirements
-                  </li>
-                </ul>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card 
-            className="border-2 hover:shadow-lg transition-all cursor-pointer bg-gradient-card hover:scale-105"
-            onClick={() => navigate("/admin/quizzes")}
-          >
-            <CardHeader>
-              <CardTitle className="text-xl flex items-center gap-3">
-                <GraduationCap className="h-6 w-6 text-primary" />
-                Manage Quizzes
-              </CardTitle>
-              <CardDescription>
-                View, edit, and manage all quizzes in the system
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-sm text-muted-foreground">
-                <ul className="space-y-2">
-                  <li className="flex items-center gap-2">
-                    <Plus className="h-4 w-4 text-green-500" />
-                    Create new quizzes
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Settings className="h-4 w-4 text-blue-500" />
-                    Edit existing quizzes
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Eye className="h-4 w-4 text-purple-500" />
-                    View all quiz details
-                  </li>
-                </ul>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Student Activity Section */}
-        <Card className="border-2 shadow-elegant bg-gradient-card">
-          <CardHeader>
-            <CardTitle className="text-2xl flex items-center gap-2">
-              <Users className="h-6 w-6 text-primary" />
-              Student Activity
-            </CardTitle>
-            <CardDescription>View and manage student profiles and quiz activities</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {/* Search Bar */}
-            <div className="mb-6">
-              <div className="relative">
+        {/* Filters and Search */}
+        <Card className="mb-6 border-2 shadow-lg">
+          <CardContent className="p-6">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
                   placeholder="Search students by name or email..."
@@ -284,8 +193,48 @@ const AdminDashboard = () => {
                   className="pl-10"
                 />
               </div>
+              <div className="flex gap-2">
+                <Button
+                  variant={filterStatus === "all" ? "default" : "outline"}
+                  onClick={() => setFilterStatus("all")}
+                >
+                  All
+                </Button>
+                <Button
+                  variant={filterStatus === "active" ? "default" : "outline"}
+                  onClick={() => setFilterStatus("active")}
+                >
+                  Active
+                </Button>
+                <Button
+                  variant={filterStatus === "subscribed" ? "default" : "outline"}
+                  onClick={() => setFilterStatus("subscribed")}
+                >
+                  Premium
+                </Button>
+                <Button
+                  variant={filterStatus === "inactive" ? "default" : "outline"}
+                  onClick={() => setFilterStatus("inactive")}
+                >
+                  Inactive
+                </Button>
+              </div>
             </div>
+          </CardContent>
+        </Card>
 
+        {/* Students List */}
+        <Card className="border-2 shadow-elegant bg-gradient-card">
+          <CardHeader>
+            <CardTitle className="text-2xl flex items-center gap-2">
+              <Users className="h-6 w-6 text-primary" />
+              Student Directory
+            </CardTitle>
+            <CardDescription>
+              {filteredStudents.length} student{filteredStudents.length !== 1 ? "s" : ""} found
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
             {error && (
               <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
                 {error}
@@ -333,6 +282,7 @@ const AdminDashboard = () => {
                                   Inactive
                                 </Badge>
                               )}
+                              {getSubscriptionBadge(student)}
                             </div>
                             <div className="flex items-center gap-4 text-sm text-muted-foreground">
                               <div className="flex items-center gap-1">
@@ -372,7 +322,7 @@ const AdminDashboard = () => {
                           }}
                         >
                           <Eye className="h-4 w-4 mr-2" />
-                          View Details
+                          View Profile
                         </Button>
                       </div>
                     </CardContent>
@@ -387,4 +337,4 @@ const AdminDashboard = () => {
   );
 };
 
-export default AdminDashboard;
+export default ManageStudents;
