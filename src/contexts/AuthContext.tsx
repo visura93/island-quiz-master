@@ -10,6 +10,7 @@ interface AuthContextType {
   register: (firstName: string, lastName: string, email: string, password: string, role: 'Student' | 'Teacher' | 'Admin') => Promise<void>;
   logout: () => void;
   refreshToken: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -155,6 +156,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const refreshUser = async () => {
+    if (!token) {
+      return;
+    }
+
+    try {
+      const currentUser = await apiService.getCurrentUser();
+      setUser(currentUser);
+      localStorage.setItem('user', JSON.stringify(currentUser));
+    } catch (error) {
+      console.error('Failed to refresh user data:', error);
+      // Don't logout on refresh failure, just log the error
+    }
+  };
+
   const value: AuthContextType = {
     user,
     token,
@@ -164,6 +180,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     register,
     logout,
     refreshToken,
+    refreshUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -17,7 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
   const { toast } = useToast();
   const [selectedGrade, setSelectedGrade] = useState<string>("");
   const [selectedMedium, setSelectedMedium] = useState<string>("");
@@ -367,6 +367,28 @@ const StudentDashboard = () => {
     // Load incomplete quizzes from localStorage
     const incomplete = getIncompleteQuizzes();
     setIncompleteQuizzes(incomplete);
+    
+    // Refresh user data to get latest premium status
+    refreshUser();
+  }, []);
+
+  // Refresh user data when window gains focus (e.g., coming back from admin panel)
+  useEffect(() => {
+    const handleFocus = () => {
+      refreshUser();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
+
+  // Periodically refresh user data to sync premium status
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refreshUser();
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
   }, []);
 
   const handleStartQuiz = (quizId: string, quizTitle: string, resume: boolean = false) => {
@@ -780,6 +802,15 @@ const StudentDashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-4">
+            {/* Premium Status Badge */}
+            {user?.isPremium && user?.subscriptionEndDate && new Date(user.subscriptionEndDate) > new Date() && (
+              <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg shadow-md">
+                <Crown className="h-4 w-4 text-white" />
+                <span className="text-sm font-semibold text-white">
+                  Premium Active
+                </span>
+              </div>
+            )}
             <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-primary/10 rounded-lg">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
               <span className="text-sm font-medium text-primary">
