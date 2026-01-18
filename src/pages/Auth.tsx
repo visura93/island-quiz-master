@@ -5,11 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { GraduationCap, User, BookOpen, Shield, AlertCircle, X, Eye, EyeOff } from "lucide-react";
+import { GraduationCap, User, BookOpen, AlertCircle, X, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 
-type UserRole = "student" | "teacher" | "admin";
+type UserRole = "student" | "teacher";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -129,10 +129,9 @@ const Auth = () => {
           return;
         }
 
-        const roleMap: Record<UserRole, 'Student' | 'Teacher' | 'Admin'> = {
+        const roleMap: Record<UserRole, 'Student' | 'Teacher'> = {
           student: 'Student',
-          teacher: 'Teacher',
-          admin: 'Admin'
+          teacher: 'Teacher'
         };
 
         await register(firstName, lastName, email, password, roleMap[selectedRole]);
@@ -215,12 +214,6 @@ const Auth = () => {
       title: "Teacher",
       description: "Create and manage MCQ content",
     },
-    {
-      id: "admin" as UserRole,
-      icon: Shield,
-      title: "Admin",
-      description: "Manage platform and users",
-    },
   ];
 
   return (
@@ -261,7 +254,7 @@ const Auth = () => {
               {!isLogin && (
                 <div className="space-y-3">
                   <Label>Select Your Role</Label>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     {roles.map((role) => (
                       <button
                         key={role.id}

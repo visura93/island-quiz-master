@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,6 +47,7 @@ const Quiz = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const quizData = location.state as QuizState;
+  const pendingSubmissions = useRef<Promise<void>[]>([]);
 
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -338,13 +339,23 @@ const Quiz = () => {
       [currentQuestion.id]: answerIndex
     }));
 
-    // Submit answer to backend
-    try {
-      await apiService.submitAnswer(attemptId, currentQuestion.id, answerIndex);
-    } catch (err) {
-      console.error("Error submitting answer:", err);
-      // Don't block UI on submit error, just log it
-    }
+    // Submit answer to backend and track the promise
+    const submissionPromise = (async () => {
+      try {
+        await apiService.submitAnswer(attemptId, currentQuestion.id, answerIndex);
+      } catch (err) {
+        console.error("Error submitting answer:", err);
+        // Don't block UI on submit error, just log it
+      }
+    })();
+    
+    // Track pending submission
+    pendingSubmissions.current.push(submissionPromise);
+    
+    // Clean up after completion
+    submissionPromise.finally(() => {
+      pendingSubmissions.current = pendingSubmissions.current.filter(p => p !== submissionPromise);
+    });
   };
 
   const handleMultipleAnswerToggle = async (answerIndex: number) => {
@@ -368,22 +379,32 @@ const Quiz = () => {
       };
     });
 
-    // Submit multiple answers to backend
-    try {
-      const currentAnswers = selectedMultipleAnswers[currentQuestion.id] || [];
-      const newAnswers = currentAnswers.includes(answerIndex)
-        ? currentAnswers.filter(idx => idx !== answerIndex)
-        : [...currentAnswers, answerIndex].sort((a, b) => a - b);
-      
-      await apiService.submitAnswer(
-        attemptId, 
-        currentQuestion.id, 
-        newAnswers[0] || 0, // First answer as primary (for backward compatibility)
-        newAnswers
-      );
-    } catch (err) {
-      console.error("Error submitting answer:", err);
-    }
+    // Submit multiple answers to backend and track the promise
+    const submissionPromise = (async () => {
+      try {
+        const currentAnswers = selectedMultipleAnswers[currentQuestion.id] || [];
+        const newAnswers = currentAnswers.includes(answerIndex)
+          ? currentAnswers.filter(idx => idx !== answerIndex)
+          : [...currentAnswers, answerIndex].sort((a, b) => a - b);
+        
+        await apiService.submitAnswer(
+          attemptId, 
+          currentQuestion.id, 
+          newAnswers[0] || 0, // First answer as primary (for backward compatibility)
+          newAnswers
+        );
+      } catch (err) {
+        console.error("Error submitting answer:", err);
+      }
+    })();
+    
+    // Track pending submission
+    pendingSubmissions.current.push(submissionPromise);
+    
+    // Clean up after completion
+    submissionPromise.finally(() => {
+      pendingSubmissions.current = pendingSubmissions.current.filter(p => p !== submissionPromise);
+    });
   };
 
   const handleNextQuestion = () => {
@@ -403,6 +424,11 @@ const Quiz = () => {
     setIsTimerRunning(false);
     
     try {
+      // Wait for all pending answer submissions to complete
+      if (pendingSubmissions.current.length > 0) {
+        await Promise.all(pendingSubmissions.current);
+      }
+      
       // Complete the quiz on backend and get results
       if (attemptId) {
         // Calculate time spent in seconds
