@@ -192,6 +192,75 @@ const AdminDashboard = () => {
           ))}
         </div>
 
+        {/* Quick Actions Grid */}
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
+          <Card 
+            className="border-2 hover:shadow-lg transition-all cursor-pointer bg-gradient-card hover:scale-105"
+            onClick={() => navigate("/admin/manage-subjects")}
+          >
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center gap-3">
+                <BookOpen className="h-6 w-6 text-primary" />
+                Manage Subjects
+              </CardTitle>
+              <CardDescription>
+                Configure subjects, free quiz counts, and payment settings
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-sm text-muted-foreground">
+                <ul className="space-y-2">
+                  <li className="flex items-center gap-2">
+                    <Plus className="h-4 w-4 text-green-500" />
+                    Add, edit, or remove subjects
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Settings className="h-4 w-4 text-blue-500" />
+                    Configure free quiz counts per subject
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Shield className="h-4 w-4 text-purple-500" />
+                    Control quiz access and payment requirements
+                  </li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card 
+            className="border-2 hover:shadow-lg transition-all cursor-pointer bg-gradient-card hover:scale-105"
+            onClick={() => navigate("/admin/quizzes")}
+          >
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center gap-3">
+                <GraduationCap className="h-6 w-6 text-primary" />
+                Manage Quizzes
+              </CardTitle>
+              <CardDescription>
+                View, edit, and manage all quizzes in the system
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-sm text-muted-foreground">
+                <ul className="space-y-2">
+                  <li className="flex items-center gap-2">
+                    <Plus className="h-4 w-4 text-green-500" />
+                    Create new quizzes
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Settings className="h-4 w-4 text-blue-500" />
+                    Edit existing quizzes
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Eye className="h-4 w-4 text-purple-500" />
+                    View all quiz details
+                  </li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Student Activity Section */}
         <Card className="border-2 shadow-elegant bg-gradient-card">
           <CardHeader>

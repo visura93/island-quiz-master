@@ -67,6 +67,9 @@ export interface Quiz {
   isActive: boolean;
   createdAt: string;
   thumbnail?: string;
+  isFree?: boolean;
+  isLocked?: boolean;
+  displayOrder?: number;
 }
 
 export interface QuizAnswer {
@@ -149,6 +152,49 @@ export interface RecentActivity {
   subject: string;
   duration: number;
   type: string;
+}
+
+export interface Subject {
+  id: string;
+  name: string;
+  value: string;
+  description: string;
+  icon: string;
+  category: string;
+  freeQuizCount: number;
+  isActive: boolean;
+  displayOrder: number;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CreateSubjectRequest {
+  name: string;
+  value: string;
+  description: string;
+  icon: string;
+  category: string;
+  freeQuizCount: number;
+  isActive: boolean;
+  displayOrder: number;
+}
+
+export interface UpdateSubjectRequest {
+  name: string;
+  value: string;
+  description: string;
+  icon: string;
+  category: string;
+  freeQuizCount: number;
+  isActive: boolean;
+  displayOrder: number;
+}
+
+export interface QuizAccess {
+  hasAccess: boolean;
+  reason: string;
+  freeQuizzesRemaining: number;
+  totalFreeQuizzes: number;
 }
 
 export interface StudentActivity {
@@ -483,6 +529,43 @@ class ApiService {
     
     // Return the public URL provided by the backend
     return uploadResponse.publicUrl;
+  }
+
+  // Subject Management endpoints
+  async getAllSubjects(): Promise<Subject[]> {
+    return this.request<Subject[]>('/subject');
+  }
+
+  async getSubjectsByCategory(category: string): Promise<Subject[]> {
+    return this.request<Subject[]>(`/subject/category/${encodeURIComponent(category)}`);
+  }
+
+  async getSubjectById(id: string): Promise<Subject> {
+    return this.request<Subject>(`/subject/${id}`);
+  }
+
+  async createSubject(subjectData: CreateSubjectRequest): Promise<Subject> {
+    return this.request<Subject>('/subject', {
+      method: 'POST',
+      body: JSON.stringify(subjectData),
+    });
+  }
+
+  async updateSubject(id: string, subjectData: UpdateSubjectRequest): Promise<Subject> {
+    return this.request<Subject>(`/subject/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(subjectData),
+    });
+  }
+
+  async deleteSubject(id: string): Promise<void> {
+    return this.request<void>(`/subject/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async checkQuizAccess(subject: string, quizId: string): Promise<QuizAccess> {
+    return this.request<QuizAccess>(`/subject/check-access/${encodeURIComponent(subject)}/${quizId}`);
   }
 }
 

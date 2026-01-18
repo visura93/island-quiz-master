@@ -15,6 +15,7 @@ import StudentProfile from "./pages/StudentProfile";
 import CreateQuiz from "./pages/CreateQuiz";
 import ViewQuizzes from "./pages/ViewQuizzes";
 import EditQuiz from "./pages/EditQuiz";
+import ManageSubjects from "./pages/ManageSubjects";
 import Quiz from "./pages/Quiz";
 import CompletedQuizzes from "./pages/CompletedQuizzes";
 import TimeAnalytics from "./pages/TimeAnalytics";
@@ -82,7 +83,7 @@ const App = () => (
               } 
             />
             <Route 
-              path="/admin/edit-quiz/:quizId" 
+              path="/admin/edit-quiz/:quizId"
               element={
                 <ProtectedRoute requiredRole="Admin">
                   <EditQuiz />
@@ -90,6 +91,14 @@ const App = () => (
               } 
             />
             <Route 
+              path="/admin/manage-subjects"
+              element={
+                <ProtectedRoute requiredRole="Admin">
+                  <ManageSubjects />
+                </ProtectedRoute>
+              } 
+            />
+            <Route
               path="/quiz" 
               element={
                 <ProtectedRoute requiredRole="Student">

@@ -5,18 +5,20 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { GraduationCap, BookOpen, Trophy, Clock, TrendingUp, LogOut, Search, FileText, Award, School, X, Info, Play, Calendar, CheckCircle, Eye, ChevronRight, Sparkles, Atom, Globe, ArrowLeft, RotateCw } from "lucide-react";
+import { GraduationCap, BookOpen, Trophy, Clock, TrendingUp, LogOut, Search, FileText, Award, School, X, Info, Play, Calendar, CheckCircle, Eye, ChevronRight, Sparkles, Atom, Globe, ArrowLeft, RotateCw, Lock, Crown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
-import { apiService, QuizBundle, QuizAttempt, TimeAnalytics } from "@/lib/api";
+import { apiService, QuizBundle, QuizAttempt, TimeAnalytics, Subject } from "@/lib/api";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { getIncompleteQuizzes, formatTimeRemaining, formatLastSavedTime, IncompleteQuiz } from "@/lib/quizProgress";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { toast } = useToast();
   const [selectedGrade, setSelectedGrade] = useState<string>("");
   const [selectedMedium, setSelectedMedium] = useState<string>("");
   const [selectedSubject, setSelectedSubject] = useState<string>("");
@@ -41,11 +43,35 @@ const StudentDashboard = () => {
   const [selectedTopic, setSelectedTopic] = useState<string>("");
   const [showTermSelection, setShowTermSelection] = useState<boolean>(false);
   const [selectedTerm, setSelectedTerm] = useState<string>("");
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [loadingSubjects, setLoadingSubjects] = useState<boolean>(false);
 
   const handleLogout = () => {
     logout();
     navigate("/");
   };
+
+  // Load subjects from API
+  useEffect(() => {
+    const loadSubjects = async () => {
+      try {
+        setLoadingSubjects(true);
+        const data = await apiService.getAllSubjects();
+        setSubjects(data);
+      } catch (err: any) {
+        console.error("Error loading subjects:", err);
+        toast({
+          title: "Warning",
+          description: "Failed to load subjects from server. Using default subjects.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoadingSubjects(false);
+      }
+    };
+
+    loadSubjects();
+  }, []);
 
   const handleGoClick = async () => {
     if (selectedGrade && selectedMedium && selectedSubject) {
@@ -415,7 +441,28 @@ const StudentDashboard = () => {
     if (!grade) return [];
     
     const gradeNumber = parseInt(grade.replace('grade-', ''));
+    let category = "";
     
+    if (gradeNumber >= 6 && gradeNumber <= 9) {
+      category = "Grade 6-9";
+    } else if (gradeNumber >= 10 && gradeNumber <= 11) {
+      category = "Grade 10-11";
+    } else if (gradeNumber >= 12 && gradeNumber <= 13) {
+      category = "Grade 12-13";
+    }
+    
+    // Get subjects from API data for the category
+    const dynamicSubjects = subjects
+      .filter(s => s.category === category && s.isActive)
+      .sort((a, b) => a.displayOrder - b.displayOrder)
+      .map(s => ({ value: s.value, label: s.name }));
+    
+    // If we have dynamic subjects, use them
+    if (dynamicSubjects.length > 0) {
+      return dynamicSubjects;
+    }
+    
+    // Fallback to hardcoded subjects if API data not available yet
     if (gradeNumber >= 6 && gradeNumber <= 9) {
       return subjectsGrade6To9;
     } else if (gradeNumber >= 10 && gradeNumber <= 11) {
@@ -510,6 +557,26 @@ const StudentDashboard = () => {
     { value: "business-studies", label: "Business Studies" },
     { value: "political-science", label: "Political Science" },
   ];
+
+  // Get dynamic O/L subjects from API
+  const getOLSubjects = () => {
+    const dynamicSubjects = subjects
+      .filter(s => s.category === "Grade 10-11" && s.isActive)
+      .sort((a, b) => a.displayOrder - b.displayOrder)
+      .map(s => ({ value: s.value, label: s.name }));
+    
+    return dynamicSubjects.length > 0 ? dynamicSubjects : olSubjects;
+  };
+
+  // Get dynamic A/L subjects from API
+  const getALSubjects = () => {
+    const dynamicSubjects = subjects
+      .filter(s => s.category === "Grade 12-13" && s.isActive)
+      .sort((a, b) => a.displayOrder - b.displayOrder)
+      .map(s => ({ value: s.value, label: s.name }));
+    
+    return dynamicSubjects.length > 0 ? dynamicSubjects : alSubjects;
+  };
 
   const physicsTopics = [
     { value: "waves", label: "Waves Related Questions" },
@@ -1091,7 +1158,7 @@ const StudentDashboard = () => {
                       Select Subject for {selectedQuizType === "al" ? "A/L" : "O/L"}
                     </h3>
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {(selectedQuizType === "al" ? alSubjects : olSubjects).map((subject) => (
+                      {(selectedQuizType === "al" ? getALSubjects() : getOLSubjects()).map((subject) => (
                         <Card
                           key={subject.value}
                           className="cursor-pointer transition-all hover:shadow-lg border-2 hover:scale-105 hover:border-primary"
@@ -1297,17 +1364,61 @@ const StudentDashboard = () => {
                             
                             // Render each quiz in the bundle
                             return bundle.quizzes && bundle.quizzes.length > 0 ? (
-                              bundle.quizzes.map((quiz) => {
+                              bundle.quizzes.map((quiz, quizIndex) => {
                                 const incomplete = incompleteQuizzes.find(iq => iq.quizId === quiz.id);
                                 const isIncomplete = !!incomplete;
+                                const isLocked = quiz.isLocked || false;
+                                const isFree = quiz.isFree !== undefined ? quiz.isFree : true;
                                 
                                 return (
                                 <Card 
                                   key={quiz.id}
-                                  className={`cursor-pointer transition-all hover:shadow-lg border-2 ${bundleBorderColor} ${bundleBgColor} hover:scale-105 ${isIncomplete ? 'border-orange-400 border-2' : ''}`}
-                                  onClick={() => handleQuizClick(quiz)}
+                                  className={`transition-all border-2 ${bundleBorderColor} ${bundleBgColor} ${
+                                    isLocked 
+                                      ? 'opacity-75 cursor-not-allowed' 
+                                      : 'cursor-pointer hover:shadow-lg hover:scale-105'
+                                  } ${isIncomplete ? 'border-orange-400 border-2' : ''} ${
+                                    isLocked ? 'relative' : ''
+                                  }`}
+                                  onClick={() => !isLocked && handleQuizClick(quiz)}
                                 >
+                                  {/* Lock Overlay for Locked Quizzes */}
+                                  {isLocked && (
+                                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm rounded-lg flex items-center justify-center z-10">
+                                      <div className="text-center text-white p-6">
+                                        <Lock className="h-12 w-12 mx-auto mb-3 text-yellow-400" />
+                                        <h4 className="font-bold text-lg mb-2">Premium Content</h4>
+                                        <p className="text-sm mb-3 opacity-90">
+                                          Unlock this quiz with premium access
+                                        </p>
+                                        <Button 
+                                          size="sm" 
+                                          className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-semibold"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            toast({
+                                              title: "Premium Feature",
+                                              description: "Payment integration coming soon! Contact admin for access.",
+                                            });
+                                          }}
+                                        >
+                                          <Crown className="h-4 w-4 mr-2" />
+                                          Upgrade Now
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  )}
+                                  
                                   <CardContent className="p-6">
+                                    {/* Free Badge */}
+                                    {!isLocked && isFree && quizIndex < 4 && (
+                                      <div className="absolute top-3 right-3">
+                                        <Badge className="bg-green-500 text-white">
+                                          FREE
+                                        </Badge>
+                                      </div>
+                                    )}
+                                    
                                     {/* Thumbnail placeholder - future implementation */}
                                     {bundle.thumbnail ? (
                                       <div className="aspect-video bg-muted rounded-lg mb-4 flex items-center justify-center">
