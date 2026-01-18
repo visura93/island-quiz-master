@@ -67,6 +67,7 @@ const Quiz = () => {
   const [quizStartTime, setQuizStartTime] = useState<Date | null>(null);
   const [shouldResume, setShouldResume] = useState(false);
   const [savedProgress, setSavedProgress] = useState<QuizProgress | null>(null);
+  const [showSubmitDialog, setShowSubmitDialog] = useState(false);
 
   const currentQuestion = questions[currentQuestionIndex];
   const totalQuestions = questions.length > 0 ? questions.length : initialQuestionCount;
@@ -398,6 +399,7 @@ const Quiz = () => {
   };
 
   const handleSubmitQuiz = async () => {
+    setShowSubmitDialog(false); // Close dialog
     setIsTimerRunning(false);
     
     try {
@@ -1019,15 +1021,16 @@ const Quiz = () => {
               </Button>
               
               <div className="flex gap-3">
-                {currentQuestionIndex === totalQuestions - 1 ? (
-                  <Button 
-                    onClick={handleSubmitQuiz}
-                    className="bg-green-600 hover:bg-green-700 btn-modern shadow-elegant"
-                    size="lg"
-                  >
-                    Submit Quiz
-                  </Button>
-                ) : (
+                <Button 
+                  onClick={() => setShowSubmitDialog(true)}
+                  variant="outline"
+                  className="bg-green-600 hover:bg-green-700 text-white border-green-600 btn-modern"
+                  size="lg"
+                >
+                  Submit Quiz
+                </Button>
+                
+                {currentQuestionIndex < totalQuestions - 1 && (
                   <Button 
                     onClick={handleNextQuestion}
                     className="btn-modern shadow-elegant"
@@ -1041,6 +1044,28 @@ const Quiz = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Submit Confirmation Dialog */}
+        <AlertDialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Submit Quiz?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to submit your quiz? This action cannot be undone. 
+                Make sure you've reviewed all your answers before submitting.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handleSubmitQuiz}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                Submit
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
