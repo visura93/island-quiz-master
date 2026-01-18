@@ -14,11 +14,12 @@ import {
   ArrowLeft,
   Search,
   Save,
-  X
+  X,
+  Settings2
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { apiService, Subject, CreateSubjectRequest } from "@/lib/api";
+import { apiService, Subject, CreateSubjectRequest, SystemSettings, UpdateSystemSettingsRequest } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -36,6 +37,11 @@ const ManageSubjects = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
   const [subjectToDelete, setSubjectToDelete] = useState<Subject | null>(null);
+  
+  // System Settings state
+  const [systemSettings, setSystemSettings] = useState<SystemSettings | null>(null);
+  const [settingsLoading, setSettingsLoading] = useState<boolean>(true);
+  const [savingSettings, setSavingSettings] = useState<boolean>(false);
 
   // Form state
   const [formData, setFormData] = useState<CreateSubjectRequest>({
@@ -64,6 +70,7 @@ const ManageSubjects = () => {
 
   useEffect(() => {
     loadSubjects();
+    loadSystemSettings();
   }, []);
 
   useEffect(() => {
@@ -87,6 +94,71 @@ const ManageSubjects = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadSystemSettings = async () => {
+    try {
+      setSettingsLoading(true);
+      const data = await apiService.getAdminSystemSettings();
+      setSystemSettings(data);
+    } catch (err: any) {
+      console.error("Error loading system settings:", err);
+      toast({
+        title: "Warning",
+        description: "Failed to load system settings. Using default values.",
+        variant: "destructive",
+      });
+      // Set default values if loading fails
+      setSystemSettings({
+        id: '',
+        enableScholarship: false,
+        enableAL: true,
+        enableOL: false,
+        enableGradeSelection: false,
+        updatedAt: new Date().toISOString()
+      });
+    } finally {
+      setSettingsLoading(false);
+    }
+  };
+
+  const handleSaveSystemSettings = async () => {
+    if (!systemSettings) return;
+
+    try {
+      setSavingSettings(true);
+      const updateRequest: UpdateSystemSettingsRequest = {
+        enableScholarship: systemSettings.enableScholarship,
+        enableAL: systemSettings.enableAL,
+        enableOL: systemSettings.enableOL,
+        enableGradeSelection: systemSettings.enableGradeSelection
+      };
+      
+      const updated = await apiService.updateSystemSettings(updateRequest);
+      setSystemSettings(updated);
+      
+      toast({
+        title: "Success",
+        description: "Quiz category settings updated successfully",
+      });
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to update settings",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+
+  const handleSettingsChange = (field: keyof UpdateSystemSettingsRequest, value: boolean) => {
+    if (!systemSettings) return;
+    
+    setSystemSettings(prev => prev ? {
+      ...prev,
+      [field]: value
+    } : null);
   };
 
   const filterSubjects = () => {
@@ -272,6 +344,138 @@ const ManageSubjects = () => {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
+        {/* Quiz Categories Settings Card */}
+        <Card className="border-2 shadow-lg bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-900 dark:to-slate-800 mb-8">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <Settings2 className="h-6 w-6 text-primary" />
+              <div>
+                <CardTitle className="text-2xl">Quiz Category Settings</CardTitle>
+                <CardDescription>
+                  Enable or disable quiz categories for students
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {settingsLoading ? (
+              <div className="text-center py-8">
+                <div className="text-muted-foreground">Loading settings...</div>
+              </div>
+            ) : systemSettings ? (
+              <div className="space-y-6">
+                <div className="grid md:grid-cols-2 gap-6">
+                  {/* Scholarship Setting */}
+                  <Card className="border-2">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-lg mb-2">Scholarship Grade 5</h3>
+                          <p className="text-sm text-muted-foreground">
+                            Allow students to access Grade 5 Scholarship exam papers
+                          </p>
+                        </div>
+                        <Switch
+                          checked={systemSettings.enableScholarship}
+                          onCheckedChange={(checked) => handleSettingsChange('enableScholarship', checked)}
+                          className="ml-4"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* A/L Setting */}
+                  <Card className="border-2">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-lg mb-2">A/L (Advanced Level)</h3>
+                          <p className="text-sm text-muted-foreground">
+                            Allow students to access A/L subject quizzes
+                          </p>
+                        </div>
+                        <Switch
+                          checked={systemSettings.enableAL}
+                          onCheckedChange={(checked) => handleSettingsChange('enableAL', checked)}
+                          className="ml-4"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* O/L Setting */}
+                  <Card className="border-2">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-lg mb-2">O/L (Ordinary Level)</h3>
+                          <p className="text-sm text-muted-foreground">
+                            Allow students to access O/L subject quizzes
+                          </p>
+                        </div>
+                        <Switch
+                          checked={systemSettings.enableOL}
+                          onCheckedChange={(checked) => handleSettingsChange('enableOL', checked)}
+                          className="ml-4"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Grade Selection Setting */}
+                  <Card className="border-2">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-lg mb-2">Select by Grade</h3>
+                          <p className="text-sm text-muted-foreground">
+                            Allow students to select quizzes by grade (6-13)
+                          </p>
+                        </div>
+                        <Switch
+                          checked={systemSettings.enableGradeSelection}
+                          onCheckedChange={(checked) => handleSettingsChange('enableGradeSelection', checked)}
+                          className="ml-4"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Save Button */}
+                <div className="flex justify-end pt-4 border-t">
+                  <Button
+                    onClick={handleSaveSystemSettings}
+                    disabled={savingSettings}
+                    className="bg-gradient-hero hover:opacity-90 transition-opacity"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    {savingSettings ? "Saving..." : "Save Settings"}
+                  </Button>
+                </div>
+
+                {/* Info Message */}
+                <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                  <p className="text-sm text-blue-800 dark:text-blue-200">
+                    <strong>Note:</strong> These settings control which quiz categories are visible and accessible 
+                    to students on their dashboard. Disabled categories will show as "Coming Soon" for students.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8 text-destructive">
+                Failed to load settings
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Subject Management Section */}
+        <div className="mb-4">
+          <h2 className="text-2xl font-bold mb-2">Subject Management</h2>
+          <p className="text-muted-foreground">Manage subjects, free quiz counts, and display settings</p>
+        </div>
+
         {/* Controls */}
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="flex-1 relative">

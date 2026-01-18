@@ -197,6 +197,23 @@ export interface QuizAccess {
   totalFreeQuizzes: number;
 }
 
+export interface SystemSettings {
+  id: string;
+  enableScholarship: boolean;
+  enableAL: boolean;
+  enableOL: boolean;
+  enableGradeSelection: boolean;
+  updatedAt: string;
+  updatedBy?: string;
+}
+
+export interface UpdateSystemSettingsRequest {
+  enableScholarship: boolean;
+  enableAL: boolean;
+  enableOL: boolean;
+  enableGradeSelection: boolean;
+}
+
 export interface StudentActivity {
   id: string;
   firstName: string;
@@ -566,6 +583,25 @@ class ApiService {
 
   async checkQuizAccess(subject: string, quizId: string): Promise<QuizAccess> {
     return this.request<QuizAccess>(`/subject/check-access/${encodeURIComponent(subject)}/${quizId}`);
+  }
+
+  // System Settings endpoints
+  // For students - read-only access
+  async getSystemSettings(): Promise<SystemSettings> {
+    return this.request<SystemSettings>('/settings');
+  }
+
+  // For admins - read settings
+  async getAdminSystemSettings(): Promise<SystemSettings> {
+    return this.request<SystemSettings>('/admin/settings');
+  }
+
+  // For admins - update settings
+  async updateSystemSettings(settings: UpdateSystemSettingsRequest): Promise<SystemSettings> {
+    return this.request<SystemSettings>('/admin/settings', {
+      method: 'PUT',
+      body: JSON.stringify(settings),
+    });
   }
 }
 
