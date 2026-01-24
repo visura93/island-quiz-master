@@ -816,14 +816,22 @@ const StudentDashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            {/* Premium Status Badge */}
-            {user?.isPremium && user?.subscriptionEndDate && new Date(user.subscriptionEndDate) > new Date() && (
+            {/* Premium Status Badge or Upgrade Button */}
+            {user?.isPremium && user?.subscriptionEndDate && new Date(user.subscriptionEndDate) > new Date() ? (
               <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg shadow-md">
                 <Crown className="h-4 w-4 text-white" />
                 <span className="text-sm font-semibold text-white">
                   Premium Active
                 </span>
               </div>
+            ) : (
+              <Button
+                onClick={() => navigate('/payment')}
+                className="hidden sm:flex bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-semibold shadow-lg"
+              >
+                <Crown className="h-4 w-4 mr-2" />
+                Upgrade to Premium
+              </Button>
             )}
             <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-primary/10 rounded-lg">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
@@ -1610,10 +1618,7 @@ const StudentDashboard = () => {
                                           className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-semibold"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            toast({
-                                              title: "Premium Feature",
-                                              description: "Payment integration coming soon! Contact admin for access.",
-                                            });
+                                            navigate('/payment');
                                           }}
                                         >
                                           <Crown className="h-4 w-4 mr-2" />

@@ -20,6 +20,7 @@ import ManageStudents from "./pages/ManageStudents";
 import Quiz from "./pages/Quiz";
 import CompletedQuizzes from "./pages/CompletedQuizzes";
 import TimeAnalytics from "./pages/TimeAnalytics";
+import Payment from "./pages/Payment";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -128,6 +129,14 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="Student">
                   <TimeAnalytics />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/payment" 
+              element={
+                <ProtectedRoute requiredRole="Student">
+                  <Payment />
                 </ProtectedRoute>
               } 
             />

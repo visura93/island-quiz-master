@@ -15,7 +15,9 @@ import {
   RotateCcw,
   BookOpen,
   XCircle,
-  RotateCw
+  RotateCw,
+  Maximize2,
+  X as CloseIcon
 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { formatTimeRemaining, formatLastSavedTime } from "@/lib/quizProgress";
@@ -69,6 +71,7 @@ const Quiz = () => {
   const [shouldResume, setShouldResume] = useState(false);
   const [savedProgress, setSavedProgress] = useState<QuizProgress | null>(null);
   const [showSubmitDialog, setShowSubmitDialog] = useState(false);
+  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
 
   const currentQuestion = questions[currentQuestionIndex];
   const totalQuestions = questions.length > 0 ? questions.length : initialQuestionCount;
@@ -578,16 +581,28 @@ const Quiz = () => {
                               <p className="font-medium mb-2">{questionResult.questionText}</p>
                             )}
                             {questionResult.questionImage && (
-                              <div className="mb-2">
+                              <div className="mb-2 relative group">
                                 <img 
                                   src={questionResult.questionImage} 
                                   alt="Question" 
-                                  className="max-w-full h-auto rounded-lg border-2 border-border shadow-md"
+                                  className="max-w-full h-auto max-h-96 rounded-lg border-2 border-border shadow-md cursor-pointer hover:border-primary transition-all"
+                                  onClick={() => setFullscreenImage(questionResult.questionImage || null)}
                                   onError={(e) => {
                                     const target = e.target as HTMLImageElement;
                                     target.style.display = 'none';
                                   }}
                                 />
+                                <Button
+                                  size="sm"
+                                  variant="secondary"
+                                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setFullscreenImage(questionResult.questionImage || null);
+                                  }}
+                                >
+                                  <Maximize2 className="h-4 w-4" />
+                                </Button>
                               </div>
                             )}
                           </div>
@@ -969,16 +984,26 @@ const Quiz = () => {
                     <h2 className="text-xl font-semibold mb-4 text-foreground">{currentQuestion.questionText}</h2>
                   )}
                   {currentQuestion.questionImage && (
-                    <div className="mb-4">
+                    <div className="mb-4 relative group">
                       <img 
                         src={currentQuestion.questionImage} 
                         alt="Question" 
-                        className="max-w-full h-auto rounded-lg border-2 border-border shadow-md"
+                        className="max-w-full h-auto max-h-[500px] w-auto mx-auto rounded-lg border-2 border-border shadow-md cursor-pointer hover:border-primary transition-all"
+                        onClick={() => setFullscreenImage(currentQuestion.questionImage || null)}
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           target.style.display = 'none';
                         }}
                       />
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => setFullscreenImage(currentQuestion.questionImage || null)}
+                      >
+                        <Maximize2 className="h-4 w-4 mr-1" />
+                        View Full Size
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -1009,16 +1034,31 @@ const Quiz = () => {
                               <span className="text-lg font-medium block mb-2">{option}</span>
                             )}
                             {optionImage && (
-                              <div className="mt-2">
+                              <div className="mt-2 relative group">
                                 <img 
                                   src={optionImage} 
                                   alt={`Option ${index + 1}`}
-                                  className="max-w-full h-auto max-h-64 rounded-lg border border-border"
+                                  className="max-w-full h-auto max-h-96 rounded-lg border border-border cursor-pointer hover:border-primary transition-all"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setFullscreenImage(optionImage);
+                                  }}
                                   onError={(e) => {
                                     const target = e.target as HTMLImageElement;
                                     target.style.display = 'none';
                                   }}
                                 />
+                                <Button
+                                  size="sm"
+                                  variant="secondary"
+                                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setFullscreenImage(optionImage);
+                                  }}
+                                >
+                                  <Maximize2 className="h-4 w-4" />
+                                </Button>
                               </div>
                             )}
                           </div>
@@ -1092,6 +1132,29 @@ const Quiz = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Fullscreen Image Modal */}
+        {fullscreenImage && (
+          <div 
+            className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+            onClick={() => setFullscreenImage(null)}
+          >
+            <Button
+              variant="outline"
+              size="icon"
+              className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 border-white/20"
+              onClick={() => setFullscreenImage(null)}
+            >
+              <CloseIcon className="h-4 w-4 text-white" />
+            </Button>
+            <img 
+              src={fullscreenImage} 
+              alt="Fullscreen view" 
+              className="max-w-full max-h-full object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
