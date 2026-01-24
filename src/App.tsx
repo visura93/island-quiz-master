@@ -30,7 +30,10 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+// Google Client ID (public - not a secret)
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '183327250808-0uodimsoe5vpj3h9guqu2gd81hiabpge.apps.googleusercontent.com';
+
+console.log('Google Client ID:', GOOGLE_CLIENT_ID); // Debug log
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
