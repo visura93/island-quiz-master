@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { GoogleLogin, CredentialResponse } from "@react-oauth/google";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,7 +15,7 @@ type UserRole = "student" | "teacher";
 const Auth = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, register, isAuthenticated, user, isLoading: authLoading } = useAuth();
+  const { login, loginWithGoogle, register, isAuthenticated, user, isLoading: authLoading } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [selectedRole, setSelectedRole] = useState<UserRole>("student");
   const [email, setEmail] = useState("");
@@ -199,6 +200,37 @@ const Auth = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+    if (!credentialResponse.credential) {
+      toast.error("Google authentication failed");
+      return;
+    }
+
+    setIsLoading(true);
+    setFieldErrors({});
+
+    try {
+      const roleMap: Record<UserRole, 'Student' | 'Teacher'> = {
+        student: 'Student',
+        teacher: 'Teacher'
+      };
+
+      await loginWithGoogle(credentialResponse.credential, roleMap[selectedRole]);
+      toast.success("Google login successful!");
+      // The user will be redirected by the useEffect below when isAuthenticated becomes true
+    } catch (error: any) {
+      const errorMessage = error.message || error.errorResponse?.message || "Google authentication failed. Please try again.";
+      setFieldErrors({ general: errorMessage });
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleError = () => {
+    toast.error("Google authentication failed");
   };
 
   const roles = [
@@ -446,6 +478,31 @@ const Auth = () => {
               >
                 {isLoading ? "Please wait..." : (isLogin ? "Sign In" : "Create Account")}
               </Button>
+
+              {/* Divider */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                    Or continue with
+                  </span>
+                </div>
+              </div>
+
+              {/* Google Sign-In Button */}
+              <div className="flex justify-center">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={handleGoogleError}
+                  useOneTap
+                  theme="outline"
+                  size="large"
+                  text={isLogin ? "signin_with" : "signup_with"}
+                  width="100%"
+                />
+              </div>
 
               {/* Forgot Password Link (Login Only) */}
               {isLogin && (

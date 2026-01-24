@@ -8,6 +8,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isNewUser: boolean;
   login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: (credential: string, role?: 'Student' | 'Teacher' | 'Admin') => Promise<void>;
   register: (firstName: string, lastName: string, email: string, password: string, role: 'Student' | 'Teacher' | 'Admin') => Promise<void>;
   logout: () => void;
   refreshToken: () => Promise<void>;
@@ -88,6 +89,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log('User state updated:', response.user);
     } catch (error) {
       console.error('Login error:', error);
+      throw error;
+    }
+  };
+
+  const loginWithGoogle = async (credential: string, role?: 'Student' | 'Teacher' | 'Admin') => {
+    try {
+      console.log('Google login function called');
+      const response: AuthResponse = await apiService.googleAuth(credential, role);
+      console.log('Google login response:', response);
+      
+      setToken(response.token);
+      setUser(response.user);
+      
+      localStorage.setItem('token', response.token);
+      localStorage.setItem('refreshToken', response.refreshToken);
+      localStorage.setItem('user', JSON.stringify(response.user));
+      
+      console.log('User state updated:', response.user);
+    } catch (error) {
+      console.error('Google login error:', error);
       throw error;
     }
   };
@@ -182,6 +203,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAuthenticated,
     isNewUser,
     login,
+    loginWithGoogle,
     register,
     logout,
     refreshToken,

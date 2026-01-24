@@ -13,6 +13,11 @@ export interface RegisterRequest {
   role: 'Student' | 'Teacher' | 'Admin';
 }
 
+export interface GoogleAuthRequest {
+  credential: string;
+  role?: 'Student' | 'Teacher' | 'Admin';
+}
+
 export interface User {
   id: string;
   firstName: string;
@@ -438,6 +443,13 @@ class ApiService {
     return this.request<AuthResponse>('/auth/register', {
       method: 'POST',
       body: JSON.stringify(userData),
+    });
+  }
+
+  async googleAuth(credential: string, role?: 'Student' | 'Teacher' | 'Admin'): Promise<AuthResponse> {
+    return this.request<AuthResponse>('/auth/google', {
+      method: 'POST',
+      body: JSON.stringify({ credential, role }),
     });
   }
 
