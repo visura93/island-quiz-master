@@ -38,6 +38,16 @@ export interface RefreshTokenRequest {
   refreshToken: string;
 }
 
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  email: string;
+  token: string;
+  newPassword: string;
+}
+
 export interface ErrorResponse {
   message: string;
   errors?: string[];
@@ -445,6 +455,20 @@ class ApiService {
   async logout(): Promise<void> {
     await this.request('/auth/logout', {
       method: 'POST',
+    });
+  }
+
+  async forgotPassword(email: string): Promise<void> {
+    return this.request<void>('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  }
+
+  async resetPassword(email: string, token: string, newPassword: string): Promise<void> {
+    return this.request<void>('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ email, token, newPassword }),
     });
   }
 
