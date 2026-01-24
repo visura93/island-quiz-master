@@ -23,6 +23,8 @@ import Quiz from "./pages/Quiz";
 import CompletedQuizzes from "./pages/CompletedQuizzes";
 import TimeAnalytics from "./pages/TimeAnalytics";
 import Payment from "./pages/Payment";
+import Settings from "./pages/Settings";
+import ContactUs from "./pages/ContactUs";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -141,6 +143,30 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="Student">
                   <Payment />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/student-profile" 
+              element={
+                <ProtectedRoute requiredRole="Student">
+                  <StudentProfile />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/settings" 
+              element={
+                <ProtectedRoute requiredRole="Student">
+                  <Settings />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/contact-us" 
+              element={
+                <ProtectedRoute requiredRole="Student">
+                  <ContactUs />
                 </ProtectedRoute>
               } 
             />

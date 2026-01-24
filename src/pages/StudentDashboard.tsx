@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { GraduationCap, BookOpen, Trophy, Clock, TrendingUp, LogOut, Search, FileText, Award, School, X, Info, Play, Calendar, CheckCircle, Eye, ChevronRight, Sparkles, Atom, Globe, ArrowLeft, RotateCw, Lock, Crown } from "lucide-react";
+import { GraduationCap, BookOpen, Trophy, Clock, TrendingUp, LogOut, Search, FileText, Award, School, X, Info, Play, Calendar, CheckCircle, Eye, ChevronRight, Sparkles, Atom, Globe, ArrowLeft, RotateCw, Lock, Crown, Settings as SettingsIcon, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
@@ -839,6 +839,24 @@ const StudentDashboard = () => {
                 Welcome, {user?.firstName}!
               </span>
             </div>
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={() => navigate('/contact-us')}
+              className="btn-modern"
+              title="Contact Us"
+            >
+              <MessageCircle className="h-4 w-4" />
+            </Button>
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={() => navigate('/settings')}
+              className="btn-modern"
+              title="Settings"
+            >
+              <SettingsIcon className="h-4 w-4" />
+            </Button>
             <DarkModeToggle />
             <Button variant="outline" onClick={handleLogout} className="btn-modern">
               <LogOut className="h-4 w-4 mr-2" />
