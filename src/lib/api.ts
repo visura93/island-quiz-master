@@ -352,6 +352,23 @@ export interface CreateQuestionRequest {
   order: number;
 }
 
+export interface QuickQuizRequest {
+  grade: string;
+  medium: string;
+  subject: string;
+  questionCount: number;
+  timeLimit: number;
+  questionsFrom: string; // "all", "past-papers", "model-papers", "school-papers"
+}
+
+export interface QuickQuizResponse {
+  attemptId: string;
+  quizId: string;
+  title: string;
+  timeLimit: number;
+  questions: Question[];
+}
+
 class ApiService {
   private baseUrl: string;
 
@@ -691,6 +708,14 @@ class ApiService {
     return this.request<SystemSettings>('/admin/settings', {
       method: 'PUT',
       body: JSON.stringify(settings),
+    });
+  }
+
+  // Quick Quiz endpoints
+  async startQuickQuiz(config: QuickQuizRequest): Promise<QuickQuizResponse> {
+    return this.request<QuickQuizResponse>('/quizattempt/start-quick-quiz', {
+      method: 'POST',
+      body: JSON.stringify(config),
     });
   }
 }

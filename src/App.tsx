@@ -21,6 +21,7 @@ import EditQuiz from "./pages/EditQuiz";
 import ManageSubjects from "./pages/ManageSubjects";
 import ManageStudents from "./pages/ManageStudents";
 import Quiz from "./pages/Quiz";
+import QuickQuizConfig from "./pages/QuickQuizConfig";
 import CompletedQuizzes from "./pages/CompletedQuizzes";
 import TimeAnalytics from "./pages/TimeAnalytics";
 import Payment from "./pages/Payment";
@@ -126,6 +127,14 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="Student">
                   <Quiz />
+                </ProtectedRoute>
+              } 
+            />
+            <Route
+              path="/quick-quiz-config" 
+              element={
+                <ProtectedRoute requiredRole="Student">
+                  <QuickQuizConfig />
                 </ProtectedRoute>
               } 
             />

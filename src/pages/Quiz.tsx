@@ -42,6 +42,10 @@ interface QuizState {
   quizType?: string;
   language?: string;
   topic?: string;
+  isQuickQuiz?: boolean; // Flag for Quick Quiz
+  questionCount?: number; // For Quick Quiz
+  timeLimit?: number; // For Quick Quiz
+  questionsFrom?: string; // For Quick Quiz
 }
 
 const Quiz = () => {
@@ -84,6 +88,15 @@ const Quiz = () => {
       
       try {
         setLoadingQuizInfo(true);
+        
+        // For Quick Quiz, set the title and skip loading from database
+        if (quizData.isQuickQuiz) {
+          setQuizTitle("Quick Quiz");
+          setInitialQuestionCount(quizData.questionCount || 20);
+          setInitialTimeLimit(quizData.timeLimit || 30);
+          setLoadingQuizInfo(false);
+          return;
+        }
         
         // Check for saved progress
         if (quizData.quizId) {
@@ -241,6 +254,31 @@ const Quiz = () => {
     try {
       setLoading(true);
       setError("");
+
+      // Check if this is a Quick Quiz
+      if (quizData.isQuickQuiz && !resumeFromSaved) {
+        // Start Quick Quiz with custom configuration
+        const response = await apiService.startQuickQuiz({
+          grade: quizData.grade,
+          medium: quizData.medium,
+          subject: quizData.subject,
+          questionCount: quizData.questionCount || 20,
+          timeLimit: quizData.timeLimit || 30,
+          questionsFrom: quizData.questionsFrom || "all"
+        });
+
+        // Set the quiz data
+        setQuestions(response.questions);
+        setInitialTimeLimit(response.timeLimit || 0);
+        setTimeRemaining(response.timeLimit * 60); // Convert minutes to seconds
+        setAttemptId(response.attemptId);
+        setQuizTitle(response.title || "Quick Quiz");
+        setQuizStartTime(new Date());
+        setIsQuizStarted(true);
+        setIsTimerRunning(true);
+        setLoading(false);
+        return;
+      }
 
       // Use quizId directly if available, otherwise get from bundle
       let quizId: string;

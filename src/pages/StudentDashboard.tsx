@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { GraduationCap, BookOpen, Trophy, Clock, TrendingUp, LogOut, Search, FileText, Award, School, X, Info, Play, Calendar, CheckCircle, Eye, ChevronRight, Sparkles, Atom, Globe, ArrowLeft, RotateCw, Lock, Crown, Settings as SettingsIcon, MessageCircle } from "lucide-react";
+import { GraduationCap, BookOpen, Trophy, Clock, TrendingUp, LogOut, Search, FileText, Award, School, X, Info, Play, Calendar, CheckCircle, Eye, ChevronRight, Sparkles, Atom, Globe, ArrowLeft, RotateCw, Lock, Crown, Settings as SettingsIcon, MessageCircle, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
@@ -277,7 +277,32 @@ const StudentDashboard = () => {
   const handlePaperTypeSelect = async (paperTypeId: string) => {
     setSelectedPaperType(paperTypeId);
     
-    if (paperTypeId === "lessonwise") {
+    if (paperTypeId === "quick-quiz") {
+      // Navigate to Quick Quiz configuration page
+      let grade = selectedGrade;
+      let medium = selectedMedium;
+      
+      if (selectedQuizType === "scholarship") {
+        grade = "grade-5";
+        medium = selectedLanguage;
+      } else if (selectedQuizType === "al") {
+        grade = "grade-12";
+        medium = selectedLanguage;
+      } else if (selectedQuizType === "ol") {
+        grade = "grade-11";
+        medium = selectedLanguage;
+      }
+      
+      navigate('/quick-quiz-config', {
+        state: {
+          grade: grade,
+          medium: medium,
+          subject: selectedSubject,
+          quizType: selectedQuizType,
+          language: selectedLanguage
+        }
+      });
+    } else if (paperTypeId === "lessonwise") {
       // Show lessonwise topic selection (only for A/L and O/L with subjects)
       if (selectedSubject && (selectedQuizType === "al" || selectedQuizType === "ol")) {
         setShowLessonwiseTopics(true);
@@ -602,6 +627,15 @@ const StudentDashboard = () => {
       color: "text-orange-600 dark:text-orange-400",
       bgColor: "bg-orange-50 dark:bg-orange-950/30",
       borderColor: "border-orange-200 dark:border-orange-800"
+    },
+    {
+      id: "quick-quiz",
+      title: "Quick Quiz",
+      description: "Random question quiz with custom settings",
+      icon: Zap,
+      color: "text-pink-600 dark:text-pink-400",
+      bgColor: "bg-pink-50 dark:bg-pink-950/30",
+      borderColor: "border-pink-200 dark:border-pink-800"
     }
   ];
 
