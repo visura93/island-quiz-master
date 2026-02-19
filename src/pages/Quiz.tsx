@@ -22,6 +22,7 @@ import {
   AlertTriangle
 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatTimeRemaining, formatLastSavedTime } from "@/lib/quizProgress";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiService, Question, QuizAnswer } from "@/lib/api";
@@ -1099,15 +1100,23 @@ const Quiz = () => {
                     rowClass = 'border-green-200 bg-green-50/50 hover:bg-green-50';
                   }
 
+                  const numberBadgeClass = isFlagged
+                    ? 'bg-amber-500 text-white'
+                    : !isAnswered
+                    ? 'bg-red-500 text-white'
+                    : 'bg-green-600 text-white';
+
                   return (
                     <button
                       key={question.id}
                       onClick={() => handleNavigateToQuestion(index)}
                       className={`w-full p-4 text-left border-2 rounded-xl transition-all hover:shadow-md flex items-center justify-between gap-3 ${rowClass}`}
                     >
-                      <div className="flex items-center gap-3">
-                        <span className="font-bold text-lg w-8 text-center">{index + 1}</span>
-                        <span className="text-muted-foreground">-</span>
+                      <div className="flex items-center gap-4">
+                        <div className={`flex items-center justify-center w-10 h-10 rounded-full font-bold text-base flex-shrink-0 shadow-sm ${numberBadgeClass}`}>
+                          {index + 1}
+                        </div>
+                        <span className="text-muted-foreground font-medium">-</span>
                         {isFlagged ? (
                           <div className="flex items-center gap-2">
                             <Flag className="h-4 w-4 text-amber-600 fill-amber-500" />
@@ -1116,7 +1125,7 @@ const Quiz = () => {
                             </span>
                           </div>
                         ) : isAnswered ? (
-                          <span className="font-semibold text-green-700">({answerLetter})</span>
+                          <span className="font-bold text-green-700 text-lg">({answerLetter})</span>
                         ) : (
                           <div className="flex items-center gap-2">
                             <AlertTriangle className="h-4 w-4 text-red-500" />
@@ -1165,21 +1174,33 @@ const Quiz = () => {
                   Question {currentQuestionIndex + 1}
                 </CardTitle>
                 {currentQuestion && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleToggleFlag}
-                    className={`btn-modern transition-all ${
-                      flaggedQuestions.has(currentQuestion.id)
-                        ? 'bg-amber-100 border-amber-400 text-amber-700 hover:bg-amber-200 hover:text-amber-800'
-                        : 'hover:border-amber-300 hover:text-amber-600'
-                    }`}
-                  >
-                    <Flag className={`h-4 w-4 mr-1.5 ${
-                      flaggedQuestions.has(currentQuestion.id) ? 'fill-amber-500' : ''
-                    }`} />
-                    {flaggedQuestions.has(currentQuestion.id) ? 'Flagged' : 'Flag'}
-                  </Button>
+                  <TooltipProvider delayDuration={300}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleToggleFlag}
+                          className={`btn-modern transition-all ${
+                            flaggedQuestions.has(currentQuestion.id)
+                              ? 'bg-amber-100 border-amber-400 text-amber-700 hover:bg-amber-200 hover:text-amber-800'
+                              : 'hover:border-amber-300 hover:text-amber-600'
+                          }`}
+                        >
+                          <Flag className={`h-4 w-4 mr-1.5 ${
+                            flaggedQuestions.has(currentQuestion.id) ? 'fill-amber-500' : ''
+                          }`} />
+                          {flaggedQuestions.has(currentQuestion.id) ? 'Flagged' : 'Flag'}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        <p>{flaggedQuestions.has(currentQuestion.id)
+                          ? 'Unflag this question'
+                          : 'Flag this question and come back to it later'
+                        }</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 )}
               </div>
             </CardHeader>
