@@ -17,7 +17,9 @@ import {
   XCircle,
   RotateCw,
   Maximize2,
-  X as CloseIcon
+  X as CloseIcon,
+  Flag,
+  AlertTriangle
 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { formatTimeRemaining, formatLastSavedTime } from "@/lib/quizProgress";
@@ -76,6 +78,8 @@ const Quiz = () => {
   const [savedProgress, setSavedProgress] = useState<QuizProgress | null>(null);
   const [showSubmitDialog, setShowSubmitDialog] = useState(false);
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
+  const [flaggedQuestions, setFlaggedQuestions] = useState<Set<string>>(new Set());
+  const [showReviewScreen, setShowReviewScreen] = useState(false);
 
   const currentQuestion = questions[currentQuestionIndex];
   const totalQuestions = questions.length > 0 ? questions.length : initialQuestionCount;
@@ -172,6 +176,7 @@ const Quiz = () => {
         quizTitle,
         currentQuestionIndex,
         selectedAnswers,
+        flaggedQuestions: Array.from(flaggedQuestions),
         timeRemaining,
         initialTimeLimit,
         totalQuestions,
@@ -189,10 +194,10 @@ const Quiz = () => {
         },
       };
       saveQuizProgress(progress);
-    }, 30000); // Save every 30 seconds
+    }, 30000);
 
     return () => clearInterval(saveInterval);
-  }, [isQuizStarted, attemptId, quizData, quizTitle, currentQuestionIndex, selectedAnswers, timeRemaining, initialTimeLimit, totalQuestions, quizStartTime]);
+  }, [isQuizStarted, attemptId, quizData, quizTitle, currentQuestionIndex, selectedAnswers, flaggedQuestions, timeRemaining, initialTimeLimit, totalQuestions, quizStartTime]);
 
   // Save progress on page unload
   useEffect(() => {
@@ -204,6 +209,7 @@ const Quiz = () => {
           quizTitle,
           currentQuestionIndex,
           selectedAnswers,
+          flaggedQuestions: Array.from(flaggedQuestions),
           timeRemaining,
           initialTimeLimit,
           totalQuestions,
@@ -226,7 +232,7 @@ const Quiz = () => {
 
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [isQuizStarted, attemptId, quizData, quizTitle, currentQuestionIndex, selectedAnswers, timeRemaining, initialTimeLimit, totalQuestions, quizStartTime]);
+  }, [isQuizStarted, attemptId, quizData, quizTitle, currentQuestionIndex, selectedAnswers, flaggedQuestions, timeRemaining, initialTimeLimit, totalQuestions, quizStartTime]);
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
@@ -330,6 +336,13 @@ const Quiz = () => {
           }
         });
         setSelectedAnswers(restoredAnswers);
+        
+        if (savedProgress.flaggedQuestions && savedProgress.flaggedQuestions.length > 0) {
+          const restoredFlags = new Set(
+            savedProgress.flaggedQuestions.filter(id => response.questions.some(q => q.id === id))
+          );
+          setFlaggedQuestions(restoredFlags);
+        }
         
         // Restore time remaining (but don't exceed the new time limit)
         const newTimeLimit = response.timeLimit * 60; // Convert to seconds
@@ -460,8 +473,27 @@ const Quiz = () => {
     }
   };
 
+  const handleToggleFlag = () => {
+    if (!currentQuestion) return;
+    setFlaggedQuestions(prev => {
+      const next = new Set(prev);
+      if (next.has(currentQuestion.id)) {
+        next.delete(currentQuestion.id);
+      } else {
+        next.add(currentQuestion.id);
+      }
+      return next;
+    });
+  };
+
+  const handleNavigateToQuestion = (index: number) => {
+    setCurrentQuestionIndex(index);
+    setShowReviewScreen(false);
+  };
+
   const handleSubmitQuiz = async () => {
-    setShowSubmitDialog(false); // Close dialog
+    setShowSubmitDialog(false);
+    setShowReviewScreen(false);
     setIsTimerRunning(false);
     
     try {
@@ -1003,151 +1035,286 @@ const Quiz = () => {
           <Progress value={progress} className="h-3 bg-muted" />
         </div>
 
-        {/* Question Card */}
-        <Card className="max-w-4xl mx-auto border-2 shadow-elegant bg-gradient-card overflow-hidden">
-          <CardHeader className="relative">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-hero"></div>
-            <CardTitle className="text-2xl flex items-center gap-3">
-              <div className="p-2 bg-gradient-hero rounded-lg">
-                <BookOpen className="h-5 w-5 text-white" />
-              </div>
-              Question {currentQuestionIndex + 1}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {currentQuestion ? (
-              <div>
-                <div className="mb-6">
-                  {currentQuestion.questionText && (
-                    <h2 className="text-xl font-semibold mb-4 text-foreground">{currentQuestion.questionText}</h2>
-                  )}
-                  {currentQuestion.questionImage && (
-                    <div className="mb-4 relative group">
-                      <img 
-                        src={currentQuestion.questionImage} 
-                        alt="Question" 
-                        className="max-w-full h-auto max-h-[500px] w-auto mx-auto rounded-lg border-2 border-border shadow-md cursor-pointer hover:border-primary transition-all"
-                        onClick={() => setFullscreenImage(currentQuestion.questionImage || null)}
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                        }}
-                      />
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={() => setFullscreenImage(currentQuestion.questionImage || null)}
-                      >
-                        <Maximize2 className="h-4 w-4 mr-1" />
-                        View Full Size
-                      </Button>
-                    </div>
-                  )}
-                </div>
-                <div className="space-y-4">
-                  {/* Note: Currently showing single-answer selection UI
-                      For multiple-answer questions, backend would need to indicate allowMultipleAnswers flag
-                      and UI would show checkboxes instead of radio-style selection */}
-                  {currentQuestion.options.map((option, index) => {
-                    const optionImage = currentQuestion.optionImages?.[index];
-                    return (
-                    <button
-                      key={index}
-                      onClick={() => handleAnswerSelect(index)}
-                      className={`w-full p-6 text-left border-2 rounded-xl transition-all hover:shadow-md card-hover ${
-                        selectedAnswers[currentQuestion.id] === index
-                          ? 'border-primary bg-primary/5 shadow-elegant'
-                          : 'border-border hover:border-primary/50'
-                      }`}
-                    >
-                      <div className="flex items-center gap-4">
-                        {selectedAnswers[currentQuestion.id] === index ? (
-                            <CheckCircle className="h-6 w-6 text-primary flex-shrink-0" />
-                        ) : (
-                            <Circle className="h-6 w-6 text-muted-foreground flex-shrink-0" />
-                        )}
-                          <div className="flex-1">
-                            {option && (
-                              <span className="text-lg font-medium block mb-2">{option}</span>
-                            )}
-                            {optionImage && (
-                              <div className="mt-2 relative group">
-                                <img 
-                                  src={optionImage} 
-                                  alt={`Option ${index + 1}`}
-                                  className="max-w-full h-auto max-h-96 rounded-lg border border-border cursor-pointer hover:border-primary transition-all"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setFullscreenImage(optionImage);
-                                  }}
-                                  onError={(e) => {
-                                    const target = e.target as HTMLImageElement;
-                                    target.style.display = 'none';
-                                  }}
-                                />
-                                <Button
-                                  size="sm"
-                                  variant="secondary"
-                                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setFullscreenImage(optionImage);
-                                  }}
-                                >
-                                  <Maximize2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                      </div>
-                    </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">Loading question...</p>
-              </div>
-            )}
-
-            {/* Navigation */}
-            <div className="flex justify-between pt-6 border-t">
-              <Button 
-                variant="outline" 
-                onClick={handlePreviousQuestion}
-                disabled={currentQuestionIndex === 0}
-                className="btn-modern"
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Previous
-              </Button>
-              
-              <div className="flex gap-3">
-                <Button 
-                  onClick={() => setShowSubmitDialog(true)}
+        {showReviewScreen ? (
+          /* Review Screen */
+          <Card className="max-w-4xl mx-auto border-2 shadow-elegant bg-gradient-card overflow-hidden">
+            <CardHeader className="relative">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-hero"></div>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-2xl flex items-center gap-3">
+                  <div className="p-2 bg-gradient-hero rounded-lg">
+                    <BookOpen className="h-5 w-5 text-white" />
+                  </div>
+                  Review Your Answers
+                </CardTitle>
+                <Button
                   variant="outline"
-                  className="bg-green-600 hover:bg-green-700 text-white border-green-600 btn-modern"
+                  onClick={() => setShowReviewScreen(false)}
+                  className="btn-modern"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to Quiz
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Summary Stats */}
+              {(() => {
+                const answeredCount = questions.filter(q => selectedAnswers[q.id] !== undefined).length;
+                const unansweredCount = questions.length - answeredCount;
+                const flaggedCount = flaggedQuestions.size;
+                return (
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div className="p-4 bg-green-50 border-2 border-green-200 rounded-xl">
+                      <div className="text-2xl font-bold text-green-700">{answeredCount}</div>
+                      <p className="text-sm font-medium text-green-600">Answered</p>
+                    </div>
+                    <div className="p-4 bg-red-50 border-2 border-red-200 rounded-xl">
+                      <div className="text-2xl font-bold text-red-700">{unansweredCount}</div>
+                      <p className="text-sm font-medium text-red-600">Not Answered</p>
+                    </div>
+                    <div className="p-4 bg-amber-50 border-2 border-amber-200 rounded-xl">
+                      <div className="text-2xl font-bold text-amber-700">{flaggedCount}</div>
+                      <p className="text-sm font-medium text-amber-600">Flagged</p>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Question List */}
+              <div className="space-y-2 max-h-[500px] overflow-y-auto pr-2">
+                {questions.map((question, index) => {
+                  const isAnswered = selectedAnswers[question.id] !== undefined;
+                  const isFlagged = flaggedQuestions.has(question.id);
+                  const answerLetter = isAnswered
+                    ? String.fromCharCode(65 + selectedAnswers[question.id])
+                    : null;
+
+                  let rowClass = 'border-border bg-background hover:bg-muted/50';
+                  if (isFlagged) {
+                    rowClass = 'border-amber-300 bg-amber-50 hover:bg-amber-100';
+                  } else if (!isAnswered) {
+                    rowClass = 'border-red-300 bg-red-50 hover:bg-red-100';
+                  } else {
+                    rowClass = 'border-green-200 bg-green-50/50 hover:bg-green-50';
+                  }
+
+                  return (
+                    <button
+                      key={question.id}
+                      onClick={() => handleNavigateToQuestion(index)}
+                      className={`w-full p-4 text-left border-2 rounded-xl transition-all hover:shadow-md flex items-center justify-between gap-3 ${rowClass}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="font-bold text-lg w-8 text-center">{index + 1}</span>
+                        <span className="text-muted-foreground">-</span>
+                        {isFlagged ? (
+                          <div className="flex items-center gap-2">
+                            <Flag className="h-4 w-4 text-amber-600 fill-amber-500" />
+                            <span className="font-semibold text-amber-700">
+                              Flag - Need to retry
+                            </span>
+                          </div>
+                        ) : isAnswered ? (
+                          <span className="font-semibold text-green-700">({answerLetter})</span>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <AlertTriangle className="h-4 w-4 text-red-500" />
+                            <span className="font-semibold text-red-600">Not Answered</span>
+                          </div>
+                        )}
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Submit Now */}
+              <div className="pt-6 border-t space-y-3">
+                <Button
+                  onClick={() => setShowSubmitDialog(true)}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white btn-modern shadow-elegant hover:shadow-hover"
                   size="lg"
                 >
-                  Submit Quiz
+                  <CheckCircle className="h-5 w-5 mr-2" />
+                  Submit Now
                 </Button>
-                
-                {currentQuestionIndex < totalQuestions - 1 && (
-                  <Button 
-                    onClick={handleNextQuestion}
-                    className="btn-modern shadow-elegant"
-                    size="lg"
+                <Button
+                  variant="outline"
+                  onClick={() => setShowReviewScreen(false)}
+                  className="w-full btn-modern"
+                  size="lg"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to Quiz
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          /* Question Card */
+          <Card className="max-w-4xl mx-auto border-2 shadow-elegant bg-gradient-card overflow-hidden">
+            <CardHeader className="relative">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-hero"></div>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-2xl flex items-center gap-3">
+                  <div className="p-2 bg-gradient-hero rounded-lg">
+                    <BookOpen className="h-5 w-5 text-white" />
+                  </div>
+                  Question {currentQuestionIndex + 1}
+                </CardTitle>
+                {currentQuestion && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleToggleFlag}
+                    className={`btn-modern transition-all ${
+                      flaggedQuestions.has(currentQuestion.id)
+                        ? 'bg-amber-100 border-amber-400 text-amber-700 hover:bg-amber-200 hover:text-amber-800'
+                        : 'hover:border-amber-300 hover:text-amber-600'
+                    }`}
                   >
-                    Next
-                    <ArrowRight className="h-4 w-4 ml-2" />
+                    <Flag className={`h-4 w-4 mr-1.5 ${
+                      flaggedQuestions.has(currentQuestion.id) ? 'fill-amber-500' : ''
+                    }`} />
+                    {flaggedQuestions.has(currentQuestion.id) ? 'Flagged' : 'Flag'}
                   </Button>
                 )}
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {currentQuestion ? (
+                <div>
+                  <div className="mb-6">
+                    {currentQuestion.questionText && (
+                      <h2 className="text-xl font-semibold mb-4 text-foreground">{currentQuestion.questionText}</h2>
+                    )}
+                    {currentQuestion.questionImage && (
+                      <div className="mb-4 relative group">
+                        <img 
+                          src={currentQuestion.questionImage} 
+                          alt="Question" 
+                          className="max-w-full h-auto max-h-[500px] w-auto mx-auto rounded-lg border-2 border-border shadow-md cursor-pointer hover:border-primary transition-all"
+                          onClick={() => setFullscreenImage(currentQuestion.questionImage || null)}
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                          }}
+                        />
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => setFullscreenImage(currentQuestion.questionImage || null)}
+                        >
+                          <Maximize2 className="h-4 w-4 mr-1" />
+                          View Full Size
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-4">
+                    {currentQuestion.options.map((option, index) => {
+                      const optionImage = currentQuestion.optionImages?.[index];
+                      return (
+                      <button
+                        key={index}
+                        onClick={() => handleAnswerSelect(index)}
+                        className={`w-full p-6 text-left border-2 rounded-xl transition-all hover:shadow-md card-hover ${
+                          selectedAnswers[currentQuestion.id] === index
+                            ? 'border-primary bg-primary/5 shadow-elegant'
+                            : 'border-border hover:border-primary/50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-4">
+                          {selectedAnswers[currentQuestion.id] === index ? (
+                              <CheckCircle className="h-6 w-6 text-primary flex-shrink-0" />
+                          ) : (
+                              <Circle className="h-6 w-6 text-muted-foreground flex-shrink-0" />
+                          )}
+                            <div className="flex-1">
+                              {option && (
+                                <span className="text-lg font-medium block mb-2">{option}</span>
+                              )}
+                              {optionImage && (
+                                <div className="mt-2 relative group">
+                                  <img 
+                                    src={optionImage} 
+                                    alt={`Option ${index + 1}`}
+                                    className="max-w-full h-auto max-h-96 rounded-lg border border-border cursor-pointer hover:border-primary transition-all"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setFullscreenImage(optionImage);
+                                    }}
+                                    onError={(e) => {
+                                      const target = e.target as HTMLImageElement;
+                                      target.style.display = 'none';
+                                    }}
+                                  />
+                                  <Button
+                                    size="sm"
+                                    variant="secondary"
+                                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setFullscreenImage(optionImage);
+                                    }}
+                                  >
+                                    <Maximize2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                        </div>
+                      </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">Loading question...</p>
+                </div>
+              )}
+
+              {/* Navigation */}
+              <div className="flex justify-between pt-6 border-t">
+                <Button 
+                  variant="outline" 
+                  onClick={handlePreviousQuestion}
+                  disabled={currentQuestionIndex === 0}
+                  className="btn-modern"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Previous
+                </Button>
+                
+                <div className="flex gap-3">
+                  <Button 
+                    onClick={() => setShowReviewScreen(true)}
+                    variant="outline"
+                    className="bg-green-600 hover:bg-green-700 text-white border-green-600 btn-modern"
+                    size="lg"
+                  >
+                    Submit Quiz
+                  </Button>
+                  
+                  {currentQuestionIndex < totalQuestions - 1 && (
+                    <Button 
+                      onClick={handleNextQuestion}
+                      className="btn-modern shadow-elegant"
+                      size="lg"
+                    >
+                      Next
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Submit Confirmation Dialog */}
         <AlertDialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>

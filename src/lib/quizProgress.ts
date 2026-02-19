@@ -6,6 +6,7 @@ export interface QuizProgress {
   quizTitle: string;
   currentQuestionIndex: number;
   selectedAnswers: { [questionId: string]: number };
+  flaggedQuestions?: string[];
   timeRemaining: number; // in seconds
   initialTimeLimit: number; // in minutes
   totalQuestions: number;
