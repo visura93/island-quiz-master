@@ -28,6 +28,7 @@ import TimeAnalytics from "./pages/TimeAnalytics";
 import Payment from "./pages/Payment";
 import Settings from "./pages/Settings";
 import ContactUs from "./pages/ContactUs";
+import Leaderboard from "./pages/Leaderboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -185,6 +186,14 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="Student">
                   <ContactUs />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/leaderboard" 
+              element={
+                <ProtectedRoute requiredRole="Student">
+                  <Leaderboard />
                 </ProtectedRoute>
               } 
             />

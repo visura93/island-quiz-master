@@ -378,6 +378,53 @@ export interface QuickQuizResponse {
   questions: Question[];
 }
 
+// Leaderboard interfaces
+export interface LeaderboardEntry {
+  rank: number;
+  studentId: string;
+  studentName: string;
+  avatarUrl?: string;
+  score: number;
+  quizzesCompleted: number;
+  currentStreak: number;
+  isCurrentUser: boolean;
+}
+
+export interface LeaderboardFilters {
+  period: 'week' | 'month' | 'allTime';
+  grade?: string;
+  medium?: string;
+  subject?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface LeaderboardResponse {
+  entries: LeaderboardEntry[];
+  totalParticipants: number;
+  myRank: number;
+  myEntry?: LeaderboardEntry;
+  updatedAt: string;
+}
+
+export interface StreakInfo {
+  currentStreak: number;
+  longestStreak: number;
+  lastActiveDate: string;
+  streakCalendar: { date: string; active: boolean }[];
+  milestones: { days: number; achieved: boolean; achievedDate?: string }[];
+}
+
+export interface StreakLeaderboardEntry {
+  rank: number;
+  studentId: string;
+  studentName: string;
+  avatarUrl?: string;
+  currentStreak: number;
+  longestStreak: number;
+  isCurrentUser: boolean;
+}
+
 class ApiService {
   private baseUrl: string;
 
@@ -824,6 +871,37 @@ class ApiService {
       method: 'POST',
       body: JSON.stringify(config),
     });
+  }
+
+  // Leaderboard endpoints
+  async getLeaderboard(filters: LeaderboardFilters): Promise<LeaderboardResponse> {
+    const params = new URLSearchParams();
+    params.append('period', filters.period);
+    if (filters.grade) params.append('grade', filters.grade);
+    if (filters.medium) params.append('medium', filters.medium);
+    if (filters.subject) params.append('subject', filters.subject);
+    if (filters.limit) params.append('limit', String(filters.limit));
+    if (filters.offset) params.append('offset', String(filters.offset));
+    return this.request<LeaderboardResponse>(`/leaderboard?${params}`);
+  }
+
+  async getSubjectLeaderboard(subject: string, filters: LeaderboardFilters): Promise<LeaderboardResponse> {
+    const params = new URLSearchParams();
+    params.append('period', filters.period);
+    if (filters.grade) params.append('grade', filters.grade);
+    if (filters.medium) params.append('medium', filters.medium);
+    if (filters.limit) params.append('limit', String(filters.limit));
+    if (filters.offset) params.append('offset', String(filters.offset));
+    return this.request<LeaderboardResponse>(`/leaderboard/subject/${encodeURIComponent(subject)}?${params}`);
+  }
+
+  async getStreakInfo(): Promise<StreakInfo> {
+    return this.request<StreakInfo>('/leaderboard/streak');
+  }
+
+  async getStreakLeaderboard(limit?: number): Promise<StreakLeaderboardEntry[]> {
+    const params = limit ? `?limit=${limit}` : '';
+    return this.request<StreakLeaderboardEntry[]>(`/leaderboard/streak/rankings${params}`);
   }
 }
 

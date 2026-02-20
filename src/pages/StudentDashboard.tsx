@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { GraduationCap, BookOpen, Trophy, Clock, TrendingUp, LogOut, Search, FileText, Award, School, X, Info, Play, Calendar, CheckCircle, Eye, ChevronRight, Sparkles, Atom, Globe, ArrowLeft, RotateCw, Lock, Crown, Settings as SettingsIcon, MessageCircle, Zap } from "lucide-react";
+import { GraduationCap, BookOpen, Trophy, Clock, TrendingUp, LogOut, Search, FileText, Award, School, X, Info, Play, Calendar, CheckCircle, Eye, ChevronRight, Sparkles, Atom, Globe, ArrowLeft, RotateCw, Lock, Crown, Settings as SettingsIcon, MessageCircle, Zap, Flame, Medal } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
@@ -15,6 +15,8 @@ import { WelcomeTutorial } from "@/components/WelcomeTutorial";
 import { getIncompleteQuizzes, formatTimeRemaining, formatLastSavedTime, IncompleteQuiz } from "@/lib/quizProgress";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { getMockLeaderboard, getMockStreakInfo } from "@/lib/mockLeaderboardData";
+import type { LeaderboardEntry, StreakInfo } from "@/lib/api";
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
@@ -51,6 +53,11 @@ const StudentDashboard = () => {
   // System settings state
   const [systemSettings, setSystemSettings] = useState<SystemSettings | null>(null);
   const [settingsLoading, setSettingsLoading] = useState<boolean>(true);
+
+  // Leaderboard widget state
+  const [leaderboardTop3, setLeaderboardTop3] = useState<LeaderboardEntry[]>([]);
+  const [myRank, setMyRank] = useState<number | null>(null);
+  const [streakDays, setStreakDays] = useState<number>(0);
 
   // Show welcome tutorial for new users
   useEffect(() => {
@@ -406,6 +413,28 @@ const StudentDashboard = () => {
     // Load incomplete quizzes from localStorage
     const incomplete = getIncompleteQuizzes();
     setIncompleteQuizzes(incomplete);
+    
+    // Load leaderboard preview data
+    const loadLeaderboardPreview = async () => {
+      try {
+        const data = await apiService.getLeaderboard({ period: 'allTime', limit: 3 });
+        setLeaderboardTop3(data.entries.slice(0, 3));
+        setMyRank(data.myRank);
+      } catch {
+        const userId = user?.id ?? '';
+        const userName = user?.fullName ?? user?.firstName ?? 'You';
+        const mock = getMockLeaderboard({ period: 'allTime', limit: 50 }, userId, userName);
+        setLeaderboardTop3(mock.entries.slice(0, 3));
+        setMyRank(mock.myRank);
+      }
+      try {
+        const streak = await apiService.getStreakInfo();
+        setStreakDays(streak.currentStreak);
+      } catch {
+        setStreakDays(getMockStreakInfo().currentStreak);
+      }
+    };
+    loadLeaderboardPreview();
     
     // Refresh user data to get latest premium status
     refreshUser();
@@ -955,6 +984,89 @@ const StudentDashboard = () => {
             </Card>
           ))}
         </div>
+
+        {/* Leaderboard Preview Widget - Only show in dashboard view */}
+        {!selectedQuizType && 
+         !showPaperTypes && 
+         !showPaperBundles && 
+         !showSubjectSelection && 
+         !showLessonwiseTopics && (
+          <Card 
+            className="border-2 shadow-elegant bg-gradient-card mb-12 cursor-pointer hover:shadow-hover transition-all group overflow-hidden"
+            onClick={() => navigate('/leaderboard')}
+          >
+            <CardContent className="p-6">
+              <div className="flex flex-col lg:flex-row lg:items-center gap-6">
+                {/* Left: Rank & Streak */}
+                <div className="flex items-center gap-6 flex-shrink-0">
+                  <div className="text-center">
+                    <div className="p-3 bg-gradient-hero rounded-xl shadow-elegant mb-2 group-hover:scale-105 transition-transform">
+                      <Trophy className="h-7 w-7 text-white" />
+                    </div>
+                    <p className="text-2xl font-bold text-foreground">#{myRank ?? '--'}</p>
+                    <p className="text-xs text-muted-foreground">Your Rank</p>
+                  </div>
+                  <div className="w-px h-16 bg-border hidden lg:block" />
+                  <div className="text-center">
+                    <div className="p-3 bg-gradient-to-br from-orange-400 to-red-500 rounded-xl shadow-elegant mb-2 group-hover:scale-105 transition-transform">
+                      <Flame className="h-7 w-7 text-white" />
+                    </div>
+                    <p className="text-2xl font-bold text-foreground">{streakDays}d</p>
+                    <p className="text-xs text-muted-foreground">Streak</p>
+                  </div>
+                </div>
+
+                {/* Center: Top 3 Mini List */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Medal className="h-4 w-4 text-amber-500" />
+                    <span className="text-sm font-semibold text-foreground">Top Performers</span>
+                  </div>
+                  <div className="space-y-2">
+                    {leaderboardTop3.map((entry, idx) => (
+                      <div key={entry.studentId} className="flex items-center gap-3">
+                        <span className={`text-xs font-bold w-5 text-center ${
+                          idx === 0 ? "text-amber-500" : idx === 1 ? "text-slate-400" : "text-orange-500"
+                        }`}>
+                          #{idx + 1}
+                        </span>
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold ${
+                          idx === 0 ? "bg-gradient-to-br from-amber-400 to-yellow-500" :
+                          idx === 1 ? "bg-gradient-to-br from-slate-300 to-slate-500" :
+                          "bg-gradient-to-br from-orange-400 to-amber-500"
+                        }`}>
+                          {entry.studentName.charAt(0)}
+                        </div>
+                        <span className={`text-sm truncate flex-1 ${entry.isCurrentUser ? "font-bold text-primary" : "text-foreground"}`}>
+                          {entry.studentName}
+                          {entry.isCurrentUser && <span className="text-[10px] text-primary ml-1">(You)</span>}
+                        </span>
+                        <span className="text-sm font-semibold text-muted-foreground">{entry.score}%</span>
+                      </div>
+                    ))}
+                    {leaderboardTop3.length === 0 && (
+                      <p className="text-sm text-muted-foreground">No data yet</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right: CTA */}
+                <div className="flex-shrink-0">
+                  <Button
+                    className="bg-gradient-hero hover:opacity-90 transition-opacity btn-modern"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate('/leaderboard');
+                    }}
+                  >
+                    View Full Leaderboard
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Recently Completed Quizzes - Only show in dashboard view */}
         {completedQuizzes.length > 0 && 
