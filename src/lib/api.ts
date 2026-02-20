@@ -392,6 +392,7 @@ export interface LeaderboardEntry {
 
 export interface LeaderboardFilters {
   period: 'week' | 'month' | 'allTime';
+  category?: string;
   grade?: string;
   medium?: string;
   subject?: string;
@@ -877,6 +878,7 @@ class ApiService {
   async getLeaderboard(filters: LeaderboardFilters): Promise<LeaderboardResponse> {
     const params = new URLSearchParams();
     params.append('period', filters.period);
+    if (filters.category) params.append('category', filters.category);
     if (filters.grade) params.append('grade', filters.grade);
     if (filters.medium) params.append('medium', filters.medium);
     if (filters.subject) params.append('subject', filters.subject);
@@ -888,6 +890,7 @@ class ApiService {
   async getSubjectLeaderboard(subject: string, filters: LeaderboardFilters): Promise<LeaderboardResponse> {
     const params = new URLSearchParams();
     params.append('period', filters.period);
+    if (filters.category) params.append('category', filters.category);
     if (filters.grade) params.append('grade', filters.grade);
     if (filters.medium) params.append('medium', filters.medium);
     if (filters.limit) params.append('limit', String(filters.limit));

@@ -21,11 +21,14 @@ import {
   Users,
   ChevronUp,
   Star,
+  Sparkles,
+  GraduationCap,
+  Atom,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
-import { apiService, Subject } from "@/lib/api";
+import { apiService, Subject, SystemSettings } from "@/lib/api";
 import type {
   LeaderboardEntry,
   LeaderboardResponse,
@@ -361,15 +364,23 @@ function YourPositionCard({ entry, isDark }: { entry?: LeaderboardEntry; isDark:
 
 // ─── Main Leaderboard Page ─────────────────────────────────────────────────────
 
+const CATEGORIES = [
+  { id: "al", label: "A/L", icon: Atom, grade: "grade-12", settingsKey: "enableAL" as const, subjectCategory: "Grade 12-13", color: "blue" },
+  { id: "ol", label: "O/L", icon: GraduationCap, grade: "grade-11", settingsKey: "enableOL" as const, subjectCategory: "Grade 10-11", color: "green" },
+  { id: "scholarship", label: "Scholarship", icon: Sparkles, grade: "grade-5", settingsKey: "enableScholarship" as const, subjectCategory: "Scholarship", color: "amber" },
+] as const;
+
 const Leaderboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isDark } = useTheme();
 
   const [activeTab, setActiveTab] = useState("by-subject");
+  const [selectedCategory, setSelectedCategory] = useState("al");
   const [selectedSubject, setSelectedSubject] = useState("");
   const [period, setPeriod] = useState<"week" | "month" | "allTime">("allTime");
   const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [systemSettings, setSystemSettings] = useState<SystemSettings | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardResponse | null>(null);
@@ -379,12 +390,21 @@ const Leaderboard = () => {
   const currentUserId = user?.id ?? "";
   const currentUserName = user?.fullName ?? user?.firstName ?? "You";
 
+  const activeCat = CATEGORIES.find(c => c.id === selectedCategory) ?? CATEGORIES[0];
+
   useEffect(() => {
     const load = async () => {
       try {
-        const data = await apiService.getAllSubjects();
-        setSubjects(data);
-        if (data.length > 0) setSelectedSubject(data[0].value);
+        const [subjectData, settings] = await Promise.all([
+          apiService.getAllSubjects(),
+          apiService.getSystemSettings(),
+        ]);
+        setSubjects(subjectData);
+        setSystemSettings(settings);
+
+        // Default to the first enabled category
+        const firstEnabled = CATEGORIES.find(c => settings[c.settingsKey]);
+        if (firstEnabled) setSelectedCategory(firstEnabled.id);
       } catch {
         setSelectedSubject(MOCK_SUBJECTS[0]);
       }
@@ -392,17 +412,37 @@ const Leaderboard = () => {
     load();
   }, []);
 
+  // Filter subjects for the selected category and auto-select the first one
+  const categorySubjects = useMemo(() => {
+    if (subjects.length === 0) return MOCK_SUBJECTS.map(s => ({ value: s, label: s }));
+    return subjects
+      .filter(s => s.isActive && s.category === activeCat.subjectCategory)
+      .sort((a, b) => a.displayOrder - b.displayOrder)
+      .map(s => ({ value: s.value, label: s.name }));
+  }, [subjects, activeCat]);
+
+  // When category or subjects list changes, reset selected subject to the first one in that category
   useEffect(() => {
-    loadLeaderboard();
-  }, [activeTab, selectedSubject, period, currentUserId]);
+    if (categorySubjects.length > 0) {
+      setSelectedSubject(categorySubjects[0].value);
+    } else {
+      setSelectedSubject("");
+    }
+  }, [selectedCategory, categorySubjects.length]);
+
+  useEffect(() => {
+    if (selectedSubject || activeTab !== "by-subject") {
+      loadLeaderboard();
+    }
+  }, [activeTab, selectedSubject, selectedCategory, period, currentUserId]);
 
   const loadLeaderboard = async () => {
     setLoading(true);
-    const filters: LeaderboardFilters = { period, limit: 50 };
+    const filters: LeaderboardFilters = { period, limit: 50, category: selectedCategory, grade: activeCat.grade };
 
     try {
       if (activeTab === "by-subject") {
-        const sub = selectedSubject || MOCK_SUBJECTS[0];
+        const sub = selectedSubject || (categorySubjects.length > 0 ? categorySubjects[0].value : MOCK_SUBJECTS[0]);
         try {
           const data = await apiService.getSubjectLeaderboard(sub, filters);
           setLeaderboardData(data);
@@ -442,11 +482,6 @@ const Leaderboard = () => {
     }
   };
 
-  const subjectOptions = useMemo(() => {
-    if (subjects.length > 0) return subjects.map(s => ({ value: s.value, label: s.name }));
-    return MOCK_SUBJECTS.map(s => ({ value: s, label: s }));
-  }, [subjects]);
-
   const entries = leaderboardData?.entries ?? [];
   const myEntry = leaderboardData?.myEntry;
 
@@ -481,7 +516,9 @@ const Leaderboard = () => {
                   Leaderboard
                 </h1>
                 <p className={isDark ? "text-slate-400" : "text-muted-foreground"}>
-                  {leaderboardData ? `${leaderboardData.totalParticipants} students competing` : "See where you stand"}
+                  {leaderboardData
+                    ? `${leaderboardData.totalParticipants} ${activeCat.label} students competing`
+                    : "See where you stand"}
                 </p>
               </div>
             </div>
@@ -491,6 +528,72 @@ const Leaderboard = () => {
       </div>
 
       <div className="container mx-auto px-4 py-8 relative z-10 pb-24">
+        {/* Category Selector */}
+        <div className="mb-6">
+          <p className={`text-sm font-medium mb-3 ${isDark ? "text-slate-400" : "text-muted-foreground"}`}>
+            Select Category
+          </p>
+          <div className="flex flex-wrap gap-3">
+            {CATEGORIES.map((cat) => {
+              const enabled = systemSettings ? systemSettings[cat.settingsKey] : true;
+              const isActive = selectedCategory === cat.id;
+              const CatIcon = cat.icon;
+
+              const colorMap = {
+                blue: {
+                  active: isDark
+                    ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-400 shadow-lg shadow-blue-500/30"
+                    : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-400 shadow-lg",
+                  inactive: isDark
+                    ? "bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-700/50 hover:border-blue-500/50"
+                    : "hover:border-blue-300 hover:bg-blue-50",
+                },
+                green: {
+                  active: isDark
+                    ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white border-green-400 shadow-lg shadow-green-500/30"
+                    : "bg-gradient-to-r from-green-500 to-emerald-500 text-white border-green-400 shadow-lg",
+                  inactive: isDark
+                    ? "bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-700/50 hover:border-green-500/50"
+                    : "hover:border-green-300 hover:bg-green-50",
+                },
+                amber: {
+                  active: isDark
+                    ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-white border-amber-400 shadow-lg shadow-amber-500/30"
+                    : "bg-gradient-to-r from-amber-500 to-yellow-500 text-white border-amber-400 shadow-lg",
+                  inactive: isDark
+                    ? "bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-700/50 hover:border-amber-500/50"
+                    : "hover:border-amber-300 hover:bg-amber-50",
+                },
+              };
+              const colors = colorMap[cat.color];
+
+              return (
+                <Button
+                  key={cat.id}
+                  variant="outline"
+                  disabled={!enabled}
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`gap-2 px-5 py-2.5 transition-all ${
+                    !enabled
+                      ? "opacity-40 cursor-not-allowed"
+                      : isActive
+                      ? colors.active
+                      : colors.inactive
+                  }`}
+                >
+                  <CatIcon className="h-4 w-4" />
+                  {cat.label}
+                  {!enabled && (
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 ml-1 border-current opacity-70">
+                      Soon
+                    </Badge>
+                  )}
+                </Button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className={`grid w-full grid-cols-2 lg:grid-cols-4 mb-8 h-auto ${isDark ? "bg-slate-800/60 border border-slate-700/60" : ""}`}>
@@ -522,7 +625,7 @@ const Leaderboard = () => {
                   <SelectValue placeholder="Select subject" />
                 </SelectTrigger>
                 <SelectContent>
-                  {subjectOptions.map(s => (
+                  {categorySubjects.map(s => (
                     <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
                   ))}
                 </SelectContent>
