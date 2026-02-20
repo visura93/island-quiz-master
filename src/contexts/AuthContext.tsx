@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { apiService, User, AuthResponse } from '@/lib/api';
+import { toast } from '@/hooks/use-toast';
 
 interface AuthContextType {
   user: User | null;
@@ -37,6 +39,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isNewUser, setIsNewUser] = useState(false);
 
   const isAuthenticated = !!user && !!token;
+  const navigate = useNavigate();
+
+  // Handle session expiry detected by the API layer (token expired + refresh failed)
+  useEffect(() => {
+    let handled = false;
+    const handleSessionExpired = () => {
+      if (handled) return;
+      handled = true;
+
+      setToken(null);
+      setUser(null);
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+
+      toast({
+        variant: "destructive",
+        title: "Session Expired",
+        description: "Your session has expired. Please log in again.",
+      });
+
+      navigate('/auth', { replace: true });
+    };
+
+    window.addEventListener('auth:session-expired', handleSessionExpired);
+    return () => window.removeEventListener('auth:session-expired', handleSessionExpired);
+  }, [navigate]);
 
   // Initialize auth state from localStorage
   useEffect(() => {

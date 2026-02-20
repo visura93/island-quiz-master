@@ -376,9 +376,56 @@ class ApiService {
     this.baseUrl = API_BASE_URL;
   }
 
+  private refreshPromise: Promise<boolean> | null = null;
+
+  private isAuthEndpoint(endpoint: string): boolean {
+    return endpoint.startsWith('/auth/');
+  }
+
+  private async attemptTokenRefresh(): Promise<boolean> {
+    if (this.refreshPromise) {
+      return this.refreshPromise;
+    }
+
+    this.refreshPromise = (async (): Promise<boolean> => {
+      const storedToken = localStorage.getItem('token');
+      const storedRefreshToken = localStorage.getItem('refreshToken');
+
+      if (!storedToken || !storedRefreshToken) {
+        return false;
+      }
+
+      try {
+        const response = await fetch(`${this.baseUrl}/auth/refresh`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: storedToken, refreshToken: storedRefreshToken }),
+        });
+
+        if (!response.ok) return false;
+
+        const data = await response.json();
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('refreshToken', data.refreshToken);
+        localStorage.setItem('user', JSON.stringify(data.user));
+
+        return true;
+      } catch {
+        return false;
+      }
+    })();
+
+    try {
+      return await this.refreshPromise;
+    } finally {
+      this.refreshPromise = null;
+    }
+  }
+
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    _isRetry = false
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
     const token = localStorage.getItem('token');
@@ -395,6 +442,14 @@ class ApiService {
     const response = await fetch(url, config);
 
     if (!response.ok) {
+      if (response.status === 401 && !this.isAuthEndpoint(endpoint) && !_isRetry) {
+        const refreshed = await this.attemptTokenRefresh();
+        if (refreshed) {
+          return this.request<T>(endpoint, options, true);
+        }
+        window.dispatchEvent(new CustomEvent('auth:session-expired'));
+      }
+
       let errorData: ErrorResponse;
       const contentType = response.headers.get('content-type');
       
