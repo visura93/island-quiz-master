@@ -1,3 +1,12 @@
+import imageCompression from 'browser-image-compression';
+import {
+  cacheQuizForOffline,
+  getOfflineQuiz,
+  cacheQuizBundles,
+  getOfflineQuizBundles,
+  queueAnswer as queueAnswerOffline,
+  queueCompletion as queueCompletionOffline,
+} from './offlineStore';
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://islandfirst-exendtg0a8c5cpfg.canadacentral-01.azurewebsites.net/api';
 
 export interface LoginRequest {
@@ -558,16 +567,22 @@ class ApiService {
 
   // Quiz endpoints
   async getQuizBundles(grade: string, medium: string, subject: string, type: string, term?: string): Promise<QuizBundle[]> {
-    const params = new URLSearchParams({
-      grade,
-      medium,
-      subject,
-      type
-    });
+    const params = new URLSearchParams({ grade, medium, subject, type });
     if (term) {
       params.append('term', term);
     }
-    return this.request<QuizBundle[]>(`/quiz/bundles?${params}`);
+    const cacheKey = `bundles:${grade}:${medium}:${subject}:${type}:${term || ''}`;
+    try {
+      const result = await this.request<QuizBundle[]>(`/quiz/bundles?${params}`);
+      cacheQuizBundles(cacheKey, result).catch(() => {});
+      return result;
+    } catch (err) {
+      if (!navigator.onLine) {
+        const cached = await getOfflineQuizBundles(cacheKey);
+        if (cached) return cached as QuizBundle[];
+      }
+      throw err;
+    }
   }
 
   async getQuiz(id: string): Promise<Quiz> {
@@ -580,10 +595,20 @@ class ApiService {
 
   // Quiz attempt endpoints
   async startQuiz(quizId: string): Promise<StartQuizResponse> {
-    return this.request<StartQuizResponse>('/quizattempt/start', {
-      method: 'POST',
-      body: JSON.stringify({ quizId }),
-    });
+    try {
+      const response = await this.request<StartQuizResponse>('/quizattempt/start', {
+        method: 'POST',
+        body: JSON.stringify({ quizId }),
+      });
+      cacheQuizForOffline(quizId, response).catch(() => {});
+      return response;
+    } catch (err) {
+      if (!navigator.onLine) {
+        const cached = await getOfflineQuiz(quizId);
+        if (cached) return cached as StartQuizResponse;
+      }
+      throw err;
+    }
   }
 
   async getQuizQuestions(quizId: string): Promise<Question[]> {
@@ -595,17 +620,33 @@ class ApiService {
   }
 
   async submitAnswer(attemptId: string, questionId: string, selectedAnswerIndex: number, selectedAnswerIndexes?: number[]): Promise<void> {
-    await this.request(`/quizattempt/${attemptId}/answer`, {
-      method: 'POST',
-      body: JSON.stringify({ questionId, selectedAnswerIndex, selectedAnswerIndexes }),
-    });
+    try {
+      await this.request(`/quizattempt/${attemptId}/answer`, {
+        method: 'POST',
+        body: JSON.stringify({ questionId, selectedAnswerIndex, selectedAnswerIndexes }),
+      });
+    } catch (err) {
+      if (!navigator.onLine) {
+        await queueAnswerOffline(attemptId, questionId, selectedAnswerIndex, selectedAnswerIndexes);
+        return;
+      }
+      throw err;
+    }
   }
 
   async completeQuiz(attemptId: string, timeSpent: number): Promise<QuizAttempt> {
-    return this.request<QuizAttempt>(`/quizattempt/${attemptId}/complete`, {
-      method: 'POST',
-      body: JSON.stringify({ timeSpent }),
-    });
+    try {
+      return await this.request<QuizAttempt>(`/quizattempt/${attemptId}/complete`, {
+        method: 'POST',
+        body: JSON.stringify({ timeSpent }),
+      });
+    } catch (err) {
+      if (!navigator.onLine) {
+        await queueCompletionOffline(attemptId, timeSpent);
+        throw new Error('You are offline. Your quiz will be submitted when you reconnect.');
+      }
+      throw err;
+    }
   }
 
   async getCompletedQuizzes(): Promise<QuizAttempt[]> {
@@ -700,13 +741,24 @@ class ApiService {
   }
 
   async uploadImageToBlob(file: File): Promise<string> {
-    // Get upload URL from backend
-    const uploadResponse = await this.getBlobUploadUrl(file.name, file.type);
-    
-    // Upload file to blob storage
-    await this.uploadToBlob(uploadResponse.url, file);
-    
-    // Return the public URL provided by the backend
+    const compressionOptions = {
+      maxSizeMB: 0.2,
+      maxWidthOrHeight: 800,
+      useWebWorker: true,
+      fileType: file.type as string,
+    };
+
+    let fileToUpload = file;
+    try {
+      if (file.size > 200 * 1024) {
+        fileToUpload = await imageCompression(file, compressionOptions);
+      }
+    } catch {
+      fileToUpload = file;
+    }
+
+    const uploadResponse = await this.getBlobUploadUrl(fileToUpload.name, fileToUpload.type);
+    await this.uploadToBlob(uploadResponse.url, fileToUpload);
     return uploadResponse.publicUrl;
   }
 

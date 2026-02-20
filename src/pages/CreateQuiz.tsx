@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { apiService, CreateQuizRequest, CreateQuestionRequest } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { OptimizedImage } from "@/components/OptimizedImage";
 
 interface QuestionFormData {
   questionText: string;
@@ -528,10 +529,11 @@ const CreateQuiz = () => {
       <div className="space-y-2">
         {currentImage ? (
           <div className="relative">
-            <img
+            <OptimizedImage
               src={currentImage}
               alt="Uploaded"
               className="max-w-full h-auto max-h-64 rounded-lg border-2 border-border"
+              skeletonHeight="150px"
             />
             <Button
               type="button"

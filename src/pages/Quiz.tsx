@@ -26,6 +26,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { formatTimeRemaining, formatLastSavedTime } from "@/lib/quizProgress";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiService, Question, QuizAnswer } from "@/lib/api";
+import { OptimizedImage } from "@/components/OptimizedImage";
 import { 
   saveQuizProgress, 
   loadQuizProgress, 
@@ -199,6 +200,24 @@ const Quiz = () => {
 
     return () => clearInterval(saveInterval);
   }, [isQuizStarted, attemptId, quizData, quizTitle, currentQuestionIndex, selectedAnswers, flaggedQuestions, timeRemaining, initialTimeLimit, totalQuestions, quizStartTime]);
+
+  // Prefetch images for the next question
+  useEffect(() => {
+    if (!isQuizStarted || questions.length === 0) return;
+    const nextIndex = currentQuestionIndex + 1;
+    if (nextIndex >= questions.length) return;
+    const nextQ = questions[nextIndex];
+    if (nextQ.questionImage) {
+      const img = new Image();
+      img.src = nextQ.questionImage;
+    }
+    nextQ.optionImages?.forEach((url) => {
+      if (url) {
+        const img = new Image();
+        img.src = url;
+      }
+    });
+  }, [currentQuestionIndex, isQuizStarted, questions]);
 
   // Save progress on page unload
   useEffect(() => {
@@ -653,15 +672,12 @@ const Quiz = () => {
                             )}
                             {questionResult.questionImage && (
                               <div className="mb-2 relative group">
-                                <img 
+                                <OptimizedImage 
                                   src={questionResult.questionImage} 
                                   alt="Question" 
                                   className="max-w-full h-auto max-h-96 rounded-lg border-2 border-border shadow-md cursor-pointer hover:border-primary transition-all"
-                                  onClick={() => setFullscreenImage(questionResult.questionImage || null)}
-                                  onError={(e) => {
-                                    const target = e.target as HTMLImageElement;
-                                    target.style.display = 'none';
-                                  }}
+                                  onImageClick={() => setFullscreenImage(questionResult.questionImage || null)}
+                                  skeletonHeight="200px"
                                 />
                                 <Button
                                   size="sm"
@@ -722,14 +738,11 @@ const Quiz = () => {
                                     )}
                                     {optionImage && (
                                       <div className="mt-2">
-                                        <img 
+                                        <OptimizedImage 
                                           src={optionImage} 
                                           alt={`Option ${String.fromCharCode(65 + optionIndex)}`}
                                           className="max-w-full h-auto max-h-64 rounded-lg border border-border"
-                                          onError={(e) => {
-                                            const target = e.target as HTMLImageElement;
-                                            target.style.display = 'none';
-                                          }}
+                                          skeletonHeight="120px"
                                         />
                                       </div>
                                     )}
@@ -1281,15 +1294,13 @@ const Quiz = () => {
                         )}
                         {currentQuestion.questionImage && (
                           <div className="mb-4 relative group">
-                            <img 
+                            <OptimizedImage 
                               src={currentQuestion.questionImage} 
                               alt="Question" 
+                              priority
                               className="max-w-full h-auto max-h-[500px] w-auto mx-auto rounded-lg border-2 border-border shadow-md cursor-pointer hover:border-primary transition-all"
-                              onClick={() => setFullscreenImage(currentQuestion.questionImage || null)}
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.style.display = 'none';
-                              }}
+                              onImageClick={() => setFullscreenImage(currentQuestion.questionImage || null)}
+                              skeletonHeight="300px"
                             />
                             <Button
                               size="sm"
@@ -1328,18 +1339,15 @@ const Quiz = () => {
                                   )}
                                   {optionImage && (
                                     <div className="mt-2 relative group">
-                                      <img 
+                                      <OptimizedImage 
                                         src={optionImage} 
                                         alt={`Option ${index + 1}`}
                                         className="max-w-full h-auto max-h-96 rounded-lg border border-border cursor-pointer hover:border-primary transition-all"
-                                        onClick={(e) => {
+                                        onImageClick={(e) => {
                                           e.stopPropagation();
                                           setFullscreenImage(optionImage);
                                         }}
-                                        onError={(e) => {
-                                          const target = e.target as HTMLImageElement;
-                                          target.style.display = 'none';
-                                        }}
+                                        skeletonHeight="150px"
                                       />
                                       <Button
                                         size="sm"

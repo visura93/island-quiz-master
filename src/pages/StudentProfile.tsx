@@ -27,6 +27,7 @@ import {
   Crown
 } from "lucide-react";
 import { apiService, StudentDetail, QuizAttempt, PaymentRecord, UpdateStudentPremiumRequest, CreatePaymentRequest } from "@/lib/api";
+import { OptimizedImage } from "@/components/OptimizedImage";
 import { 
   Dialog, 
   DialogContent, 
@@ -632,14 +633,11 @@ const StudentProfile = () => {
                         )}
                         {question.questionImage && (
                           <div className="mb-2">
-                            <img 
-                              src={question.questionImage} 
-                              alt="Question" 
+                            <OptimizedImage
+                              src={question.questionImage}
+                              alt="Question"
                               className="max-w-full h-auto rounded-lg border border-border"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.style.display = 'none';
-                              }}
+                              skeletonHeight="150px"
                             />
                           </div>
                         )}
@@ -683,14 +681,11 @@ const StudentProfile = () => {
                                 )}
                                 {optionImage && (
                                   <div className="mt-2">
-                                    <img 
+                                    <OptimizedImage 
                                       src={optionImage} 
                                       alt={`Option ${String.fromCharCode(65 + optionIndex)}`}
                                       className="max-w-full h-auto max-h-48 rounded-lg border border-border"
-                                      onError={(e) => {
-                                        const target = e.target as HTMLImageElement;
-                                        target.style.display = 'none';
-                                      }}
+                                      skeletonHeight="100px"
                                     />
                                   </div>
                                 )}
