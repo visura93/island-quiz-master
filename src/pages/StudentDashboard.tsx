@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { GraduationCap, BookOpen, Trophy, Clock, TrendingUp, LogOut, Search, FileText, Award, School, X, Info, Play, Calendar, CheckCircle, Eye, ChevronRight, Sparkles, Atom, Globe, ArrowLeft, RotateCw, Lock, Crown, Settings as SettingsIcon, MessageCircle, Zap, Flame, Medal } from "lucide-react";
+import { GraduationCap, BookOpen, Trophy, Clock, TrendingUp, LogOut, Search, FileText, Award, School, X, Info, Play, Calendar, CheckCircle, Eye, ChevronRight, Sparkles, Atom, Globe, ArrowLeft, RotateCw, Lock, Crown, Settings as SettingsIcon, MessageCircle, Zap, Flame, Medal, Target, Star, Rocket, Moon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
@@ -17,6 +17,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from "@/hooks/use-toast";
 import { getMockLeaderboard, getMockStreakInfo } from "@/lib/mockLeaderboardData";
 import type { LeaderboardEntry, StreakInfo } from "@/lib/api";
+import { getActiveGoals, refreshGoalProgress, type StudyGoal } from "@/lib/goalsStore";
+import { evaluateBadges, getRecentBadges, type EarnedBadge, type BadgeProgress, RARITY_STYLES } from "@/lib/badgesEngine";
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
@@ -58,6 +60,11 @@ const StudentDashboard = () => {
   const [leaderboardTop3, setLeaderboardTop3] = useState<LeaderboardEntry[]>([]);
   const [myRank, setMyRank] = useState<number | null>(null);
   const [streakDays, setStreakDays] = useState<number>(0);
+
+  // Goals & badges widget state
+  const [dashboardGoals, setDashboardGoals] = useState<StudyGoal[]>([]);
+  const [recentBadges, setRecentBadges] = useState<EarnedBadge[]>([]);
+  const [totalBadgesEarned, setTotalBadgesEarned] = useState<number>(0);
 
   // Show welcome tutorial for new users
   useEffect(() => {
@@ -435,6 +442,27 @@ const StudentDashboard = () => {
       }
     };
     loadLeaderboardPreview();
+
+    // Load goals & badges preview
+    const loadGoalsAndBadges = async () => {
+      try {
+        const [quizResult, streakResult] = await Promise.allSettled([
+          apiService.getCompletedQuizzes(),
+          apiService.getStreakInfo(),
+        ]);
+        const quizzes = quizResult.status === 'fulfilled' ? quizResult.value : [];
+        const streakData = streakResult.status === 'fulfilled' ? streakResult.value : getMockStreakInfo();
+        refreshGoalProgress(quizzes, streakData);
+        setDashboardGoals(getActiveGoals().slice(0, 3));
+        const badgeResults = evaluateBadges(quizzes, streakData);
+        setTotalBadgesEarned(badgeResults.filter((b) => b.earned).length);
+        setRecentBadges(getRecentBadges(4));
+      } catch {
+        setDashboardGoals(getActiveGoals().slice(0, 3));
+        setRecentBadges(getRecentBadges(4));
+      }
+    };
+    loadGoalsAndBadges();
     
     // Refresh user data to get latest premium status
     refreshUser();
@@ -1060,6 +1088,114 @@ const StudentDashboard = () => {
                     }}
                   >
                     View Full Leaderboard
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Goals & Badges Widget - Only show in dashboard view */}
+        {!selectedQuizType &&
+         !showPaperTypes &&
+         !showPaperBundles &&
+         !showSubjectSelection &&
+         !showLessonwiseTopics && (
+          <Card
+            className="border-2 shadow-elegant bg-gradient-card mb-12 cursor-pointer hover:shadow-hover transition-all group overflow-hidden"
+            onClick={() => navigate('/goals')}
+          >
+            <CardContent className="p-6">
+              <div className="flex flex-col lg:flex-row gap-6">
+                {/* Left: Active Goals */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="p-1.5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg">
+                      <Target className="h-4 w-4 text-white" />
+                    </div>
+                    <span className="text-sm font-semibold text-foreground">My Goals</span>
+                    {dashboardGoals.length === 0 && (
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 ml-auto">
+                        Set a goal
+                      </Badge>
+                    )}
+                  </div>
+                  {dashboardGoals.length > 0 ? (
+                    <div className="space-y-3">
+                      {dashboardGoals.map((goal) => {
+                        const pct = goal.target > 0 ? Math.min(100, Math.round((goal.current / goal.target) * 100)) : 0;
+                        return (
+                          <div key={goal.id} className="space-y-1">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-foreground font-medium truncate mr-2">{goal.title}</span>
+                              <span className="text-muted-foreground whitespace-nowrap">{pct}%</span>
+                            </div>
+                            <Progress value={pct} className="h-1.5" />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      No active goals yet. Tap to create one!
+                    </p>
+                  )}
+                </div>
+
+                <div className="w-px bg-border hidden lg:block" />
+
+                {/* Right: Recent Badges */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="p-1.5 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg">
+                      <Trophy className="h-4 w-4 text-white" />
+                    </div>
+                    <span className="text-sm font-semibold text-foreground">Badges</span>
+                    {totalBadgesEarned > 0 && (
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 ml-auto">
+                        {totalBadgesEarned} earned
+                      </Badge>
+                    )}
+                  </div>
+                  {recentBadges.length > 0 ? (
+                    <div className="flex flex-wrap gap-3">
+                      {recentBadges.map((badge) => {
+                        const style = RARITY_STYLES[badge.rarity];
+                        const IconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+                          Rocket, BookOpen, Crown, Star, TrendingUp, GraduationCap,
+                          Flame, Zap, Moon, Target, Trophy,
+                        };
+                        const Icon = IconMap[badge.icon] || Star;
+                        return (
+                          <div key={badge.id} className="flex flex-col items-center gap-1" title={badge.name}>
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${style.border} ${style.bg}`}>
+                              <Icon className={`h-5 w-5 ${style.text}`} />
+                            </div>
+                            <span className="text-[10px] text-muted-foreground text-center leading-tight max-w-[60px] truncate">
+                              {badge.name}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      Complete quizzes to earn badges!
+                    </p>
+                  )}
+                </div>
+
+                {/* CTA Arrow */}
+                <div className="flex items-center flex-shrink-0">
+                  <Button
+                    className="bg-gradient-hero hover:opacity-90 transition-opacity btn-modern"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate('/goals');
+                    }}
+                  >
+                    View All
                     <ChevronRight className="h-4 w-4 ml-1" />
                   </Button>
                 </div>

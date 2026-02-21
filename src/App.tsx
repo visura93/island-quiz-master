@@ -30,6 +30,7 @@ import Payment from "./pages/Payment";
 import Settings from "./pages/Settings";
 import ContactUs from "./pages/ContactUs";
 import Leaderboard from "./pages/Leaderboard";
+import GoalsAndAchievements from "./pages/GoalsAndAchievements";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -196,6 +197,14 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="Student">
                   <Leaderboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/goals" 
+              element={
+                <ProtectedRoute requiredRole="Student">
+                  <GoalsAndAchievements />
                 </ProtectedRoute>
               } 
             />
