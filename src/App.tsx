@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { QuizPreferencesProvider } from "@/contexts/QuizPreferencesContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import Index from "./pages/Index";
@@ -42,6 +43,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <ThemeProvider>
+        <QuizPreferencesProvider>
         <TooltipProvider>
           <Toaster />
           <Sonner />
@@ -203,6 +205,7 @@ const App = () => (
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
+    </QuizPreferencesProvider>
     </ThemeProvider>
     </GoogleOAuthProvider>
   </QueryClientProvider>

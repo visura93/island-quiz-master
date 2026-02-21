@@ -2,14 +2,17 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
-import { ArrowLeft, User, Lock, Bell, Shield, Smartphone, Mail, Globe, Eye } from "lucide-react";
+import { useQuizPreferences } from "@/contexts/QuizPreferencesContext";
+import { ArrowLeft, User, Lock, Bell, Shield, Smartphone, Mail, Globe, Eye, Volume2, Vibrate } from "lucide-react";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
 
 const Settings = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { soundEnabled, hapticEnabled, toggleSound, toggleHaptic } = useQuizPreferences();
 
   return (
     <div className="min-h-screen bg-gradient-mesh">
@@ -261,6 +264,28 @@ const Settings = () => {
                         <p className="text-sm text-muted-foreground">Show/hide timer during quizzes</p>
                       </div>
                       <div className="text-sm text-muted-foreground">Coming Soon</div>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <Volume2 className="h-5 w-5 text-primary flex-shrink-0" />
+                        <div>
+                          <p className="font-medium">Sound Effects</p>
+                          <p className="text-sm text-muted-foreground">Play sounds when selecting answers, submitting, and timer warnings</p>
+                        </div>
+                      </div>
+                      <Switch checked={soundEnabled} onCheckedChange={toggleSound} />
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <Vibrate className="h-5 w-5 text-primary flex-shrink-0" />
+                        <div>
+                          <p className="font-medium">Haptic Feedback</p>
+                          <p className="text-sm text-muted-foreground">Vibrate on interactions (mobile devices)</p>
+                        </div>
+                      </div>
+                      <Switch checked={hapticEnabled} onCheckedChange={toggleHaptic} />
                     </div>
                   </CardContent>
                 </Card>

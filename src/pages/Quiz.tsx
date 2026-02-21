@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,8 +19,12 @@ import {
   Maximize2,
   X as CloseIcon,
   Flag,
-  AlertTriangle
+  AlertTriangle,
+  Keyboard,
+  HelpCircle
 } from "lucide-react";
+import { useQuizKeyboard } from "@/hooks/useQuizKeyboard";
+import { useQuizSounds } from "@/hooks/useQuizSounds";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatTimeRemaining, formatLastSavedTime } from "@/lib/quizProgress";
@@ -82,10 +86,13 @@ const Quiz = () => {
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [flaggedQuestions, setFlaggedQuestions] = useState<Set<string>>(new Set());
   const [showReviewScreen, setShowReviewScreen] = useState(false);
+  const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
 
   const currentQuestion = questions[currentQuestionIndex];
   const totalQuestions = questions.length > 0 ? questions.length : initialQuestionCount;
   const progress = totalQuestions > 0 ? ((currentQuestionIndex + 1) / totalQuestions) * 100 : 0;
+
+  const { playClickSound, playCompletionSound, playTimerWarning } = useQuizSounds();
 
   // Check for saved progress and load quiz information when component mounts
   useEffect(() => {
@@ -268,13 +275,22 @@ const Quiz = () => {
   // Determine if timer should display in red (warning state)
   const shouldShowWarning = () => {
     if (initialTimeLimit < 5) {
-      // If time limit is less than 5 minutes, show red when ≤ 20 seconds remain
       return timeRemaining <= 20;
     } else {
-      // If time limit is ≥ 5 minutes, show red when ≤ 60 seconds (1 minute) remain
       return timeRemaining <= 60;
     }
   };
+
+  const timerWarningFired = useRef(false);
+  useEffect(() => {
+    if (isQuizStarted && isTimerRunning && shouldShowWarning() && !timerWarningFired.current) {
+      timerWarningFired.current = true;
+      playTimerWarning();
+    }
+    if (!shouldShowWarning()) {
+      timerWarningFired.current = false;
+    }
+  }, [timeRemaining, isQuizStarted, isTimerRunning]);
 
   const handleStartQuiz = async (resumeFromSaved: boolean = false) => {
     try {
@@ -406,8 +422,8 @@ const Quiz = () => {
   const handleAnswerSelect = async (answerIndex: number) => {
     if (!currentQuestion || !attemptId) return;
 
-    // For now, treat all questions as single answer
-    // In a real implementation, the backend would indicate if multiple answers are allowed
+    playClickSound();
+
     setSelectedAnswers(prev => ({
       ...prev,
       [currentQuestion.id]: answerIndex
@@ -506,6 +522,19 @@ const Quiz = () => {
     });
   };
 
+  const stableAnswerSelect = useCallback((idx: number) => handleAnswerSelect(idx), [currentQuestion, attemptId]);
+
+  useQuizKeyboard({
+    enabled: isQuizStarted && !showResults && !showReviewScreen && !showSubmitDialog && !fullscreenImage && isTimerRunning,
+    optionCount: currentQuestion?.options?.length ?? 0,
+    isLastQuestion: currentQuestionIndex >= totalQuestions - 1,
+    onSelectAnswer: stableAnswerSelect,
+    onNext: handleNextQuestion,
+    onPrevious: handlePreviousQuestion,
+    onFlag: handleToggleFlag,
+    onSubmit: () => setShowReviewScreen(true),
+  });
+
   const handleNavigateToQuestion = (index: number) => {
     setCurrentQuestionIndex(index);
     setShowReviewScreen(false);
@@ -544,6 +573,7 @@ const Quiz = () => {
         
         const result = await apiService.completeQuiz(attemptId, timeSpentInSeconds);
         setQuizResult(result);
+        playCompletionSound();
         
         // Clear saved progress when quiz is completed
         if (quizData.quizId) {
@@ -553,7 +583,6 @@ const Quiz = () => {
       setShowResults(true);
     } catch (err) {
       console.error("Error completing quiz:", err);
-      // Still show results even if completion fails
       setShowResults(true);
     }
   };
@@ -1376,7 +1405,7 @@ const Quiz = () => {
                   )}
 
                   {/* Navigation */}
-                  <div className="flex justify-between pt-6 border-t">
+                  <div className="flex justify-between items-center pt-6 border-t">
                     <Button 
                       variant="outline" 
                       onClick={handlePreviousQuestion}
@@ -1388,6 +1417,34 @@ const Quiz = () => {
                     </Button>
                     
                     <div className="flex gap-3">
+                      {/* Keyboard shortcuts help */}
+                      <div className="relative">
+                        <TooltipProvider delayDuration={0}>
+                          <Tooltip open={showShortcutsHelp} onOpenChange={setShowShortcutsHelp}>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-muted-foreground hover:text-foreground"
+                                onClick={() => setShowShortcutsHelp(prev => !prev)}
+                              >
+                                <Keyboard className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="w-56 p-3">
+                              <p className="font-semibold text-sm mb-2">Keyboard Shortcuts</p>
+                              <div className="space-y-1 text-xs">
+                                <div className="flex justify-between"><span>Select answer</span><span className="font-mono bg-muted px-1 rounded">1-5</span></div>
+                                <div className="flex justify-between"><span>Previous question</span><span className="font-mono bg-muted px-1 rounded">&larr;</span></div>
+                                <div className="flex justify-between"><span>Next question</span><span className="font-mono bg-muted px-1 rounded">&rarr;</span></div>
+                                <div className="flex justify-between"><span>Flag question</span><span className="font-mono bg-muted px-1 rounded">F</span></div>
+                                <div className="flex justify-between"><span>Next / Submit</span><span className="font-mono bg-muted px-1 rounded">Enter</span></div>
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+
                       <Button 
                         onClick={() => setShowReviewScreen(true)}
                         variant="outline"
