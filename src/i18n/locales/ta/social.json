@@ -1,0 +1,117 @@
+{
+  "leaderboard": {
+    "title": "முன்னிலை பட்டியல்",
+    "subtitle": "நீங்கள் எங்கு நிற்கிறீர்கள் என்று பாருங்கள்",
+    "participantsCompeting": "{{count}} {{category}} மாணவர்கள் போட்டியிடுகிறார்கள்",
+    "back": "திரும்பு",
+    "selectCategory": "வகையை தேர்வு செய்",
+    "tabs": {
+      "bySubject": "பாட வாரியாக",
+      "subject": "பாடம்",
+      "overall": "ஒட்டுமொத்தம்",
+      "weeklyMonthly": "வாராந்திர / மாதாந்திர",
+      "time": "நேரம்",
+      "streaks": "தொடர்கள்"
+    },
+    "selectSubject": "பாடத்தை தேர்வு செய்",
+    "thisWeek": "இந்த வாரம்",
+    "thisMonth": "இந்த மாதம்",
+    "noRankings": "தரவரிசைகள் இல்லை",
+    "noRankingsDesc": "முன்னிலை பட்டியலில் தோன்ற சில வினாடி வினாக்களை முடிக்கவும்!",
+    "table": {
+      "rank": "#",
+      "student": "மாணவர்",
+      "score": "மதிப்பெண்",
+      "quizzes": "வினாடி வினாக்கள்",
+      "streak": "தொடர்",
+      "current": "தற்போது",
+      "best": "சிறந்தது"
+    },
+    "yourRank": "உங்கள் தரவரிசை",
+    "soon": "விரைவில்",
+    "streakCard": {
+      "currentStreak": "தற்போதைய தொடர்",
+      "days": "{{count}} நாட்கள்",
+      "best": "சிறந்தது: {{count}} நாட்கள்",
+      "last90Days": "கடந்த 90 நாட்கள்",
+      "less": "குறைவு",
+      "more": "அதிகம்",
+      "milestones": "மைல்கற்கள்",
+      "streakRankings": "தொடர் தரவரிசை",
+      "done": "முடிந்தது",
+      "active": "செயலில்",
+      "inactive": "செயலற்றது"
+    },
+    "podium": {
+      "first": "1வது",
+      "second": "2வது",
+      "third": "3வது"
+    },
+    "quizzesCount": "{{count}} வினாடி வினாக்கள்"
+  },
+  "goals": {
+    "title": "இலக்குகள் & சாதனைகள்",
+    "subtitle": "முன்னேற்றத்தை கண்காணித்து பட்டங்களை சேகரிக்கவும்",
+    "loading": "உங்கள் சாதனைகளை ஏற்றுகிறது...",
+    "summary": {
+      "activeGoals": "செயலில் உள்ள இலக்குகள்",
+      "goalsCompleted": "முடிந்த இலக்குகள்",
+      "badgesEarned": "பெற்ற பட்டங்கள்"
+    },
+    "tabs": {
+      "studyGoals": "படிப்பு இலக்குகள்",
+      "badges": "பட்டங்கள்"
+    },
+    "activeGoals": "செயலில் உள்ள இலக்குகள்",
+    "addGoal": "இலக்கு சேர்",
+    "noGoals": "செயலில் உள்ள இலக்குகள் இல்லை",
+    "noGoalsDesc": "படிப்பு இலக்கை அமைத்து முன்னேற்றத்தை கண்காணிக்கவும்.",
+    "createFirstGoal": "உங்கள் முதல் இலக்கை உருவாக்கு",
+    "completedGoals": "முடிந்த இலக்குகள் ({{count}})",
+    "completed": "{{date}} முடிந்தது",
+    "ends": "{{date}} முடிகிறது",
+    "expired": "காலாவதியானது",
+    "achievementBadges": "சாதனை பட்டங்கள்",
+    "unlocked": "{{count}} / {{total}} திறக்கப்பட்டது",
+    "unlockedDate": "{{date}} திறக்கப்பட்டது",
+    "createGoal": {
+      "title": "படிப்பு இலக்கை உருவாக்கு",
+      "subtitle": "இலக்கை அமைத்து தானாகவே முன்னேற்றத்தை கண்காணிக்கவும்.",
+      "goalType": "இலக்கு வகை",
+      "completeQuizzes": "வினாடி வினாக்களை முடி",
+      "achieveScore": "மதிப்பெண் இலக்கை அடை",
+      "buildStreak": "தொடரை கட்டமை",
+      "targetLabel": {
+        "quiz_count": "வினாடி வினாக்களின் எண்ணிக்கை",
+        "score_target": "இலக்கு மதிப்பெண் (%)",
+        "streak": "தொடர் நாட்கள்"
+      },
+      "placeholder": {
+        "quiz_count": "எ.கா. 5",
+        "score_target": "எ.கா. 80",
+        "streak": "எ.கா. 7"
+      },
+      "subjectOptional": "பாடம் (விருப்பமானது)",
+      "allSubjects": "அனைத்து பாடங்கள்",
+      "timePeriod": "நேர காலம்",
+      "thisWeek": "இந்த வாரம்",
+      "thisMonth": "இந்த மாதம்",
+      "createButton": "இலக்கை உருவாக்கு",
+      "invalidTarget": "தவறான இலக்கு",
+      "invalidTargetDesc": "சரியான இலக்கு எண்ணை உள்ளிடுக.",
+      "limitReached": "வரம்பை அடைந்தது",
+      "limitReachedDesc": "அதிகபட்சம் 5 செயலில் உள்ள இலக்குகள் மட்டுமே வைக்கலாம்.",
+      "goalCreated": "இலக்கு உருவாக்கப்பட்டது"
+    },
+    "badgeCelebration": {
+      "badgeUnlocked": "பட்டம் திறக்கப்பட்டது!",
+      "awesome": "அருமை!"
+    },
+    "rarity": {
+      "common": "சாதாரண",
+      "rare": "அரிது",
+      "epic": "புகழ்பெற்றது",
+      "legendary": "புராணம்"
+    }
+  }
+}

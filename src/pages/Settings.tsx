@@ -8,9 +8,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQuizPreferences } from "@/contexts/QuizPreferencesContext";
 import { ArrowLeft, User, Lock, Bell, Shield, Smartphone, Mail, Globe, Eye, Volume2, Vibrate } from "lucide-react";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useTranslation } from "react-i18next";
 
 const Settings = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation(['profile', 'common']);
   const { user } = useAuth();
   const { soundEnabled, hapticEnabled, toggleSound, toggleHaptic } = useQuizPreferences();
 
@@ -19,20 +22,26 @@ const Settings = () => {
       {/* Header */}
       <header className="border-b border-border/50 backdrop-blur-sm bg-background/80 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => navigate('/student-dashboard')}
-              className="btn-modern"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold bg-gradient-hero bg-clip-text text-transparent">
-                Settings
-              </h1>
-              <p className="text-sm text-muted-foreground">Manage your account settings and preferences</p>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => navigate('/student-dashboard')}
+                className="btn-modern"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <div>
+                <h1 className="text-2xl font-bold bg-gradient-hero bg-clip-text text-transparent">
+                  {t('profile:settings.title')}
+                </h1>
+                <p className="text-sm text-muted-foreground">{t('profile:settings.subtitle')}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <LanguageSwitcher />
+              <DarkModeToggle />
             </div>
           </div>
         </div>
@@ -42,9 +51,9 @@ const Settings = () => {
       <div className="container mx-auto px-4 py-8">
         <Card className="border-2 shadow-elegant bg-gradient-card max-w-4xl mx-auto">
           <CardHeader>
-            <CardTitle className="text-2xl">Account Settings</CardTitle>
+            <CardTitle className="text-2xl">{t('profile:settings.cardTitle')}</CardTitle>
             <CardDescription>
-              Manage your profile, security, and notification preferences
+              {t('profile:settings.cardSubtitle')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -52,23 +61,23 @@ const Settings = () => {
               <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 mb-8">
                 <TabsTrigger value="profile" className="gap-2">
                   <User className="h-4 w-4" />
-                  Profile
+                  {t('profile:settings.tabs.profile')}
                 </TabsTrigger>
                 <TabsTrigger value="password" className="gap-2">
                   <Lock className="h-4 w-4" />
-                  Password
+                  {t('profile:settings.tabs.password')}
                 </TabsTrigger>
                 <TabsTrigger value="notifications" className="gap-2">
                   <Bell className="h-4 w-4" />
-                  Notifications
+                  {t('profile:settings.tabs.notifications')}
                 </TabsTrigger>
                 <TabsTrigger value="privacy" className="gap-2">
                   <Shield className="h-4 w-4" />
-                  Privacy
+                  {t('profile:settings.tabs.privacy')}
                 </TabsTrigger>
                 <TabsTrigger value="preferences" className="gap-2">
                   <Globe className="h-4 w-4" />
-                  Preferences
+                  {t('profile:settings.tabs.preferences')}
                 </TabsTrigger>
               </TabsList>
 
@@ -78,10 +87,10 @@ const Settings = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <User className="h-5 w-5" />
-                      Profile Settings
+                      {t('profile:settings.profile.title')}
                     </CardTitle>
                     <CardDescription>
-                      View and update your personal information
+                      {t('profile:settings.profile.subtitle')}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -90,10 +99,10 @@ const Settings = () => {
                       className="w-full bg-gradient-hero hover:opacity-90 transition-opacity"
                     >
                       <Eye className="h-4 w-4 mr-2" />
-                      View & Edit Profile
+                      {t('profile:settings.profile.viewEdit')}
                     </Button>
                     <p className="text-sm text-muted-foreground mt-4 text-center">
-                      Update your name, profile picture, contact details, and more
+                      {t('profile:settings.profile.hint')}
                     </p>
                   </CardContent>
                 </Card>
@@ -105,10 +114,10 @@ const Settings = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Lock className="h-5 w-5" />
-                      Change Password
+                      {t('profile:settings.password.title')}
                     </CardTitle>
                     <CardDescription>
-                      Update your password to keep your account secure
+                      {t('profile:settings.password.subtitle')}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -117,15 +126,15 @@ const Settings = () => {
                       className="w-full bg-gradient-hero hover:opacity-90 transition-opacity"
                     >
                       <Lock className="h-4 w-4 mr-2" />
-                      Change Password
+                      {t('profile:settings.password.changeButton')}
                     </Button>
                     <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-                      <h4 className="font-semibold text-sm mb-2">Password Requirements:</h4>
+                      <h4 className="font-semibold text-sm mb-2">{t('profile:settings.password.requirements')}</h4>
                       <ul className="text-sm text-muted-foreground space-y-1">
-                        <li>• At least 8 characters long</li>
-                        <li>• Include uppercase and lowercase letters</li>
-                        <li>• Include at least one number</li>
-                        <li>• Include at least one special character</li>
+                        <li>• {t('profile:settings.password.req1')}</li>
+                        <li>• {t('profile:settings.password.req2')}</li>
+                        <li>• {t('profile:settings.password.req3')}</li>
+                        <li>• {t('profile:settings.password.req4')}</li>
                       </ul>
                     </div>
                   </CardContent>
@@ -138,10 +147,10 @@ const Settings = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Bell className="h-5 w-5" />
-                      Notification Preferences
+                      {t('profile:settings.notifications.title')}
                     </CardTitle>
                     <CardDescription>
-                      Manage how you receive notifications and updates
+                      {t('profile:settings.notifications.subtitle')}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -149,33 +158,33 @@ const Settings = () => {
                       <div className="flex items-center gap-3">
                         <Mail className="h-5 w-5 text-primary" />
                         <div>
-                          <p className="font-medium">Email Notifications</p>
-                          <p className="text-sm text-muted-foreground">Receive updates via email</p>
+                          <p className="font-medium">{t('profile:settings.notifications.email')}</p>
+                          <p className="text-sm text-muted-foreground">{t('profile:settings.notifications.emailDesc')}</p>
                         </div>
                       </div>
-                      <div className="text-sm text-muted-foreground">Coming Soon</div>
+                      <div className="text-sm text-muted-foreground">{t('common:status.comingSoon')}</div>
                     </div>
-                    
+
                     <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
                       <div className="flex items-center gap-3">
                         <Smartphone className="h-5 w-5 text-primary" />
                         <div>
-                          <p className="font-medium">Push Notifications</p>
-                          <p className="text-sm text-muted-foreground">Get alerts on your device</p>
+                          <p className="font-medium">{t('profile:settings.notifications.push')}</p>
+                          <p className="text-sm text-muted-foreground">{t('profile:settings.notifications.pushDesc')}</p>
                         </div>
                       </div>
-                      <div className="text-sm text-muted-foreground">Coming Soon</div>
+                      <div className="text-sm text-muted-foreground">{t('common:status.comingSoon')}</div>
                     </div>
 
                     <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
                       <div className="flex items-center gap-3">
                         <Bell className="h-5 w-5 text-primary" />
                         <div>
-                          <p className="font-medium">Quiz Reminders</p>
-                          <p className="text-sm text-muted-foreground">Reminders for incomplete quizzes</p>
+                          <p className="font-medium">{t('profile:settings.notifications.reminders')}</p>
+                          <p className="text-sm text-muted-foreground">{t('profile:settings.notifications.remindersDesc')}</p>
                         </div>
                       </div>
-                      <div className="text-sm text-muted-foreground">Coming Soon</div>
+                      <div className="text-sm text-muted-foreground">{t('common:status.comingSoon')}</div>
                     </div>
                   </CardContent>
                 </Card>
@@ -187,35 +196,35 @@ const Settings = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Shield className="h-5 w-5" />
-                      Privacy & Security
+                      {t('profile:settings.privacy.title')}
                     </CardTitle>
                     <CardDescription>
-                      Control your privacy and security settings
+                      {t('profile:settings.privacy.subtitle')}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="p-4 bg-muted/50 rounded-lg">
-                      <h4 className="font-semibold mb-2">Account Privacy</h4>
+                      <h4 className="font-semibold mb-2">{t('profile:settings.privacy.accountPrivacy')}</h4>
                       <p className="text-sm text-muted-foreground mb-3">
-                        Your quiz results and progress are private by default
+                        {t('profile:settings.privacy.accountPrivacyDesc')}
                       </p>
-                      <div className="text-sm text-muted-foreground">Coming Soon</div>
+                      <div className="text-sm text-muted-foreground">{t('common:status.comingSoon')}</div>
                     </div>
 
                     <div className="p-4 bg-muted/50 rounded-lg">
-                      <h4 className="font-semibold mb-2">Data & Analytics</h4>
+                      <h4 className="font-semibold mb-2">{t('profile:settings.privacy.dataAnalytics')}</h4>
                       <p className="text-sm text-muted-foreground mb-3">
-                        We collect performance data to improve your learning experience
+                        {t('profile:settings.privacy.dataAnalyticsDesc')}
                       </p>
-                      <div className="text-sm text-muted-foreground">Coming Soon</div>
+                      <div className="text-sm text-muted-foreground">{t('common:status.comingSoon')}</div>
                     </div>
 
                     <div className="p-4 bg-muted/50 rounded-lg">
-                      <h4 className="font-semibold mb-2">Two-Factor Authentication</h4>
+                      <h4 className="font-semibold mb-2">{t('profile:settings.privacy.twoFactor')}</h4>
                       <p className="text-sm text-muted-foreground mb-3">
-                        Add an extra layer of security to your account
+                        {t('profile:settings.privacy.twoFactorDesc')}
                       </p>
-                      <div className="text-sm text-muted-foreground">Coming Soon</div>
+                      <div className="text-sm text-muted-foreground">{t('common:status.comingSoon')}</div>
                     </div>
                   </CardContent>
                 </Card>
@@ -227,51 +236,51 @@ const Settings = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Globe className="h-5 w-5" />
-                      Display Preferences
+                      {t('profile:settings.preferences.title')}
                     </CardTitle>
                     <CardDescription>
-                      Customize your learning environment
+                      {t('profile:settings.preferences.subtitle')}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
                       <div>
-                        <p className="font-medium">Dark Mode</p>
-                        <p className="text-sm text-muted-foreground">Toggle dark/light theme</p>
+                        <p className="font-medium">{t('profile:settings.preferences.darkMode')}</p>
+                        <p className="text-sm text-muted-foreground">{t('profile:settings.preferences.darkModeDesc')}</p>
                       </div>
                       <DarkModeToggle />
                     </div>
 
                     <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
                       <div>
-                        <p className="font-medium">Language</p>
-                        <p className="text-sm text-muted-foreground">Choose your preferred language</p>
+                        <p className="font-medium">{t('profile:settings.preferences.language')}</p>
+                        <p className="text-sm text-muted-foreground">{t('profile:settings.preferences.languageDesc')}</p>
                       </div>
-                      <div className="text-sm text-muted-foreground">Coming Soon</div>
+                      <LanguageSwitcher />
                     </div>
 
                     <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
                       <div>
-                        <p className="font-medium">Font Size</p>
-                        <p className="text-sm text-muted-foreground">Adjust text size for better readability</p>
+                        <p className="font-medium">{t('profile:settings.preferences.fontSize')}</p>
+                        <p className="text-sm text-muted-foreground">{t('profile:settings.preferences.fontSizeDesc')}</p>
                       </div>
-                      <div className="text-sm text-muted-foreground">Coming Soon</div>
+                      <div className="text-sm text-muted-foreground">{t('common:status.comingSoon')}</div>
                     </div>
 
                     <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
                       <div>
-                        <p className="font-medium">Quiz Timer Display</p>
-                        <p className="text-sm text-muted-foreground">Show/hide timer during quizzes</p>
+                        <p className="font-medium">{t('profile:settings.preferences.quizTimer')}</p>
+                        <p className="text-sm text-muted-foreground">{t('profile:settings.preferences.quizTimerDesc')}</p>
                       </div>
-                      <div className="text-sm text-muted-foreground">Coming Soon</div>
+                      <div className="text-sm text-muted-foreground">{t('common:status.comingSoon')}</div>
                     </div>
 
                     <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
                       <div className="flex items-center gap-3">
                         <Volume2 className="h-5 w-5 text-primary flex-shrink-0" />
                         <div>
-                          <p className="font-medium">Sound Effects</p>
-                          <p className="text-sm text-muted-foreground">Play sounds when selecting answers, submitting, and timer warnings</p>
+                          <p className="font-medium">{t('profile:settings.preferences.soundEffects')}</p>
+                          <p className="text-sm text-muted-foreground">{t('profile:settings.preferences.soundEffectsDesc')}</p>
                         </div>
                       </div>
                       <Switch checked={soundEnabled} onCheckedChange={toggleSound} />
@@ -281,8 +290,8 @@ const Settings = () => {
                       <div className="flex items-center gap-3">
                         <Vibrate className="h-5 w-5 text-primary flex-shrink-0" />
                         <div>
-                          <p className="font-medium">Haptic Feedback</p>
-                          <p className="text-sm text-muted-foreground">Vibrate on interactions (mobile devices)</p>
+                          <p className="font-medium">{t('profile:settings.preferences.hapticFeedback')}</p>
+                          <p className="text-sm text-muted-foreground">{t('profile:settings.preferences.hapticFeedbackDesc')}</p>
                         </div>
                       </div>
                       <Switch checked={hapticEnabled} onCheckedChange={toggleHaptic} />

@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -47,9 +49,9 @@ import {
 // ─── Podium ────────────────────────────────────────────────────────────────────
 
 const PODIUM_META = [
-  { place: 2, order: "order-1 lg:order-1", height: "h-28 lg:h-32", color: "slate", icon: Medal, label: "2nd" },
-  { place: 1, order: "order-0 lg:order-2", height: "h-36 lg:h-44", color: "amber", icon: Crown, label: "1st" },
-  { place: 3, order: "order-2 lg:order-3", height: "h-24 lg:h-28", color: "orange", icon: Award, label: "3rd" },
+  { place: 2, order: "order-1 lg:order-1", height: "h-28 lg:h-32", color: "slate", icon: Medal, labelKey: "social:leaderboard.podium.second" },
+  { place: 1, order: "order-0 lg:order-2", height: "h-36 lg:h-44", color: "amber", icon: Crown, labelKey: "social:leaderboard.podium.first" },
+  { place: 3, order: "order-2 lg:order-3", height: "h-24 lg:h-28", color: "orange", icon: Award, labelKey: "social:leaderboard.podium.third" },
 ] as const;
 
 function podiumColors(place: 1 | 2 | 3, isDark: boolean) {
@@ -83,6 +85,7 @@ function podiumColors(place: 1 | 2 | 3, isDark: boolean) {
 }
 
 function PodiumCard({ entry, meta, isDark }: { entry: LeaderboardEntry; meta: typeof PODIUM_META[number]; isDark: boolean }) {
+  const { t } = useTranslation(['social', 'common']);
   const c = podiumColors(meta.place as 1 | 2 | 3, isDark);
   const Icon = meta.icon;
   return (
@@ -99,7 +102,7 @@ function PodiumCard({ entry, meta, isDark }: { entry: LeaderboardEntry; meta: ty
         </p>
         <p className={`text-2xl font-bold mt-1 ${c.text}`}>{entry.score}%</p>
         <p className={`text-xs mt-0.5 ${isDark ? "text-slate-400" : "text-muted-foreground"}`}>
-          {entry.quizzesCompleted} quizzes
+          {t('social:leaderboard.quizzesCount', { count: entry.quizzesCompleted })}
         </p>
       </div>
       <div className={`w-20 lg:w-24 ${meta.height} rounded-t-lg mt-2 flex items-end justify-center pb-2 ${c.bar}`}>
@@ -135,17 +138,18 @@ function LeaderboardTable({
   startFrom?: number;
   showStreak?: boolean;
 }) {
+  const { t } = useTranslation(['social', 'common']);
   const rows = entries.slice(startFrom - 1);
   if (rows.length === 0) return null;
 
   return (
     <div className={`rounded-xl border-2 overflow-hidden ${isDark ? "border-slate-700/60 bg-slate-800/40" : "border-border bg-background"}`}>
       <div className={`grid ${showStreak ? "grid-cols-[3rem_1fr_5rem_5rem_5rem]" : "grid-cols-[3rem_1fr_5rem_5rem]"} gap-2 px-4 py-3 text-xs font-semibold uppercase tracking-wider ${isDark ? "text-slate-400 bg-slate-800/60" : "text-muted-foreground bg-muted/50"}`}>
-        <span>#</span>
-        <span>Student</span>
-        <span className="text-center">Score</span>
-        <span className="text-center">Quizzes</span>
-        {showStreak && <span className="text-center">Streak</span>}
+        <span>{t('social:leaderboard.table.rank')}</span>
+        <span>{t('social:leaderboard.table.student')}</span>
+        <span className="text-center">{t('social:leaderboard.table.score')}</span>
+        <span className="text-center">{t('social:leaderboard.table.quizzes')}</span>
+        {showStreak && <span className="text-center">{t('social:leaderboard.table.streak')}</span>}
       </div>
       <div className="divide-y divide-border/40">
         {rows.map((entry) => (
@@ -193,16 +197,17 @@ function LeaderboardTable({
 // ─── Streak Table ──────────────────────────────────────────────────────────────
 
 function StreakTable({ entries, isDark }: { entries: StreakLeaderboardEntry[]; isDark: boolean }) {
+  const { t } = useTranslation(['social', 'common']);
   if (entries.length === 0) return null;
   return (
     <div className={`rounded-xl border-2 overflow-hidden ${isDark ? "border-slate-700/60 bg-slate-800/40" : "border-border bg-background"}`}>
       <div className="grid grid-cols-[3rem_1fr_6rem_6rem] gap-2 px-4 py-3 text-xs font-semibold uppercase tracking-wider"
         style={{ color: isDark ? "rgb(148 163 184)" : undefined }}
       >
-        <span>#</span>
-        <span>Student</span>
-        <span className="text-center">Current</span>
-        <span className="text-center">Best</span>
+        <span>{t('social:leaderboard.table.rank')}</span>
+        <span>{t('social:leaderboard.table.student')}</span>
+        <span className="text-center">{t('social:leaderboard.table.current')}</span>
+        <span className="text-center">{t('social:leaderboard.table.best')}</span>
       </div>
       <div className="divide-y divide-border/40">
         {entries.map((entry) => (
@@ -239,6 +244,7 @@ function StreakTable({ entries, isDark }: { entries: StreakLeaderboardEntry[]; i
 // ─── Calendar Heatmap ──────────────────────────────────────────────────────────
 
 function CalendarHeatmap({ calendar, isDark }: { calendar: { date: string; active: boolean }[]; isDark: boolean }) {
+  const { t } = useTranslation(['social', 'common']);
   const weeks: { date: string; active: boolean }[][] = [];
   let current: { date: string; active: boolean }[] = [];
 
@@ -281,7 +287,7 @@ function CalendarHeatmap({ calendar, isDark }: { calendar: { date: string; activ
                     />
                   </TooltipTrigger>
                   <TooltipContent side="top" className="text-xs">
-                    {day.date} — {day.active ? "Active" : "Inactive"}
+                    {day.date} — {day.active ? t('social:leaderboard.streakCard.active') : t('social:leaderboard.streakCard.inactive')}
                   </TooltipContent>
                 </Tooltip>
               );
@@ -321,14 +327,15 @@ function TableSkeleton({ rows = 8 }: { rows?: number }) {
 // ─── Empty State ───────────────────────────────────────────────────────────────
 
 function EmptyState({ isDark }: { isDark: boolean }) {
+  const { t } = useTranslation(['social', 'common']);
   return (
     <div className="text-center py-16">
       <Trophy className={`h-16 w-16 mx-auto mb-4 ${isDark ? "text-slate-600" : "text-muted-foreground/40"}`} />
       <h3 className={`text-lg font-semibold mb-2 ${isDark ? "text-slate-300" : "text-foreground"}`}>
-        No rankings yet
+        {t('social:leaderboard.noRankings')}
       </h3>
       <p className={`text-sm max-w-sm mx-auto ${isDark ? "text-slate-500" : "text-muted-foreground"}`}>
-        Complete some quizzes to appear on the leaderboard!
+        {t('social:leaderboard.noRankingsDesc')}
       </p>
     </div>
   );
@@ -337,6 +344,7 @@ function EmptyState({ isDark }: { isDark: boolean }) {
 // ─── Your Position Floating Card ───────────────────────────────────────────────
 
 function YourPositionCard({ entry, isDark }: { entry?: LeaderboardEntry; isDark: boolean }) {
+  const { t } = useTranslation(['social', 'common']);
   if (!entry) return null;
   return (
     <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-4 px-6 py-3 rounded-2xl border-2 shadow-2xl backdrop-blur-xl transition-all ${
@@ -346,7 +354,7 @@ function YourPositionCard({ entry, isDark }: { entry?: LeaderboardEntry; isDark:
     }`}>
       <div className="flex items-center gap-2">
         <ChevronUp className={`h-4 w-4 ${isDark ? "text-primary" : "text-primary"}`} />
-        <span className={`text-sm font-medium ${isDark ? "text-slate-400" : "text-muted-foreground"}`}>Your Rank</span>
+        <span className={`text-sm font-medium ${isDark ? "text-slate-400" : "text-muted-foreground"}`}>{t('social:leaderboard.yourRank')}</span>
         <span className={`text-lg font-bold ${isDark ? "text-white" : "text-foreground"}`}>#{entry.rank}</span>
       </div>
       <div className={`w-px h-6 ${isDark ? "bg-slate-700" : "bg-border"}`} />
@@ -374,6 +382,7 @@ const Leaderboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isDark } = useTheme();
+  const { t } = useTranslation(['social', 'common']);
 
   const [activeTab, setActiveTab] = useState("by-subject");
   const [selectedCategory, setSelectedCategory] = useState("al");
@@ -509,20 +518,23 @@ const Leaderboard = () => {
                 className={isDark ? "bg-slate-800/50 border-cyan-500/30 text-cyan-100 hover:bg-slate-700/50 hover:border-cyan-500/50" : ""}
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back
+                {t('common:buttons.back')}
               </Button>
               <div>
                 <h1 className={`text-3xl font-bold bg-clip-text text-transparent ${isDark ? "bg-gradient-to-r from-amber-400 via-orange-400 to-red-400" : "bg-gradient-hero"}`}>
-                  Leaderboard
+                  {t('social:leaderboard.title')}
                 </h1>
                 <p className={isDark ? "text-slate-400" : "text-muted-foreground"}>
                   {leaderboardData
-                    ? `${leaderboardData.totalParticipants} ${activeCat.label} students competing`
-                    : "See where you stand"}
+                    ? t('social:leaderboard.participantsCompeting', { count: leaderboardData.totalParticipants, category: activeCat.label })
+                    : t('social:leaderboard.subtitle')}
                 </p>
               </div>
             </div>
-            <DarkModeToggle />
+            <div className="flex items-center gap-2">
+              <LanguageSwitcher />
+              <DarkModeToggle />
+            </div>
           </div>
         </div>
       </div>
@@ -531,7 +543,7 @@ const Leaderboard = () => {
         {/* Category Selector */}
         <div className="mb-6">
           <p className={`text-sm font-medium mb-3 ${isDark ? "text-slate-400" : "text-muted-foreground"}`}>
-            Select Category
+            {t('social:leaderboard.selectCategory')}
           </p>
           <div className="flex flex-wrap gap-3">
             {CATEGORIES.map((cat) => {
@@ -585,7 +597,7 @@ const Leaderboard = () => {
                   {cat.label}
                   {!enabled && (
                     <Badge variant="outline" className="text-[10px] px-1.5 py-0 ml-1 border-current opacity-70">
-                      Soon
+                      {t('social:leaderboard.soon')}
                     </Badge>
                   )}
                 </Button>
@@ -599,21 +611,21 @@ const Leaderboard = () => {
           <TabsList className={`grid w-full grid-cols-2 lg:grid-cols-4 mb-8 h-auto ${isDark ? "bg-slate-800/60 border border-slate-700/60" : ""}`}>
             <TabsTrigger value="by-subject" className={`gap-2 py-2.5 ${isDark ? "data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white" : ""}`}>
               <BookOpen className="h-4 w-4" />
-              <span className="hidden sm:inline">By Subject</span>
-              <span className="sm:hidden">Subject</span>
+              <span className="hidden sm:inline">{t('social:leaderboard.tabs.bySubject')}</span>
+              <span className="sm:hidden">{t('social:leaderboard.tabs.subject')}</span>
             </TabsTrigger>
             <TabsTrigger value="overall" className={`gap-2 py-2.5 ${isDark ? "data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-cyan-500 data-[state=active]:text-white" : ""}`}>
               <Trophy className="h-4 w-4" />
-              Overall
+              {t('social:leaderboard.tabs.overall')}
             </TabsTrigger>
             <TabsTrigger value="weekly-monthly" className={`gap-2 py-2.5 ${isDark ? "data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white" : ""}`}>
               <Calendar className="h-4 w-4" />
-              <span className="hidden sm:inline">Weekly / Monthly</span>
-              <span className="sm:hidden">Time</span>
+              <span className="hidden sm:inline">{t('social:leaderboard.tabs.weeklyMonthly')}</span>
+              <span className="sm:hidden">{t('social:leaderboard.tabs.time')}</span>
             </TabsTrigger>
             <TabsTrigger value="streaks" className={`gap-2 py-2.5 ${isDark ? "data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white" : ""}`}>
               <Flame className="h-4 w-4" />
-              Streaks
+              {t('social:leaderboard.tabs.streaks')}
             </TabsTrigger>
           </TabsList>
 
@@ -622,7 +634,7 @@ const Leaderboard = () => {
             <div className="flex flex-wrap gap-3 mb-6">
               <Select value={selectedSubject} onValueChange={setSelectedSubject}>
                 <SelectTrigger className={`w-[220px] ${isDark ? "bg-slate-800/60 border-slate-700 text-white" : ""}`}>
-                  <SelectValue placeholder="Select subject" />
+                  <SelectValue placeholder={t('social:leaderboard.selectSubject')} />
                 </SelectTrigger>
                 <SelectContent>
                   {categorySubjects.map(s => (
@@ -676,7 +688,7 @@ const Leaderboard = () => {
                 }`}
               >
                 <Calendar className="h-4 w-4 mr-2" />
-                This Week
+                {t('social:leaderboard.thisWeek')}
               </Button>
               <Button
                 variant={period === "month" ? "default" : "outline"}
@@ -688,7 +700,7 @@ const Leaderboard = () => {
                 }`}
               >
                 <TrendingUp className="h-4 w-4 mr-2" />
-                This Month
+                {t('social:leaderboard.thisMonth')}
               </Button>
             </div>
             {loading ? (
@@ -729,28 +741,28 @@ const Leaderboard = () => {
                             </div>
                           </div>
                           <p className={`text-4xl font-extrabold ${isDark ? "bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent" : "text-orange-600"}`}>
-                            {streakInfo.currentStreak} days
+                            {t('social:leaderboard.streakCard.days', { count: streakInfo.currentStreak })}
                           </p>
-                          <p className={`text-sm ${isDark ? "text-slate-400" : "text-muted-foreground"}`}>Current Streak</p>
+                          <p className={`text-sm ${isDark ? "text-slate-400" : "text-muted-foreground"}`}>{t('social:leaderboard.streakCard.currentStreak')}</p>
                           <p className={`text-xs mt-1 ${isDark ? "text-slate-500" : "text-muted-foreground"}`}>
-                            Best: {streakInfo.longestStreak} days
+                            {t('social:leaderboard.streakCard.best', { count: streakInfo.longestStreak })}
                           </p>
                         </div>
 
                         <div className="flex-1 space-y-4 w-full">
                           <div>
                             <p className={`text-sm font-semibold mb-3 ${isDark ? "text-slate-300" : "text-foreground"}`}>
-                              Last 90 Days
+                              {t('social:leaderboard.streakCard.last90Days')}
                             </p>
                             <div className="overflow-x-auto pb-2">
                               <CalendarHeatmap calendar={streakInfo.streakCalendar} isDark={isDark} />
                             </div>
                             <div className="flex items-center gap-2 mt-2">
-                              <span className={`text-xs ${isDark ? "text-slate-500" : "text-muted-foreground"}`}>Less</span>
+                              <span className={`text-xs ${isDark ? "text-slate-500" : "text-muted-foreground"}`}>{t('social:leaderboard.streakCard.less')}</span>
                               <div className={`w-3 h-3 rounded-sm ${isDark ? "bg-slate-700" : "bg-slate-200"}`} />
                               <div className="w-3 h-3 rounded-sm bg-green-300" />
                               <div className="w-3 h-3 rounded-sm bg-green-500" />
-                              <span className={`text-xs ${isDark ? "text-slate-500" : "text-muted-foreground"}`}>More</span>
+                              <span className={`text-xs ${isDark ? "text-slate-500" : "text-muted-foreground"}`}>{t('social:leaderboard.streakCard.more')}</span>
                             </div>
                           </div>
                         </div>
@@ -764,7 +776,7 @@ const Leaderboard = () => {
                   <div>
                     <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${isDark ? "text-white" : "text-foreground"}`}>
                       <Target className={`h-5 w-5 ${isDark ? "text-amber-400" : "text-amber-600"}`} />
-                      Milestones
+                      {t('social:leaderboard.streakCard.milestones')}
                     </h3>
                     <div className="flex flex-wrap gap-3">
                       {streakInfo.milestones.map((m) => (
@@ -781,8 +793,8 @@ const Leaderboard = () => {
                           }`}
                         >
                           <Star className={`h-4 w-4 ${m.achieved ? "fill-current" : ""}`} />
-                          <span className="font-semibold text-sm">{m.days} days</span>
-                          {m.achieved && <Badge className="text-[10px] px-1.5 py-0 bg-amber-500 text-white border-0">Done</Badge>}
+                          <span className="font-semibold text-sm">{t('social:leaderboard.streakCard.days', { count: m.days })}</span>
+                          {m.achieved && <Badge className="text-[10px] px-1.5 py-0 bg-amber-500 text-white border-0">{t('social:leaderboard.streakCard.done')}</Badge>}
                         </div>
                       ))}
                     </div>
@@ -793,7 +805,7 @@ const Leaderboard = () => {
                 <div>
                   <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${isDark ? "text-white" : "text-foreground"}`}>
                     <Users className={`h-5 w-5 ${isDark ? "text-orange-400" : "text-orange-600"}`} />
-                    Streak Rankings
+                    {t('social:leaderboard.streakCard.streakRankings')}
                   </h3>
                   <StreakTable entries={streakLeaderboard} isDark={isDark} />
                 </div>

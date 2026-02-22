@@ -2,47 +2,50 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen, Users, TrendingUp, Shield, CheckCircle2, GraduationCap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { DarkModeToggle } from "@/components/DarkModeToggle";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation(['landing', 'common']);
 
   const features = [
     {
       icon: BookOpen,
-      title: "Smart MCQ Management",
-      description: "Create, organize, and manage multiple-choice questions with ease",
+      title: t('landing:features.items.mcqManagement'),
+      description: t('landing:features.items.mcqManagementDesc'),
     },
     {
       icon: Users,
-      title: "Role-Based Access",
-      description: "Separate portals for teachers, students, and administrators",
+      title: t('landing:features.items.roleAccess'),
+      description: t('landing:features.items.roleAccessDesc'),
     },
     {
       icon: TrendingUp,
-      title: "Performance Analytics",
-      description: "Track progress and identify areas for improvement",
+      title: t('landing:features.items.analytics'),
+      description: t('landing:features.items.analyticsDesc'),
     },
     {
       icon: Shield,
-      title: "Secure & Scalable",
-      description: "Cloud-based infrastructure with enterprise-grade security",
+      title: t('landing:features.items.secure'),
+      description: t('landing:features.items.secureDesc'),
     },
   ];
 
-  const benefits = {
-    teachers: [
-      "Upload and monetize MCQ content",
-      "Monitor student progress in real-time",
-      "Customize quiz settings and timers",
-      "Earn through subscriptions",
-    ],
-    students: [
-      "Access curated MCQ collections",
-      "Practice with customizable settings",
-      "Track your learning progress",
-      "Flexible subscription plans",
-    ],
-  };
+  const teacherBenefits = [
+    t('landing:benefits.teachers.b1'),
+    t('landing:benefits.teachers.b2'),
+    t('landing:benefits.teachers.b3'),
+    t('landing:benefits.teachers.b4'),
+  ];
+
+  const studentBenefits = [
+    t('landing:benefits.students.b1'),
+    t('landing:benefits.students.b2'),
+    t('landing:benefits.students.b3'),
+    t('landing:benefits.students.b4'),
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-mesh">
@@ -52,15 +55,17 @@ const Index = () => {
           <div className="flex items-center gap-2">
             <GraduationCap className="h-8 w-8 text-primary" />
             <span className="text-2xl font-bold bg-gradient-hero bg-clip-text text-transparent">
-              Island First
+              {t('common:appName')}
             </span>
           </div>
-          <div className="flex gap-3">
+          <div className="flex items-center gap-3">
+            <LanguageSwitcher />
+            <DarkModeToggle />
             <Button variant="ghost" onClick={() => navigate("/auth")}>
-              Log In
+              {t('landing:nav.logIn')}
             </Button>
             <Button onClick={() => navigate("/auth")} className="bg-gradient-hero hover:opacity-90 transition-opacity">
-              Get Started
+              {t('landing:nav.getStarted')}
             </Button>
           </div>
         </div>
@@ -70,29 +75,28 @@ const Index = () => {
       <section className="container mx-auto px-4 py-20 md:py-32">
         <div className="max-w-4xl mx-auto text-center space-y-8 animate-fade-in">
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
-            Smart MCQ Platform for{" "}
+            {t('landing:hero.title')}{" "}
             <span className="bg-gradient-hero bg-clip-text text-transparent">
-              Enhanced Learning
+              {t('landing:hero.titleHighlight')}
             </span>
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
-            Empowering teachers to create and monetize content while helping students
-            excel through intelligent practice and analytics.
+            {t('landing:hero.subtitle')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               className="bg-gradient-hero hover:opacity-90 transition-opacity text-lg px-8"
               onClick={() => navigate("/auth")}
             >
-              Start Free Trial
+              {t('landing:hero.startTrial')}
             </Button>
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               variant="outline"
               className="text-lg px-8 border-2 hover:bg-muted"
             >
-              Watch Demo
+              {t('landing:hero.watchDemo')}
             </Button>
           </div>
         </div>
@@ -101,13 +105,13 @@ const Index = () => {
       {/* Features Section */}
       <section className="container mx-auto px-4 py-20">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4">Powerful Features</h2>
-          <p className="text-xl text-muted-foreground">Everything you need for effective MCQ-based learning</p>
+          <h2 className="text-4xl font-bold mb-4">{t('landing:features.sectionTitle')}</h2>
+          <p className="text-xl text-muted-foreground">{t('landing:features.sectionSubtitle')}</p>
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {features.map((feature, index) => (
-            <Card 
-              key={index} 
+            <Card
+              key={index}
               className="border-2 hover:shadow-hover transition-all duration-300 hover:-translate-y-1 bg-gradient-card"
               style={{ animationDelay: `${index * 100}ms` }}
             >
@@ -132,10 +136,10 @@ const Index = () => {
               <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
                 <Users className="h-6 w-6 text-primary" />
               </div>
-              <h3 className="text-3xl font-bold">For Teachers</h3>
+              <h3 className="text-3xl font-bold">{t('landing:benefits.forTeachers')}</h3>
             </div>
             <ul className="space-y-4">
-              {benefits.teachers.map((benefit, index) => (
+              {teacherBenefits.map((benefit, index) => (
                 <li key={index} className="flex items-start gap-3">
                   <CheckCircle2 className="h-6 w-6 text-success flex-shrink-0 mt-0.5" />
                   <span className="text-lg">{benefit}</span>
@@ -150,10 +154,10 @@ const Index = () => {
               <div className="h-12 w-12 rounded-full bg-secondary/10 flex items-center justify-center">
                 <GraduationCap className="h-6 w-6 text-secondary" />
               </div>
-              <h3 className="text-3xl font-bold">For Students</h3>
+              <h3 className="text-3xl font-bold">{t('landing:benefits.forStudents')}</h3>
             </div>
             <ul className="space-y-4">
-              {benefits.students.map((benefit, index) => (
+              {studentBenefits.map((benefit, index) => (
                 <li key={index} className="flex items-start gap-3">
                   <CheckCircle2 className="h-6 w-6 text-success flex-shrink-0 mt-0.5" />
                   <span className="text-lg">{benefit}</span>
@@ -168,17 +172,17 @@ const Index = () => {
       <section className="container mx-auto px-4 py-20 text-center">
         <div className="max-w-3xl mx-auto space-y-8 bg-gradient-hero rounded-3xl p-12 shadow-elegant text-white">
           <h2 className="text-4xl md:text-5xl font-bold">
-            Ready to Transform Learning?
+            {t('landing:cta.title')}
           </h2>
           <p className="text-xl opacity-90">
-            Join thousands of teachers and students already using Island First
+            {t('landing:cta.subtitle')}
           </p>
-          <Button 
-            size="lg" 
+          <Button
+            size="lg"
             className="bg-white text-primary hover:bg-white/90 text-lg px-8"
             onClick={() => navigate("/auth")}
           >
-            Get Started Now
+            {t('landing:cta.button')}
           </Button>
         </div>
       </section>
@@ -189,10 +193,10 @@ const Index = () => {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-2">
               <GraduationCap className="h-6 w-6 text-primary" />
-              <span className="font-semibold">Island First</span>
+              <span className="font-semibold">{t('common:appName')}</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              © 2025 Island First. All rights reserved.
+              {t('landing:footer.copyright')}
             </p>
           </div>
         </div>

@@ -1,5 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -40,6 +43,7 @@ const EditQuiz = () => {
   const navigate = useNavigate();
   const { quizId } = useParams<{ quizId: string }>();
   const { toast } = useToast();
+  const { t } = useTranslation(['admin', 'common']);
   
   const [quizData, setQuizData] = useState({
     title: "",
@@ -169,8 +173,8 @@ const EditQuiz = () => {
       }]);
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.message || "Failed to load quiz",
+        title: t('common:feedback.errorTitle'),
+        description: error.message || t('admin:viewQuizzes.loadError'),
         variant: "destructive",
       });
       navigate("/admin/quizzes");
@@ -206,13 +210,13 @@ const EditQuiz = () => {
       handleQuestionChange(questionIndex, "questionImageUrl", imageUrl);
       handleQuestionChange(questionIndex, "questionImageFile", file);
       toast({
-        title: "Image uploaded",
-        description: "Question image uploaded successfully",
+        title: t('admin:createQuiz.notifications.imageUploaded'),
+        description: t('admin:createQuiz.notifications.questionImageUploaded'),
       });
     } catch (error: any) {
       toast({
-        title: "Upload failed",
-        description: error.message || "Failed to upload image",
+        title: t('admin:createQuiz.notifications.uploadFailed'),
+        description: error.message || t('admin:createQuiz.notifications.uploadFailed'),
         variant: "destructive",
       });
     } finally {
@@ -231,13 +235,13 @@ const EditQuiz = () => {
         return updated;
       });
       toast({
-        title: "Image uploaded",
-        description: "Option image uploaded successfully",
+        title: t('admin:createQuiz.notifications.imageUploaded'),
+        description: t('admin:createQuiz.notifications.optionImageUploaded'),
       });
     } catch (error: any) {
       toast({
-        title: "Upload failed",
-        description: error.message || "Failed to upload image",
+        title: t('admin:createQuiz.notifications.uploadFailed'),
+        description: error.message || t('admin:createQuiz.notifications.uploadFailed'),
         variant: "destructive",
       });
     } finally {
@@ -267,13 +271,13 @@ const EditQuiz = () => {
       setThumbnailFile(file);
       handleQuizDataChange("thumbnail", imageUrl);
       toast({
-        title: "Thumbnail uploaded",
-        description: "Quiz thumbnail uploaded successfully",
+        title: t('admin:createQuiz.notifications.thumbnailUploaded'),
+        description: t('admin:createQuiz.notifications.thumbnailUploadedDesc'),
       });
     } catch (error: any) {
       toast({
-        title: "Upload failed",
-        description: error.message || "Failed to upload thumbnail",
+        title: t('admin:createQuiz.notifications.uploadFailed'),
+        description: error.message || t('admin:createQuiz.notifications.uploadFailed'),
         variant: "destructive",
       });
     } finally {
@@ -460,7 +464,7 @@ const EditQuiz = () => {
     const validationError = validateQuiz();
     if (validationError) {
       toast({
-        title: "Validation error",
+        title: t('admin:createQuiz.validationError'),
         description: validationError,
         variant: "destructive",
       });
@@ -535,15 +539,15 @@ const EditQuiz = () => {
       await apiService.updateQuiz(quizId, quizRequest);
 
       toast({
-        title: "Success",
-        description: "Quiz updated successfully!",
+        title: t('common:feedback.successTitle'),
+        description: t('admin:createQuiz.updateSuccess'),
       });
 
       navigate("/admin/quizzes");
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.message || "Failed to update quiz",
+        title: t('common:feedback.errorTitle'),
+        description: error.message || t('common:status.error'),
         variant: "destructive",
       });
     } finally {
@@ -601,8 +605,8 @@ const EditQuiz = () => {
               
               onUpload(file);
               toast({
-                title: "Image pasted",
-                description: "Image has been pasted successfully",
+                title: t('admin:createQuiz.notifications.imagePasted'),
+                description: t('admin:createQuiz.notifications.imagePastedDesc'),
               });
             }
             break;
@@ -702,7 +706,7 @@ const EditQuiz = () => {
       <div className="min-h-screen bg-gradient-mesh flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading quiz...</p>
+          <p className="text-muted-foreground">{t('common:status.loading')}</p>
         </div>
       </div>
     );
@@ -712,22 +716,28 @@ const EditQuiz = () => {
     <div className="min-h-screen bg-gradient-mesh">
       <header className="border-b border-border/50 backdrop-blur-sm bg-background/80">
         <div className="container mx-auto px-4 py-4">
-          <Button variant="ghost" onClick={() => navigate("/admin/quizzes")} className="mb-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Quizzes
-          </Button>
+          <div className="flex items-center justify-between">
+            <Button variant="ghost" onClick={() => navigate("/admin/quizzes")} className="mb-4">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              {t('common:buttons.back')}
+            </Button>
+            <div className="flex items-center gap-2">
+              <LanguageSwitcher />
+              <DarkModeToggle />
+            </div>
+          </div>
         </div>
       </header>
 
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-4xl font-bold mb-2">Edit Quiz</h1>
-            <p className="text-muted-foreground text-lg">Update quiz details and questions</p>
+            <h1 className="text-4xl font-bold mb-2">{t('common:buttons.edit')} {t('admin:viewQuizzes.title')}</h1>
+            <p className="text-muted-foreground text-lg">{t('admin:createQuiz.subtitle')}</p>
           </div>
           <Button onClick={handleSubmit} disabled={saving || uploading} size="lg">
             <Save className="h-5 w-5 mr-2" />
-            {saving ? "Saving..." : "Update Quiz"}
+            {saving ? t('common:status.loading') : t('common:buttons.save')}
           </Button>
         </div>
 
@@ -791,8 +801,8 @@ const EditQuiz = () => {
           <TabsContent value="quiz">
             <Card className="border-2 shadow-elegant bg-gradient-card">
               <CardHeader>
-                <CardTitle>Quiz Information</CardTitle>
-                <CardDescription>Update the basic details for this quiz</CardDescription>
+                <CardTitle>{t('admin:createQuiz.fields.quizTitle')}</CardTitle>
+                <CardDescription>{t('admin:createQuiz.subtitle')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-6">

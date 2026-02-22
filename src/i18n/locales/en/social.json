@@ -1,0 +1,117 @@
+{
+  "leaderboard": {
+    "title": "Leaderboard",
+    "subtitle": "See where you stand",
+    "participantsCompeting": "{{count}} {{category}} students competing",
+    "back": "Back",
+    "selectCategory": "Select Category",
+    "tabs": {
+      "bySubject": "By Subject",
+      "subject": "Subject",
+      "overall": "Overall",
+      "weeklyMonthly": "Weekly / Monthly",
+      "time": "Time",
+      "streaks": "Streaks"
+    },
+    "selectSubject": "Select subject",
+    "thisWeek": "This Week",
+    "thisMonth": "This Month",
+    "noRankings": "No rankings yet",
+    "noRankingsDesc": "Complete some quizzes to appear on the leaderboard!",
+    "table": {
+      "rank": "#",
+      "student": "Student",
+      "score": "Score",
+      "quizzes": "Quizzes",
+      "streak": "Streak",
+      "current": "Current",
+      "best": "Best"
+    },
+    "yourRank": "Your Rank",
+    "soon": "Soon",
+    "streakCard": {
+      "currentStreak": "Current Streak",
+      "days": "{{count}} days",
+      "best": "Best: {{count}} days",
+      "last90Days": "Last 90 Days",
+      "less": "Less",
+      "more": "More",
+      "milestones": "Milestones",
+      "streakRankings": "Streak Rankings",
+      "done": "Done",
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "podium": {
+      "first": "1st",
+      "second": "2nd",
+      "third": "3rd"
+    },
+    "quizzesCount": "{{count}} quizzes"
+  },
+  "goals": {
+    "title": "Goals & Achievements",
+    "subtitle": "Track your progress and collect badges",
+    "loading": "Loading your achievements...",
+    "summary": {
+      "activeGoals": "Active Goals",
+      "goalsCompleted": "Goals Completed",
+      "badgesEarned": "Badges Earned"
+    },
+    "tabs": {
+      "studyGoals": "Study Goals",
+      "badges": "Badges"
+    },
+    "activeGoals": "Active Goals",
+    "addGoal": "Add Goal",
+    "noGoals": "No active goals",
+    "noGoalsDesc": "Set a study goal to stay motivated and track your progress.",
+    "createFirstGoal": "Create Your First Goal",
+    "completedGoals": "Completed Goals ({{count}})",
+    "completed": "Completed {{date}}",
+    "ends": "Ends {{date}}",
+    "expired": "Expired",
+    "achievementBadges": "Achievement Badges",
+    "unlocked": "{{count}} of {{total}} unlocked",
+    "unlockedDate": "Unlocked {{date}}",
+    "createGoal": {
+      "title": "Create a Study Goal",
+      "subtitle": "Set a target and track your progress automatically.",
+      "goalType": "Goal Type",
+      "completeQuizzes": "Complete Quizzes",
+      "achieveScore": "Achieve Score Target",
+      "buildStreak": "Build a Streak",
+      "targetLabel": {
+        "quiz_count": "Number of Quizzes",
+        "score_target": "Target Score (%)",
+        "streak": "Streak Days"
+      },
+      "placeholder": {
+        "quiz_count": "e.g. 5",
+        "score_target": "e.g. 80",
+        "streak": "e.g. 7"
+      },
+      "subjectOptional": "Subject (optional)",
+      "allSubjects": "All subjects",
+      "timePeriod": "Time Period",
+      "thisWeek": "This Week",
+      "thisMonth": "This Month",
+      "createButton": "Create Goal",
+      "invalidTarget": "Invalid target",
+      "invalidTargetDesc": "Please enter a valid target number.",
+      "limitReached": "Limit reached",
+      "limitReachedDesc": "You can have at most 5 active goals.",
+      "goalCreated": "Goal created"
+    },
+    "badgeCelebration": {
+      "badgeUnlocked": "Badge Unlocked!",
+      "awesome": "Awesome!"
+    },
+    "rarity": {
+      "common": "Common",
+      "rare": "Rare",
+      "epic": "Epic",
+      "legendary": "Legendary"
+    }
+  }
+}

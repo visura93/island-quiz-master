@@ -4,15 +4,18 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Crown, Building2, MessageCircle, Mail, Copy, CheckCircle2, Phone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { GraduationCap, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 const Payment = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation(['payment', 'common']);
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const handleLogout = () => {
@@ -24,8 +27,8 @@ const Payment = () => {
     navigator.clipboard.writeText(text);
     setCopiedField(fieldName);
     toast({
-      title: "Copied!",
-      description: `${fieldName} copied to clipboard`,
+      title: t('payment:copied'),
+      description: t('payment:copiedDesc', { field: fieldName }),
     });
     setTimeout(() => setCopiedField(null), 2000);
   };
@@ -35,7 +38,7 @@ const Payment = () => {
       {/* Header */}
       <header className="border-b border-border/50 backdrop-blur-sm bg-background/80 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div 
+          <div
             className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
             onClick={() => navigate('/student-dashboard')}
           >
@@ -44,9 +47,9 @@ const Payment = () => {
             </div>
             <div>
               <span className="text-2xl font-bold bg-gradient-hero bg-clip-text text-transparent">
-                Island First
+                {t('common:appName')}
               </span>
-              <p className="text-xs text-muted-foreground">Smart Learning Platform</p>
+              <p className="text-xs text-muted-foreground">{t('common:taglineShort')}</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -55,7 +58,7 @@ const Payment = () => {
               <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg shadow-md">
                 <Crown className="h-4 w-4 text-white" />
                 <span className="text-sm font-semibold text-white">
-                  Premium Active
+                  {t('payment:premiumActive')}
                 </span>
               </div>
             ) : (
@@ -64,19 +67,20 @@ const Payment = () => {
                 className="hidden sm:flex bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-semibold shadow-lg"
               >
                 <Crown className="h-4 w-4 mr-2" />
-                Upgrade to Premium
+                {t('payment:upgrade')}
               </Button>
             )}
             <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-primary/10 rounded-lg">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
               <span className="text-sm font-medium text-primary">
-                Welcome, {user?.firstName}!
+                {t('payment:welcome', { name: user?.firstName })}
               </span>
             </div>
+            <LanguageSwitcher />
             <DarkModeToggle />
             <Button variant="outline" onClick={handleLogout} className="btn-modern">
               <LogOut className="h-4 w-4 mr-2" />
-              Logout
+              {t('common:buttons.logout')}
             </Button>
           </div>
         </div>
@@ -85,26 +89,26 @@ const Payment = () => {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8 max-w-5xl">
         {/* Back Button */}
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={() => navigate('/student-dashboard')}
           className="mb-6 btn-modern"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Dashboard
+          {t('payment:backToDashboard')}
         </Button>
 
         {/* Page Title */}
         <div className="mb-8 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-yellow-400/20 to-orange-500/20 rounded-full mb-4">
             <Crown className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-            <span className="text-sm font-medium text-yellow-700 dark:text-yellow-400">Premium Subscription</span>
+            <span className="text-sm font-medium text-yellow-700 dark:text-yellow-400">{t('payment:premiumSubscription')}</span>
           </div>
           <h1 className="text-5xl font-bold mb-4 text-foreground">
-            Upgrade to Premium
+            {t('payment:upgrade')}
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Unlock all features and access premium content
+            {t('payment:unlockFeatures')}
           </p>
         </div>
 
@@ -115,10 +119,10 @@ const Payment = () => {
               <Crown className="h-10 w-10 text-white" />
             </div>
             <CardTitle className="text-3xl bg-gradient-hero bg-clip-text text-transparent mb-2">
-              Premium Plan
+              {t('payment:premiumPlan')}
             </CardTitle>
             <CardDescription className="text-lg text-foreground">
-              3 Months Subscription
+              {t('payment:threeMonths')}
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
@@ -126,20 +130,20 @@ const Payment = () => {
               <div className="text-5xl font-bold text-orange-600 dark:text-orange-400 mb-2">
                 Rs 1,000
               </div>
-              <p className="text-muted-foreground">for 3 months</p>
+              <p className="text-muted-foreground">{t('payment:forThreeMonths')}</p>
             </div>
-            
+
             {/* Features List */}
             <div className="bg-white/50 dark:bg-slate-900/30 rounded-lg p-6 mb-6">
-              <h3 className="font-semibold text-lg mb-4">What You'll Get:</h3>
+              <h3 className="font-semibold text-lg mb-4">{t('payment:whatYouGet')}</h3>
               <ul className="space-y-3 text-left">
                 {[
-                  "Unlimited access to all quizzes",
-                  "Access to premium locked content",
-                  "Advanced learning analytics",
-                  "Priority support",
-                  "Ad-free experience",
-                  "Downloadable study materials"
+                  t('payment:featuresList.unlimitedAccess'),
+                  t('payment:featuresList.premiumContent'),
+                  t('payment:featuresList.advancedAnalytics'),
+                  t('payment:featuresList.prioritySupport'),
+                  t('payment:featuresList.adFree'),
+                  t('payment:featuresList.downloadable')
                 ].map((feature, index) => (
                   <li key={index} className="flex items-center gap-3">
                     <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0" />
@@ -156,10 +160,10 @@ const Payment = () => {
           <CardHeader>
             <CardTitle className="text-2xl flex items-center gap-2">
               <Building2 className="h-6 w-6 text-primary" />
-              Payment Instructions
+              {t('payment:instructions.title')}
             </CardTitle>
             <CardDescription>
-              Please transfer the payment and share the receipt with us
+              {t('payment:instructions.subtitle')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -167,22 +171,22 @@ const Payment = () => {
             <div>
               <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
                 <Building2 className="h-5 w-5 text-primary" />
-                Bank Account Details
+                {t('payment:instructions.bankDetails')}
               </h3>
               <div className="bg-muted/50 rounded-lg p-6 space-y-4">
                 {/* Bank Name */}
                 <div className="flex items-center justify-between group">
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Bank Name</p>
+                    <p className="text-sm text-muted-foreground mb-1">{t('payment:instructions.bankName')}</p>
                     <p className="font-semibold text-lg">Commercial Bank</p>
                   </div>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => copyToClipboard("Commercial Bank", "Bank Name")}
+                    onClick={() => copyToClipboard("Commercial Bank", t('payment:instructions.bankName'))}
                     className="opacity-0 group-hover:opacity-100 transition-opacity"
                   >
-                    {copiedField === "Bank Name" ? (
+                    {copiedField === t('payment:instructions.bankName') ? (
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
                     ) : (
                       <Copy className="h-4 w-4" />
@@ -195,16 +199,16 @@ const Payment = () => {
                 {/* Account Name */}
                 <div className="flex items-center justify-between group">
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Account Name</p>
+                    <p className="text-sm text-muted-foreground mb-1">{t('payment:instructions.accountName')}</p>
                     <p className="font-semibold text-lg">A.B.C Weeffffffffff</p>
                   </div>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => copyToClipboard("A.B.C Weeffffffffff", "Account Name")}
+                    onClick={() => copyToClipboard("A.B.C Weeffffffffff", t('payment:instructions.accountName'))}
                     className="opacity-0 group-hover:opacity-100 transition-opacity"
                   >
-                    {copiedField === "Account Name" ? (
+                    {copiedField === t('payment:instructions.accountName') ? (
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
                     ) : (
                       <Copy className="h-4 w-4" />
@@ -217,16 +221,16 @@ const Payment = () => {
                 {/* Account Number */}
                 <div className="flex items-center justify-between group">
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Account Number</p>
+                    <p className="text-sm text-muted-foreground mb-1">{t('payment:instructions.accountNumber')}</p>
                     <p className="font-semibold text-lg font-mono">123456789</p>
                   </div>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => copyToClipboard("123456789", "Account Number")}
+                    onClick={() => copyToClipboard("123456789", t('payment:instructions.accountNumber'))}
                     className="opacity-0 group-hover:opacity-100 transition-opacity"
                   >
-                    {copiedField === "Account Number" ? (
+                    {copiedField === t('payment:instructions.accountNumber') ? (
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
                     ) : (
                       <Copy className="h-4 w-4" />
@@ -242,15 +246,15 @@ const Payment = () => {
                 <div className="w-full border-t border-border"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-background text-muted-foreground">After Payment</span>
+                <span className="px-4 bg-background text-muted-foreground">{t('payment:instructions.afterPayment')}</span>
               </div>
             </div>
 
             {/* Submit Receipt Instructions */}
             <div>
-              <h3 className="font-semibold text-lg mb-4">Share Your Payment Receipt</h3>
+              <h3 className="font-semibold text-lg mb-4">{t('payment:instructions.shareReceipt')}</h3>
               <p className="text-muted-foreground mb-4">
-                Please send your payment slip or receipt to either WhatsApp or Email:
+                {t('payment:instructions.shareReceiptDesc')}
               </p>
 
               <div className="grid md:grid-cols-2 gap-4">
@@ -263,7 +267,7 @@ const Payment = () => {
                       </div>
                       <div>
                         <h4 className="font-semibold text-lg">WhatsApp</h4>
-                        <Badge className="bg-green-500 text-white mt-1">Preferred</Badge>
+                        <Badge className="bg-green-500 text-white mt-1">{t('payment:instructions.preferred')}</Badge>
                       </div>
                     </div>
                     <div className="bg-white/50 dark:bg-slate-900/30 rounded-lg p-4 mb-4">
@@ -275,9 +279,9 @@ const Payment = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => copyToClipboard("+947111111111", "WhatsApp Number")}
+                          onClick={() => copyToClipboard("+947111111111", "WhatsApp")}
                         >
-                          {copiedField === "WhatsApp Number" ? (
+                          {copiedField === "WhatsApp" ? (
                             <CheckCircle2 className="h-4 w-4 text-green-600" />
                           ) : (
                             <Copy className="h-4 w-4" />
@@ -285,12 +289,12 @@ const Payment = () => {
                         </Button>
                       </div>
                     </div>
-                    <Button 
+                    <Button
                       className="w-full bg-green-500 hover:bg-green-600 text-white"
                       onClick={() => window.open('https://wa.me/947111111111', '_blank')}
                     >
                       <MessageCircle className="h-4 w-4 mr-2" />
-                      Send via WhatsApp
+                      {t('payment:instructions.sendViaWhatsApp')}
                     </Button>
                   </CardContent>
                 </Card>
@@ -303,8 +307,8 @@ const Payment = () => {
                         <Mail className="h-6 w-6 text-white" />
                       </div>
                       <div>
-                        <h4 className="font-semibold text-lg">Email</h4>
-                        <Badge variant="outline" className="mt-1">Alternative</Badge>
+                        <h4 className="font-semibold text-lg">{t('common:labels.email')}</h4>
+                        <Badge variant="outline" className="mt-1">{t('payment:instructions.alternative')}</Badge>
                       </div>
                     </div>
                     <div className="bg-white/50 dark:bg-slate-900/30 rounded-lg p-4 mb-4">
@@ -316,9 +320,9 @@ const Payment = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => copyToClipboard("viiii@gg.com", "Email")}
+                          onClick={() => copyToClipboard("viiii@gg.com", t('common:labels.email'))}
                         >
-                          {copiedField === "Email" ? (
+                          {copiedField === t('common:labels.email') ? (
                             <CheckCircle2 className="h-4 w-4 text-green-600" />
                           ) : (
                             <Copy className="h-4 w-4" />
@@ -326,12 +330,12 @@ const Payment = () => {
                         </Button>
                       </div>
                     </div>
-                    <Button 
+                    <Button
                       className="w-full bg-blue-500 hover:bg-blue-600 text-white"
                       onClick={() => window.location.href = 'mailto:viiii@gg.com?subject=Premium Subscription Payment Receipt'}
                     >
                       <Mail className="h-4 w-4 mr-2" />
-                      Send via Email
+                      {t('payment:instructions.sendViaEmail')}
                     </Button>
                   </CardContent>
                 </Card>
@@ -342,13 +346,13 @@ const Payment = () => {
             <div className="bg-yellow-50 dark:bg-yellow-950/20 border-2 border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
               <h4 className="font-semibold text-yellow-800 dark:text-yellow-400 mb-2 flex items-center gap-2">
                 <CheckCircle2 className="h-5 w-5" />
-                Important Note
+                {t('payment:importantNote.title')}
               </h4>
               <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
-                <li>• Include your registered name and email in the message</li>
-                <li>• Your premium access will be activated within 24 hours after verification</li>
-                <li>• Keep your payment receipt for future reference</li>
-                <li>• Contact us if you don't receive confirmation within 24 hours</li>
+                <li>• {t('payment:importantNote.note1')}</li>
+                <li>• {t('payment:importantNote.note2')}</li>
+                <li>• {t('payment:importantNote.note3')}</li>
+                <li>• {t('payment:importantNote.note4')}</li>
               </ul>
             </div>
           </CardContent>
@@ -356,13 +360,13 @@ const Payment = () => {
 
         {/* Footer Actions */}
         <div className="flex justify-center gap-4">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => navigate('/student-dashboard')}
             className="btn-modern"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
+            {t('payment:backToDashboard')}
           </Button>
         </div>
       </div>

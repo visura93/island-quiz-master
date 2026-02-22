@@ -1,0 +1,67 @@
+{
+  "appName": "Island First",
+  "tagline": "දියුණු ඉගෙනීම සඳහා MCQ වේදිකාව",
+  "taglineShort": "දක්ෂ ඉගෙනුම් වේදිකාව",
+  "buttons": {
+    "logout": "පිටවීම",
+    "login": "පිවිසීම",
+    "register": "ලියාපදිංචිය",
+    "back": "ආපසු",
+    "next": "ඊළඟ",
+    "previous": "කලින්",
+    "cancel": "අවලංගු කරන්න",
+    "save": "සුරකින්න",
+    "delete": "මකන්න",
+    "edit": "සංස්කරණය",
+    "submit": "ඉදිරිපත් කරන්න",
+    "close": "වසන්න",
+    "getStarted": "ආරම්භ කරන්න",
+    "viewAll": "සියල්ල බලන්න",
+    "tryAgain": "නැවත උත්සාහ කරන්න",
+    "backToHome": "මුල් පිටුවට",
+    "backToSignIn": "පිවිසීමට ආපසු",
+    "send": "යවන්න",
+    "sending": "යවමින්...",
+    "loading": "රැඳෙන්න...",
+    "upgrade": "ප්‍රිමියම් වෙත උසස් කරන්න",
+    "contactUs": "අප අමතන්න",
+    "settings": "සැකසීම්"
+  },
+  "status": {
+    "loading": "පූරණය වෙමින්...",
+    "error": "දෝෂයක් සිදු විය",
+    "noData": "දත්ත නොමැත",
+    "comingSoon": "ඉදිරියේ දී",
+    "syncing": "සමමුහුර්ත කිරීම...",
+    "offline": "ඔබ නොබැඳ සිටී",
+    "premiumActive": "ප්‍රිමියම් ක්‍රියාත්මකයි",
+    "liveDashboard": "සජීවී උපකරණ පුවරුව"
+  },
+  "labels": {
+    "search": "සොයන්න",
+    "filter": "පෙරහන",
+    "sortBy": "වර්ගීකරණය",
+    "all": "සියල්ල",
+    "name": "නම",
+    "email": "විද්‍යුත් තැපෑල",
+    "score": "ලකුණු",
+    "date": "දිනය",
+    "time": "වේලාව",
+    "rank": "ශ්‍රේණිය",
+    "you": "ඔබ"
+  },
+  "feedback": {
+    "successTitle": "සාර්ථකයි",
+    "errorTitle": "දෝෂය",
+    "warningTitle": "අවවාදයයි",
+    "infoTitle": "තොරතුරු",
+    "synced": "සමමුහුර්ත විය",
+    "syncedDesc": "ඔබගේ නොබැඳ ප්‍රශ්නාවලි දත්ත සාර්ථකව සමමුහුර්ත කෙරිණි."
+  },
+  "accessibility": {
+    "switchToLight": "ආලෝක ප්‍රකාරයට මාරු වන්න",
+    "switchToDark": "අඳුරු ප්‍රකාරයට මාරු වන්න",
+    "toggleTheme": "තේමාව මාරු කරන්න",
+    "selectLanguage": "භාෂාව තෝරන්න"
+  }
+}

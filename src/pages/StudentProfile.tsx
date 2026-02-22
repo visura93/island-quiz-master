@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { 
+import {
   ArrowLeft,
   GraduationCap,
   Mail,
@@ -28,32 +30,33 @@ import {
 } from "lucide-react";
 import { apiService, StudentDetail, QuizAttempt, PaymentRecord, UpdateStudentPremiumRequest, CreatePaymentRequest } from "@/lib/api";
 import { OptimizedImage } from "@/components/OptimizedImage";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogHeader, 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
   DialogTitle,
-  DialogFooter 
+  DialogFooter
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from "@/components/ui/select";
 
 const StudentProfile = () => {
   const { studentId } = useParams<{ studentId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation(['profile', 'common']);
   const [student, setStudent] = useState<StudentDetail | null>(null);
   const [selectedQuiz, setSelectedQuiz] = useState<QuizAttempt | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
-  
+
   // Premium Management State
   const [isPremiumToggle, setIsPremiumToggle] = useState<boolean>(false);
   const [savingPremium, setSavingPremium] = useState<boolean>(false);
@@ -81,7 +84,7 @@ const StudentProfile = () => {
       setStudent(data);
       setIsPremiumToggle(data.isPremium || false);
     } catch (err: any) {
-      setError(err.message || "Failed to load student details");
+      setError(err.message || t('profile:studentProfile.failedLoadStudent'));
       console.error("Error loading student detail:", err);
     } finally {
       setLoading(false);
@@ -103,7 +106,7 @@ const StudentProfile = () => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    
+
     if (hours > 0) {
       return `${hours}h ${minutes}m ${secs}s`;
     }
@@ -135,15 +138,15 @@ const StudentProfile = () => {
       const updated = await apiService.updateStudentPremium(studentId, request);
       setStudent(updated);
       setIsPremiumToggle(enabled);
-      
+
       toast({
-        title: "Success",
-        description: enabled ? "Premium access enabled for 3 months" : "Premium access disabled",
+        title: t('common:feedback.successTitle'),
+        description: enabled ? t('profile:studentProfile.premiumEnabled') : t('profile:studentProfile.premiumDisabled'),
       });
     } catch (err: any) {
       toast({
-        title: "Error",
-        description: err.message || "Failed to update premium status",
+        title: t('common:feedback.errorTitle'),
+        description: err.message || t('profile:studentProfile.failedUpdatePremium'),
         variant: "destructive",
       });
       // Revert toggle on error
@@ -167,8 +170,8 @@ const StudentProfile = () => {
 
     if (paymentAmount <= 0) {
       toast({
-        title: "Validation Error",
-        description: "Payment amount must be greater than 0",
+        title: t('common:feedback.errorTitle'),
+        description: t('profile:studentProfile.validationAmountError'),
         variant: "destructive",
       });
       return;
@@ -186,18 +189,18 @@ const StudentProfile = () => {
       };
 
       await apiService.createPaymentRecord(request);
-      
+
       toast({
-        title: "Success",
-        description: "Payment recorded successfully",
+        title: t('common:feedback.successTitle'),
+        description: t('profile:studentProfile.paymentRecorded'),
       });
 
       setPaymentDialogOpen(false);
       loadStudentDetail(); // Reload student data
     } catch (err: any) {
       toast({
-        title: "Error",
-        description: err.message || "Failed to record payment",
+        title: t('common:feedback.errorTitle'),
+        description: err.message || t('profile:studentProfile.failedRecordPayment'),
         variant: "destructive",
       });
     } finally {
@@ -207,7 +210,7 @@ const StudentProfile = () => {
 
   const getPremiumStatus = () => {
     if (!student?.isPremium || !student.subscriptionEndDate) {
-      return { badge: <Badge variant="outline">Regular Account</Badge>, color: "text-gray-600" };
+      return { badge: <Badge variant="outline">{t('profile:studentProfile.regularAccount')}</Badge>, color: "text-gray-600" };
     }
 
     const endDate = new Date(student.subscriptionEndDate);
@@ -215,19 +218,19 @@ const StudentProfile = () => {
     const daysRemaining = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
     if (daysRemaining > 30) {
-      return { 
-        badge: <Badge className="bg-green-600"><Crown className="h-3 w-3 mr-1" />Premium - {daysRemaining} days left</Badge>, 
-        color: "text-green-600" 
+      return {
+        badge: <Badge className="bg-green-600"><Crown className="h-3 w-3 mr-1" />{t('profile:studentProfile.premiumDaysLeft', { days: daysRemaining })}</Badge>,
+        color: "text-green-600"
       };
     } else if (daysRemaining > 0) {
-      return { 
-        badge: <Badge className="bg-yellow-600"><Crown className="h-3 w-3 mr-1" />Premium - Expiring ({daysRemaining}d)</Badge>, 
-        color: "text-yellow-600" 
+      return {
+        badge: <Badge className="bg-yellow-600"><Crown className="h-3 w-3 mr-1" />{t('profile:studentProfile.premiumExpiring', { days: daysRemaining })}</Badge>,
+        color: "text-yellow-600"
       };
     } else {
-      return { 
-        badge: <Badge variant="destructive">Expired</Badge>, 
-        color: "text-red-600" 
+      return {
+        badge: <Badge variant="destructive">{t('profile:studentProfile.expired')}</Badge>,
+        color: "text-red-600"
       };
     }
   };
@@ -237,7 +240,7 @@ const StudentProfile = () => {
       <div className="min-h-screen bg-gradient-mesh flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading student profile...</p>
+          <p className="text-muted-foreground">{t('profile:studentProfile.loading')}</p>
         </div>
       </div>
     );
@@ -248,10 +251,10 @@ const StudentProfile = () => {
       <div className="min-h-screen bg-gradient-mesh flex items-center justify-center">
         <Card className="max-w-md">
           <CardContent className="p-6 text-center">
-            <p className="text-red-600 mb-4">{error || "Student not found"}</p>
+            <p className="text-red-600 mb-4">{error || t('profile:studentProfile.notFound')}</p>
             <Button onClick={() => navigate("/admin-dashboard")}>
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
+              {t('profile:studentProfile.backToDashboard')}
             </Button>
           </CardContent>
         </Card>
@@ -263,15 +266,16 @@ const StudentProfile = () => {
     <div className="min-h-screen bg-gradient-mesh">
       {/* Header */}
       <header className="border-b border-border/50 backdrop-blur-sm bg-background/80">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Button
             variant="ghost"
             onClick={() => navigate("/admin-dashboard")}
             className="mb-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
+            {t('profile:studentProfile.backToDashboard')}
           </Button>
+          <LanguageSwitcher />
         </div>
       </header>
 
@@ -294,7 +298,7 @@ const StudentProfile = () => {
                       </div>
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4" />
-                        Joined: {formatDate(student.createdAt)}
+                        {t('profile:studentProfile.joined', { date: formatDate(student.createdAt) })}
                       </div>
                     </div>
                   </CardDescription>
@@ -303,12 +307,12 @@ const StudentProfile = () => {
               {student.isActive ? (
                 <Badge className="bg-green-600 text-white px-4 py-2">
                   <UserCheck className="h-4 w-4 mr-2" />
-                  Active
+                  {t('profile:studentProfile.active')}
                 </Badge>
               ) : (
                 <Badge variant="secondary" className="px-4 py-2">
                   <UserX className="h-4 w-4 mr-2" />
-                  Inactive
+                  {t('profile:studentProfile.inactive')}
                 </Badge>
               )}
             </div>
@@ -318,28 +322,28 @@ const StudentProfile = () => {
               <div className="text-center p-4 bg-primary/5 rounded-lg">
                 <BookOpen className="h-8 w-8 text-primary mx-auto mb-2" />
                 <div className="text-3xl font-bold text-primary">{student.totalQuizzes}</div>
-                <div className="text-sm text-muted-foreground">Total Quizzes</div>
+                <div className="text-sm text-muted-foreground">{t('profile:studentProfile.totalQuizzes')}</div>
               </div>
               <div className="text-center p-4 bg-green-500/10 rounded-lg">
                 <Award className="h-8 w-8 text-green-600 mx-auto mb-2" />
                 <div className={`text-3xl font-bold ${getScoreColor(student.averageScore)}`}>
                   {student.averageScore.toFixed(1)}%
                 </div>
-                <div className="text-sm text-muted-foreground">Average Score</div>
+                <div className="text-sm text-muted-foreground">{t('profile:studentProfile.averageScore')}</div>
               </div>
               <div className="text-center p-4 bg-blue-500/10 rounded-lg">
                 <TrendingUp className="h-8 w-8 text-blue-600 mx-auto mb-2" />
                 <div className="text-3xl font-bold text-blue-600">
                   {student.quizAttempts.reduce((sum, q) => sum + q.correctAnswers, 0)}
                 </div>
-                <div className="text-sm text-muted-foreground">Total Correct</div>
+                <div className="text-sm text-muted-foreground">{t('profile:studentProfile.totalCorrect')}</div>
               </div>
               <div className="text-center p-4 bg-purple-500/10 rounded-lg">
                 <Clock className="h-8 w-8 text-purple-600 mx-auto mb-2" />
                 <div className="text-3xl font-bold text-purple-600">
-                  {student.lastActivityDate ? formatDate(student.lastActivityDate) : "Never"}
+                  {student.lastActivityDate ? formatDate(student.lastActivityDate) : t('profile:studentProfile.never')}
                 </div>
-                <div className="text-sm text-muted-foreground">Last Activity</div>
+                <div className="text-sm text-muted-foreground">{t('profile:studentProfile.lastActivity')}</div>
               </div>
             </div>
           </CardContent>
@@ -352,15 +356,15 @@ const StudentProfile = () => {
               <div>
                 <CardTitle className="text-2xl flex items-center gap-2">
                   <Crown className="h-6 w-6 text-primary" />
-                  Premium Status Management
+                  {t('profile:studentProfile.premiumManagement')}
                 </CardTitle>
                 <CardDescription>
-                  Manage student's premium access and payment history
+                  {t('profile:studentProfile.premiumManagementDesc')}
                 </CardDescription>
               </div>
               <Button onClick={handleOpenPaymentDialog} className="bg-gradient-hero">
                 <Plus className="h-4 w-4 mr-2" />
-                Add Payment
+                {t('profile:studentProfile.addPayment')}
               </Button>
             </div>
           </CardHeader>
@@ -371,24 +375,24 @@ const StudentProfile = () => {
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
                     <Crown className="h-6 w-6 text-primary" />
-                    <h3 className="text-xl font-semibold">Premium Access</h3>
+                    <h3 className="text-xl font-semibold">{t('profile:studentProfile.premiumAccess')}</h3>
                     {getPremiumStatus().badge}
                   </div>
                   <p className="text-sm text-muted-foreground mb-4">
-                    {isPremiumToggle 
-                      ? "Student has unlimited quiz access until subscription expires" 
-                      : "Enable premium to grant unlimited access for 3 months"}
+                    {isPremiumToggle
+                      ? t('profile:studentProfile.premiumEnabledDesc')
+                      : t('profile:studentProfile.premiumDisabledDesc')}
                   </p>
                   {student?.subscriptionEndDate && isPremiumToggle && (
                     <div className="flex items-center gap-6 text-sm">
                       <div>
-                        <span className="font-medium">Start Date:</span>{" "}
+                        <span className="font-medium">{t('profile:studentProfile.startDate')}</span>{" "}
                         <span className="text-muted-foreground">
                           {student.subscriptionStartDate ? formatDate(student.subscriptionStartDate) : "N/A"}
                         </span>
                       </div>
                       <div>
-                        <span className="font-medium">End Date:</span>{" "}
+                        <span className="font-medium">{t('profile:studentProfile.endDate')}</span>{" "}
                         <span className="text-muted-foreground">
                           {formatDate(student.subscriptionEndDate)}
                         </span>
@@ -398,7 +402,7 @@ const StudentProfile = () => {
                 </div>
                 <div className="flex items-center gap-3">
                   <Label htmlFor="premium-toggle" className="text-base font-medium">
-                    {isPremiumToggle ? "Enabled" : "Disabled"}
+                    {isPremiumToggle ? t('profile:studentProfile.enabled') : t('profile:studentProfile.disabled')}
                   </Label>
                   <Switch
                     id="premium-toggle"
@@ -417,21 +421,21 @@ const StudentProfile = () => {
                 <div className="text-2xl font-bold text-blue-600">
                   {student.paymentHistory?.length || 0}
                 </div>
-                <div className="text-sm text-muted-foreground">Total Payments</div>
+                <div className="text-sm text-muted-foreground">{t('profile:studentProfile.totalPayments')}</div>
               </div>
               <div className="text-center p-4 bg-green-500/10 rounded-lg">
                 <Calendar className="h-8 w-8 text-green-600 mx-auto mb-2" />
                 <div className="text-sm font-bold text-green-600">
                   {student.subscriptionStartDate ? formatDate(student.subscriptionStartDate) : "N/A"}
                 </div>
-                <div className="text-sm text-muted-foreground">Premium Since</div>
+                <div className="text-sm text-muted-foreground">{t('profile:studentProfile.premiumSince')}</div>
               </div>
               <div className="text-center p-4 bg-orange-500/10 rounded-lg">
                 <Calendar className="h-8 w-8 text-orange-600 mx-auto mb-2" />
                 <div className="text-sm font-bold text-orange-600">
                   {student.subscriptionEndDate ? formatDate(student.subscriptionEndDate) : "N/A"}
                 </div>
-                <div className="text-sm text-muted-foreground">Premium Until</div>
+                <div className="text-sm text-muted-foreground">{t('profile:studentProfile.premiumUntil')}</div>
               </div>
             </div>
 
@@ -439,13 +443,13 @@ const StudentProfile = () => {
             <div className="border-t pt-6">
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                 <DollarSign className="h-5 w-5 text-primary" />
-                Payment History
+                {t('profile:studentProfile.paymentHistory')}
               </h3>
               {!student.paymentHistory || student.paymentHistory.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <DollarSign className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p className="text-lg font-medium">No payment records</p>
-                  <p className="text-sm">This student hasn't made any payments yet.</p>
+                  <p className="text-lg font-medium">{t('profile:studentProfile.noPaymentRecords')}</p>
+                  <p className="text-sm">{t('profile:studentProfile.noPaymentDesc')}</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -464,17 +468,17 @@ const StudentProfile = () => {
                                   {payment.currency} {payment.amount.toLocaleString()}
                                 </div>
                                 <div className="text-sm text-muted-foreground">
-                                  {payment.paymentMethod} • {payment.subscriptionMonths} month{payment.subscriptionMonths !== 1 ? "s" : ""} premium access
+                                  {payment.paymentMethod} • {payment.subscriptionMonths} {payment.subscriptionMonths !== 1 ? t('profile:studentProfile.months', { count: payment.subscriptionMonths }) : t('profile:studentProfile.month', { count: 1 })}
                                 </div>
                                 {payment.notes && (
                                   <div className="text-sm text-muted-foreground mt-1">
-                                    Note: {payment.notes}
+                                    {t('profile:studentProfile.note', { note: payment.notes })}
                                   </div>
                                 )}
                               </div>
                             </div>
                             <div className="text-right">
-                              <Badge 
+                              <Badge
                                 variant={payment.status === "completed" ? "default" : "secondary"}
                                 className="mb-2"
                               >
@@ -499,20 +503,20 @@ const StudentProfile = () => {
           <CardHeader>
             <CardTitle className="text-2xl flex items-center gap-2">
               <BookOpen className="h-6 w-6 text-primary" />
-              Quiz History
+              {t('profile:studentProfile.quizHistory')}
             </CardTitle>
             <CardDescription>
               {student.quizAttempts.length === 0
-                ? "No quiz attempts yet"
-                : `${student.quizAttempts.length} quiz attempt${student.quizAttempts.length !== 1 ? "s" : ""}`}
+                ? t('profile:studentProfile.noQuizAttempts')
+                : t('profile:studentProfile.quizAttemptCount', { count: student.quizAttempts.length })}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {student.quizAttempts.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <BookOpen className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p className="text-lg font-medium">No quiz attempts</p>
-                <p className="text-sm">This student hasn't completed any quizzes yet.</p>
+                <p className="text-lg font-medium">{t('profile:studentProfile.noQuizAttemptsDesc')}</p>
+                <p className="text-sm">{t('profile:studentProfile.noQuizCompletedDesc')}</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -530,28 +534,28 @@ const StudentProfile = () => {
                             <div className="flex items-center gap-3 mb-2">
                               <h3 className="text-xl font-semibold">{quiz.quizTitle}</h3>
                               <Badge variant={getScoreBadgeVariant(quiz.score)}>
-                                {quiz.score}% Score
+                                {quiz.score}% {t('profile:studentProfile.score')}
                               </Badge>
                             </div>
                             <div className="grid md:grid-cols-4 gap-4 text-sm text-muted-foreground">
                               <div>
-                                <span className="font-medium">Subject:</span> {quiz.subject}
+                                <span className="font-medium">{t('profile:studentProfile.subject')}</span> {quiz.subject}
                               </div>
                               <div>
-                                <span className="font-medium">Grade:</span> {quiz.grade}
+                                <span className="font-medium">{t('profile:studentProfile.grade')}</span> {quiz.grade}
                               </div>
                               <div>
-                                <span className="font-medium">Type:</span> {quiz.type}
+                                <span className="font-medium">{t('profile:studentProfile.type')}</span> {quiz.type}
                               </div>
                               <div>
-                                <span className="font-medium">Completed:</span> {formatDate(quiz.completedDate)}
+                                <span className="font-medium">{t('profile:studentProfile.completed')}</span> {formatDate(quiz.completedDate)}
                               </div>
                             </div>
                             <div className="flex items-center gap-6 mt-3">
                               <div className="flex items-center gap-2">
                                 <CheckCircle className="h-4 w-4 text-green-600" />
                                 <span className="text-sm">
-                                  {quiz.correctAnswers} / {quiz.totalQuestions} Correct
+                                  {quiz.correctAnswers} / {quiz.totalQuestions} {t('profile:studentProfile.correctLabel')}
                                 </span>
                               </div>
                               <div className="flex items-center gap-2">
@@ -563,7 +567,7 @@ const StudentProfile = () => {
                             </div>
                           </div>
                           <Button variant="outline" onClick={() => setSelectedQuiz(quiz)}>
-                            View Details
+                            {t('profile:studentProfile.viewDetails')}
                           </Button>
                         </div>
                       </CardContent>
@@ -581,26 +585,26 @@ const StudentProfile = () => {
           <DialogHeader>
             <DialogTitle>{selectedQuiz?.quizTitle}</DialogTitle>
             <DialogDescription>
-              Quiz completed on {selectedQuiz ? formatDate(selectedQuiz.completedDate) : ""}
+              {selectedQuiz ? t('profile:studentProfile.quizCompleted', { date: formatDate(selectedQuiz.completedDate) }) : ""}
             </DialogDescription>
           </DialogHeader>
           {selectedQuiz && (
             <div className="space-y-4">
               <div className="grid grid-cols-3 gap-4 p-4 bg-muted/50 rounded-lg">
                 <div>
-                  <div className="text-sm text-muted-foreground">Score</div>
+                  <div className="text-sm text-muted-foreground">{t('profile:studentProfile.score')}</div>
                   <div className={`text-2xl font-bold ${getScoreColor(selectedQuiz.score)}`}>
                     {selectedQuiz.score}%
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground">Correct Answers</div>
+                  <div className="text-sm text-muted-foreground">{t('profile:studentProfile.correctAnswers')}</div>
                   <div className="text-2xl font-bold">
                     {selectedQuiz.correctAnswers} / {selectedQuiz.totalQuestions}
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground">Time Spent</div>
+                  <div className="text-sm text-muted-foreground">{t('profile:studentProfile.timeSpent')}</div>
                   <div className="text-2xl font-bold">
                     {formatTime(selectedQuiz.timeSpent)}
                   </div>
@@ -608,25 +612,25 @@ const StudentProfile = () => {
               </div>
 
               <div className="space-y-4">
-                <h3 className="font-semibold text-lg">Question Review</h3>
+                <h3 className="font-semibold text-lg">{t('profile:studentProfile.questionReview')}</h3>
                 {selectedQuiz.questions.map((question, index) => (
                   <Card key={question.id} className="border-2">
                     <CardContent className="p-4">
                       <div className="flex items-center gap-2 mb-3">
-                        <span className="font-semibold">Question {index + 1}</span>
+                        <span className="font-semibold">{t('profile:studentProfile.question', { number: index + 1 })}</span>
                         {question.isCorrect ? (
                           <Badge className="bg-green-600">
                             <CheckCircle className="h-3 w-3 mr-1" />
-                            Correct
+                            {t('profile:studentProfile.correctLabel')}
                           </Badge>
                         ) : (
                           <Badge variant="destructive">
                             <XCircle className="h-3 w-3 mr-1" />
-                            Incorrect
+                            {t('profile:studentProfile.incorrectLabel')}
                           </Badge>
                         )}
                       </div>
-                      
+
                       <div className="mb-4">
                         {question.questionText && (
                           <p className="font-medium mb-2">{question.questionText}</p>
@@ -648,7 +652,7 @@ const StudentProfile = () => {
                           // Support both single and multiple correct answers
                           const correctIndexes = question.correctAnswerIndexes || [question.correctAnswerIndex];
                           const selectedIndexes = question.selectedAnswerIndexes || [question.selectedAnswerIndex];
-                          
+
                           const isSelected = selectedIndexes.includes(optionIndex);
                           const isCorrect = correctIndexes.includes(optionIndex);
                           const optionImage = question.optionImages?.[optionIndex];
@@ -681,8 +685,8 @@ const StudentProfile = () => {
                                 )}
                                 {optionImage && (
                                   <div className="mt-2">
-                                    <OptimizedImage 
-                                      src={optionImage} 
+                                    <OptimizedImage
+                                      src={optionImage}
                                       alt={`Option ${String.fromCharCode(65 + optionIndex)}`}
                                       className="max-w-full h-auto max-h-48 rounded-lg border border-border"
                                       skeletonHeight="100px"
@@ -692,12 +696,12 @@ const StudentProfile = () => {
                               </div>
                               {isCorrect && (
                                 <Badge className="bg-green-600 ml-auto flex-shrink-0">
-                                  {correctIndexes.length > 1 ? `Correct (${correctIndexes.indexOf(optionIndex) + 1}/${correctIndexes.length})` : 'Correct'}
+                                  {correctIndexes.length > 1 ? `${t('profile:studentProfile.correctLabel')} (${correctIndexes.indexOf(optionIndex) + 1}/${correctIndexes.length})` : t('profile:studentProfile.correctLabel')}
                                 </Badge>
                               )}
                               {isSelected && !isCorrect && (
                                 <Badge variant="destructive" className="ml-auto flex-shrink-0">
-                                  Selected
+                                  {t('profile:studentProfile.selected')}
                                 </Badge>
                               )}
                             </div>
@@ -707,7 +711,7 @@ const StudentProfile = () => {
 
                       {question.explanation && (
                         <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded">
-                          <p className="text-sm font-semibold text-blue-900 mb-1">Explanation:</p>
+                          <p className="text-sm font-semibold text-blue-900 mb-1">{t('profile:studentProfile.explanation')}</p>
                           <p className="text-sm text-blue-800">{question.explanation}</p>
                         </div>
                       )}
@@ -724,14 +728,14 @@ const StudentProfile = () => {
       <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Record Payment</DialogTitle>
+            <DialogTitle>{t('profile:studentProfile.recordPayment')}</DialogTitle>
             <DialogDescription>
-              Add a new payment record and extend premium access
+              {t('profile:studentProfile.recordPaymentDesc')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="amount">Payment Amount</Label>
+              <Label htmlFor="amount">{t('profile:studentProfile.paymentAmount')}</Label>
               <Input
                 id="amount"
                 type="number"
@@ -739,11 +743,11 @@ const StudentProfile = () => {
                 step="0.01"
                 value={paymentAmount}
                 onChange={(e) => setPaymentAmount(parseFloat(e.target.value) || 0)}
-                placeholder="Enter payment amount"
+                placeholder={t('profile:studentProfile.enterAmount')}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="currency">Currency</Label>
+              <Label htmlFor="currency">{t('profile:studentProfile.currency')}</Label>
               <Select value={paymentCurrency} onValueChange={setPaymentCurrency}>
                 <SelectTrigger>
                   <SelectValue />
@@ -757,7 +761,7 @@ const StudentProfile = () => {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="paymentMethod">Payment Method</Label>
+              <Label htmlFor="paymentMethod">{t('profile:studentProfile.paymentMethod')}</Label>
               <Select value={paymentMethod} onValueChange={setPaymentMethod}>
                 <SelectTrigger>
                   <SelectValue />
@@ -773,7 +777,7 @@ const StudentProfile = () => {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="paymentMonths">Premium Duration (Months)</Label>
+              <Label htmlFor="paymentMonths">{t('profile:studentProfile.premiumDuration')}</Label>
               <Select
                 value={paymentMonths.toString()}
                 onValueChange={(value) => setPaymentMonths(parseInt(value))}
@@ -782,30 +786,30 @@ const StudentProfile = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">1 Month</SelectItem>
-                  <SelectItem value="3">3 Months</SelectItem>
-                  <SelectItem value="6">6 Months</SelectItem>
-                  <SelectItem value="12">12 Months</SelectItem>
+                  <SelectItem value="1">{t('profile:studentProfile.month', { count: 1 })}</SelectItem>
+                  <SelectItem value="3">{t('profile:studentProfile.months', { count: 3 })}</SelectItem>
+                  <SelectItem value="6">{t('profile:studentProfile.months', { count: 6 })}</SelectItem>
+                  <SelectItem value="12">{t('profile:studentProfile.months', { count: 12 })}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="paymentNotes">Notes (Optional)</Label>
+              <Label htmlFor="paymentNotes">{t('profile:studentProfile.notesOptional')}</Label>
               <Textarea
                 id="paymentNotes"
                 value={paymentNotes}
                 onChange={(e) => setPaymentNotes(e.target.value)}
-                placeholder="Add any notes about this payment"
+                placeholder={t('profile:studentProfile.notesPlaceholder')}
                 rows={3}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setPaymentDialogOpen(false)}>
-              Cancel
+              {t('common:buttons.cancel')}
             </Button>
             <Button onClick={handleSavePayment} disabled={savingPayment}>
-              {savingPayment ? "Recording..." : "Record Payment"}
+              {savingPayment ? t('profile:studentProfile.recording') : t('profile:studentProfile.recordPaymentBtn')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -815,4 +819,3 @@ const StudentProfile = () => {
 };
 
 export default StudentProfile;
-

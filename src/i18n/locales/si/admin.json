@@ -1,0 +1,61 @@
+{
+  "createQuiz": {
+    "title": "ප්‍රශ්නාවලිය සාදන්න",
+    "subtitle": "නව ප්‍රශ්නාවලියක් සාදන්න",
+    "fields": {
+      "quizTitle": "ප්‍රශ්නාවලිය ශීර්ෂය",
+      "description": "විස්තරය",
+      "grade": "ශ්‍රේණිය",
+      "medium": "මාධ්‍යය",
+      "subject": "විෂය",
+      "quizType": "ප්‍රශ්නාවලිය වර්ගය",
+      "timeLimit": "කාල සීමාව",
+      "difficulty": "දුෂ්කරත්වය"
+    },
+    "notifications": {
+      "imageUploaded": "රූපය ඉදිරිපත් කෙරිණ",
+      "questionImageUploaded": "ප්‍රශ්නය රූපය සාර්ථකව ඉදිරිපත් කෙරිණ",
+      "optionImageUploaded": "විකල්ප රූපය සාර්ථකව ඉදිරිපත් කෙරිණ",
+      "thumbnailUploaded": "සංක්ෂිප්ත රූපය ඉදිරිපත් කෙරිණ",
+      "thumbnailUploadedDesc": "ප්‍රශ්නාවලිය සංක්ෂිප්ත රූපය සාර්ථකව ඉදිරිපත් කෙරිණ",
+      "uploadFailed": "ඉදිරිපත් කිරීම අසාර්ථකයි",
+      "imagePasted": "රූපය ඇලවිණ",
+      "imagePastedDesc": "රූපය සාර්ථකව ඇලවිණ"
+    },
+    "createSuccess": "ප්‍රශ්නාවලිය සාර්ථකව සාදන ලදී!",
+    "updateSuccess": "ප්‍රශ්නාවලිය සාර්ථකව යාවත්කාලීන කෙරිණ!",
+    "validationError": "සත්‍යාපන දෝෂය"
+  },
+  "viewQuizzes": {
+    "title": "ප්‍රශ්නාවලි",
+    "searchPlaceholder": "ප්‍රශ්නාවලි සොයන්න...",
+    "deleteSuccess": "ප්‍රශ්නාවලිය සාර්ථකව මකා දමා ඇත",
+    "loadError": "ප්‍රශ්නාවලි පූරණය කිරීමට අසාර්ථකයි",
+    "deleteConfirm": "ප්‍රශ්නාවලිය මකන්නද",
+    "deleteConfirmDesc": "ඔබ ඉෂ්ටයෙන්ම මෙම ප්‍රශ්නාවලිය මකා දැමීමට කැමතිද? මෙම ක්‍රියාව ප්‍රතිවර්තනය කළ නොහැකිය."
+  },
+  "manageSubjects": {
+    "title": "විෂයයන් කළමනාකරණය",
+    "categories": {
+      "all": "සියලු කාණ්ඩ",
+      "ol": "10-11 ශ්‍රේණිය (සා/පෙ)",
+      "al": "12-13 ශ්‍රේණිය (උ/පෙ)",
+      "scholarship": "ශිෂ්‍යත්ව"
+    },
+    "errors": {
+      "nameRequired": "විෂය නාමය අවශ්‍යයි",
+      "valueRequired": "විෂය අගය අවශ්‍යයි"
+    },
+    "updateSuccess": "විෂය සාර්ථකව යාවත්කාලීන කෙරිණ",
+    "createSuccess": "විෂය සාර්ථකව සාදන ලදී",
+    "deleteSuccess": "විෂය සාර්ථකව මකා දමා ඇත"
+  },
+  "manageStudents": {
+    "title": "සිසුන් කළමනාකරණය",
+    "searchPlaceholder": "සිසුන් සොයන්න...",
+    "stats": {
+      "totalStudents": "සම්පූර්ණ සිසුන්",
+      "activeStudents": "ක්‍රියාකාරී සිසුන්"
+    }
+  }
+}

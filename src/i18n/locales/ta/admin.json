@@ -1,0 +1,61 @@
+{
+  "createQuiz": {
+    "title": "வினாடி வினா உருவாக்கு",
+    "subtitle": "புதிய வினாடி வினா உருவாக்கு",
+    "fields": {
+      "quizTitle": "வினாடி வினா தலைப்பு",
+      "description": "விளக்கம்",
+      "grade": "வகுப்பு",
+      "medium": "ஊடகம்",
+      "subject": "பாடம்",
+      "quizType": "வினாடி வினா வகை",
+      "timeLimit": "நேர வரம்பு",
+      "difficulty": "கஷ்டம்"
+    },
+    "notifications": {
+      "imageUploaded": "படம் பதிவேற்றப்பட்டது",
+      "questionImageUploaded": "கேள்வி படம் வெற்றிகரமாக பதிவேற்றப்பட்டது",
+      "optionImageUploaded": "விருப்பப் படம் வெற்றிகரமாக பதிவேற்றப்பட்டது",
+      "thumbnailUploaded": "சிறுபட படம் பதிவேற்றப்பட்டது",
+      "thumbnailUploadedDesc": "வினாடி வினா சிறுபட படம் வெற்றிகரமாக பதிவேற்றப்பட்டது",
+      "uploadFailed": "பதிவேற்றம் தோல்வியடைந்தது",
+      "imagePasted": "படம் ஒட்டப்பட்டது",
+      "imagePastedDesc": "படம் வெற்றிகரமாக ஒட்டப்பட்டது"
+    },
+    "createSuccess": "வினாடி வினா வெற்றிகரமாக உருவாக்கப்பட்டது!",
+    "updateSuccess": "வினாடி வினா வெற்றிகரமாக புதுப்பிக்கப்பட்டது!",
+    "validationError": "சரிபார்ப்பு பிழை"
+  },
+  "viewQuizzes": {
+    "title": "வினாடி வினாக்கள்",
+    "searchPlaceholder": "வினாடி வினாக்களை தேடு...",
+    "deleteSuccess": "வினாடி வினா வெற்றிகரமாக நீக்கப்பட்டது",
+    "loadError": "வினாடி வினாக்களை ஏற்றத் தோல்வி",
+    "deleteConfirm": "வினாடி வினாவை நீக்கு",
+    "deleteConfirmDesc": "இந்த வினாடி வினாவை நீக்க விரும்புகிறீர்களா? இந்த செயலை மாற்ற முடியாது."
+  },
+  "manageSubjects": {
+    "title": "பாடங்களை நிர்வகி",
+    "categories": {
+      "all": "அனைத்து வகைகளும்",
+      "ol": "10-11 வகுப்பு (சா/த)",
+      "al": "12-13 வகுப்பு (உ/த)",
+      "scholarship": "உதாரண"
+    },
+    "errors": {
+      "nameRequired": "பாடத்தின் பெயர் தேவை",
+      "valueRequired": "பாட மதிப்பு தேவை"
+    },
+    "updateSuccess": "பாடம் வெற்றிகரமாக புதுப்பிக்கப்பட்டது",
+    "createSuccess": "பாடம் வெற்றிகரமாக உருவாக்கப்பட்டது",
+    "deleteSuccess": "பாடம் வெற்றிகரமாக நீக்கப்பட்டது"
+  },
+  "manageStudents": {
+    "title": "மாணவர்களை நிர்வகி",
+    "searchPlaceholder": "மாணவர்களை தேடு...",
+    "stats": {
+      "totalStudents": "மொத்த மாணவர்கள்",
+      "activeStudents": "செயலில் உள்ள மாணவர்கள்"
+    }
+  }
+}

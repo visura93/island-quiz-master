@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { apiService, StudentActivity } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
@@ -25,6 +27,7 @@ import { DarkModeToggle } from "@/components/DarkModeToggle";
 const ManageStudents = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation(['admin', 'common']);
   const [students, setStudents] = useState<StudentActivity[]>([]);
   const [filteredStudents, setFilteredStudents] = useState<StudentActivity[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -48,10 +51,10 @@ const ManageStudents = () => {
       setStudents(data);
       setFilteredStudents(data);
     } catch (err: any) {
-      setError(err.message || "Failed to load students");
+      setError(err.message || t('common:status.error'));
       toast({
-        title: "Error",
-        description: err.message || "Failed to load students",
+        title: t('common:feedback.errorTitle'),
+        description: err.message || t('common:status.error'),
         variant: "destructive",
       });
     } finally {
@@ -129,8 +132,8 @@ const ManageStudents = () => {
     : 0;
 
   const stats = [
-    { label: "Total Students", value: totalStudents.toString(), icon: Users, color: "text-primary" },
-    { label: "Active Students", value: activeStudents.toString(), icon: UserCheck, color: "text-green-600" },
+    { label: t('admin:manageStudents.stats.totalStudents'), value: totalStudents.toString(), icon: Users, color: "text-primary" },
+    { label: t('admin:manageStudents.stats.activeStudents'), value: activeStudents.toString(), icon: UserCheck, color: "text-green-600" },
     { label: "Premium", value: premiumStudents.toString(), icon: CreditCard, color: "text-blue-600" },
     { label: "Avg Score", value: averageScore.toFixed(1) + "%", icon: Award, color: "text-accent" },
   ];
@@ -148,15 +151,18 @@ const ManageStudents = () => {
                 className="gap-2"
               >
                 <ArrowLeft className="h-5 w-5" />
-                Back to Dashboard
+                {t('common:buttons.back')}
               </Button>
               <div className="h-8 w-px bg-border" />
               <div className="flex items-center gap-3">
                 <Users className="h-6 w-6 text-primary" />
-                <h1 className="text-2xl font-bold">Manage Students</h1>
+                <h1 className="text-2xl font-bold">{t('admin:manageStudents.title')}</h1>
               </div>
             </div>
-            <DarkModeToggle />
+            <div className="flex items-center gap-2">
+              <LanguageSwitcher />
+              <DarkModeToggle />
+            </div>
           </div>
         </div>
       </div>
@@ -187,7 +193,7 @@ const ManageStudents = () => {
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
-                  placeholder="Search students by name or email..."
+                  placeholder={t('admin:manageStudents.searchPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -244,7 +250,7 @@ const ManageStudents = () => {
             {loading ? (
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                <p className="text-muted-foreground">Loading students...</p>
+                <p className="text-muted-foreground">{t('common:status.loading')}</p>
               </div>
             ) : filteredStudents.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">

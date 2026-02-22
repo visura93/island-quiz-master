@@ -1,0 +1,113 @@
+{
+  "student": {
+    "title": "Student Dashboard",
+    "subtitle": "Welcome back! Ready to practice and improve your skills?",
+    "welcome": "Welcome, {{name}}!",
+    "stats": {
+      "quizzesCompleted": "Quizzes Completed",
+      "averageScore": "Average Score",
+      "timeSpent": "Time Spent",
+      "progress": "Progress"
+    },
+    "selectGrade": "Select Grade",
+    "selectMedium": "Select Medium",
+    "selectSubject": "Select Subject",
+    "go": "Go",
+    "search": "Search papers...",
+    "quizTypes": {
+      "scholarship": "Scholarship",
+      "al": "A/L",
+      "ol": "O/L",
+      "regular": "Regular"
+    },
+    "languages": {
+      "sinhala": "Sinhala",
+      "english": "English",
+      "tamil": "Tamil"
+    },
+    "paperTypes": {
+      "pastPapers": "Past Papers",
+      "pastPapersDesc": "Official past papers from previous years",
+      "modelPapers": "Model Papers",
+      "modelPapersDesc": "Practice papers designed by experts",
+      "schoolPapers": "School Papers",
+      "schoolPapersDesc": "Papers from various schools",
+      "lessonwise": "Lessonwise Select",
+      "lessonwiseDesc": "Select specific topics to practice",
+      "quickQuiz": "Quick Quiz",
+      "quickQuizDesc": "Random question quiz with custom settings"
+    },
+    "grades": {
+      "grade6": "Grade 6",
+      "grade7": "Grade 7",
+      "grade8": "Grade 8",
+      "grade9": "Grade 9",
+      "grade10": "Grade 10",
+      "grade11": "Grade 11",
+      "grade12": "Grade 12",
+      "grade13": "Grade 13"
+    },
+    "incompleteQuizzes": "Incomplete Quizzes",
+    "resumeQuiz": "Resume Quiz",
+    "startNew": "Start New",
+    "startQuiz": "Start Quiz",
+    "resumeDialogTitle": "Resume Quiz?",
+    "resumeDialogDesc": "You have an incomplete attempt for \"{{title}}\". Would you like to resume or start a new attempt?",
+    "warningTitle": "Warning",
+    "loadingSubjectsError": "Failed to load subjects from server. Using default subjects.",
+    "comingSoonScholarship": "Scholarship quizzes are currently not available. Please check back later!",
+    "comingSoonAL": "A/L quizzes are currently not available. Please check back later!",
+    "comingSoonOL": "O/L quizzes are currently not available. Please check back later!",
+    "selectLanguageFirst": "Please select a language first",
+    "noQuizzesFound": "No quizzes found",
+    "loadingQuizzes": "Loading quizzes...",
+    "selectTopic": "Select Topic",
+    "selectTerm": "Select Term",
+    "term1": "Term 1",
+    "term2": "Term 2",
+    "term3": "Term 3",
+    "leaderboardWidget": {
+      "title": "Leaderboard",
+      "yourRank": "Your Rank",
+      "viewFull": "View Full Leaderboard",
+      "noData": "No rankings yet"
+    },
+    "goalsWidget": {
+      "title": "Goals & Achievements",
+      "activeGoals": "Active Goals",
+      "badgesEarned": "Badges Earned",
+      "viewAll": "View All",
+      "noGoals": "No active goals"
+    },
+    "streakWidget": {
+      "dayStreak": "{{count}} Day Streak"
+    }
+  },
+  "teacher": {
+    "title": "Teacher Dashboard",
+    "subtitle": "Manage your MCQ collections",
+    "welcome": "Welcome, {{name}}!",
+    "stats": {
+      "totalMcqs": "Total MCQs",
+      "activeStudents": "Active Students",
+      "earnings": "Earnings"
+    },
+    "createMcqSet": "Create MCQ Set",
+    "collections": {
+      "title": "Your MCQ Collections",
+      "subtitle": "Create and manage your question sets",
+      "empty": "No MCQ sets created yet",
+      "emptyDesc": "Start creating your first MCQ collection",
+      "createFirst": "Create Your First Set"
+    }
+  },
+  "admin": {
+    "title": "Admin Dashboard",
+    "subtitle": "Manage the platform",
+    "stats": {
+      "totalStudents": "Total Students",
+      "activeStudents": "Active Students",
+      "totalQuizzes": "Total Quizzes"
+    }
+  }
+}

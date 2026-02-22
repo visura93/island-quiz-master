@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -24,6 +26,7 @@ const StudentDashboard = () => {
   const navigate = useNavigate();
   const { user, logout, refreshUser, isNewUser, setIsNewUser } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation(['dashboard', 'common']);
   const [selectedGrade, setSelectedGrade] = useState<string>("");
   const [selectedMedium, setSelectedMedium] = useState<string>("");
   const [selectedSubject, setSelectedSubject] = useState<string>("");
@@ -93,8 +96,8 @@ const StudentDashboard = () => {
       } catch (err: any) {
         console.error("Error loading subjects:", err);
         toast({
-          title: "Warning",
-          description: "Failed to load subjects from server. Using default subjects.",
+          title: t('dashboard:student.warningTitle'),
+          description: t('dashboard:student.loadingSubjectsError'),
           variant: "destructive",
         });
       } finally {
@@ -241,25 +244,25 @@ const StudentDashboard = () => {
     if (quizType === "scholarship" && !systemSettings.enableScholarship) {
       toast({
         title: "Coming Soon",
-        description: "Scholarship quizzes are currently not available. Please check back later!",
+        description: t('dashboard:student.comingSoonScholarship'),
         variant: "default",
       });
       return;
     }
-    
+
     if (quizType === "al" && !systemSettings.enableAL) {
       toast({
         title: "Coming Soon",
-        description: "A/L quizzes are currently not available. Please check back later!",
+        description: t('dashboard:student.comingSoonAL'),
         variant: "default",
       });
       return;
     }
-    
+
     if (quizType === "ol" && !systemSettings.enableOL) {
       toast({
         title: "Coming Soon",
-        description: "O/L quizzes are currently not available. Please check back later!",
+        description: t('dashboard:student.comingSoonOL'),
         variant: "default",
       });
       return;
@@ -548,20 +551,20 @@ const StudentDashboard = () => {
 
   // Static data for form options
   const grades = [
-    { value: "grade-6", label: "Grade 6" },
-    { value: "grade-7", label: "Grade 7" },
-    { value: "grade-8", label: "Grade 8" },
-    { value: "grade-9", label: "Grade 9" },
-    { value: "grade-10", label: "Grade 10" },
-    { value: "grade-11", label: "Grade 11" },
-    { value: "grade-12", label: "Grade 12" },
-    { value: "grade-13", label: "Grade 13" },
+    { value: "grade-6", label: t('dashboard:student.grades.grade6') },
+    { value: "grade-7", label: t('dashboard:student.grades.grade7') },
+    { value: "grade-8", label: t('dashboard:student.grades.grade8') },
+    { value: "grade-9", label: t('dashboard:student.grades.grade9') },
+    { value: "grade-10", label: t('dashboard:student.grades.grade10') },
+    { value: "grade-11", label: t('dashboard:student.grades.grade11') },
+    { value: "grade-12", label: t('dashboard:student.grades.grade12') },
+    { value: "grade-13", label: t('dashboard:student.grades.grade13') },
   ];
 
   const mediums = [
-    { value: "sinhala", label: "Sinhala" },
-    { value: "english", label: "English" },
-    { value: "tamil", label: "Tamil" },
+    { value: "sinhala", label: t('dashboard:student.languages.sinhala') },
+    { value: "english", label: t('dashboard:student.languages.english') },
+    { value: "tamil", label: t('dashboard:student.languages.tamil') },
   ];
 
   // Grade-specific subject lists
@@ -651,8 +654,8 @@ const StudentDashboard = () => {
   const paperTypes = [
     {
       id: "past-papers",
-      title: "Past Papers",
-      description: "Official past papers from previous years",
+      title: t('dashboard:student.paperTypes.pastPapers'),
+      description: t('dashboard:student.paperTypes.pastPapersDesc'),
       icon: FileText,
       color: "text-blue-600 dark:text-blue-400",
       bgColor: "bg-blue-50 dark:bg-blue-950/30",
@@ -660,8 +663,8 @@ const StudentDashboard = () => {
     },
     {
       id: "model-papers",
-      title: "Model Papers",
-      description: "Practice papers designed by experts",
+      title: t('dashboard:student.paperTypes.modelPapers'),
+      description: t('dashboard:student.paperTypes.modelPapersDesc'),
       icon: Award,
       color: "text-green-600 dark:text-green-400",
       bgColor: "bg-green-50 dark:bg-green-950/30",
@@ -669,8 +672,8 @@ const StudentDashboard = () => {
     },
     {
       id: "school-papers",
-      title: "School Papers",
-      description: "Papers from various schools",
+      title: t('dashboard:student.paperTypes.schoolPapers'),
+      description: t('dashboard:student.paperTypes.schoolPapersDesc'),
       icon: School,
       color: "text-purple-600 dark:text-purple-400",
       bgColor: "bg-purple-50 dark:bg-purple-950/30",
@@ -678,8 +681,8 @@ const StudentDashboard = () => {
     },
     {
       id: "lessonwise",
-      title: "Lessonwise Select",
-      description: "Select specific topics to practice",
+      title: t('dashboard:student.paperTypes.lessonwise'),
+      description: t('dashboard:student.paperTypes.lessonwiseDesc'),
       icon: BookOpen,
       color: "text-orange-600 dark:text-orange-400",
       bgColor: "bg-orange-50 dark:bg-orange-950/30",
@@ -687,8 +690,8 @@ const StudentDashboard = () => {
     },
     {
       id: "quick-quiz",
-      title: "Quick Quiz",
-      description: "Random question quiz with custom settings",
+      title: t('dashboard:student.paperTypes.quickQuiz'),
+      description: t('dashboard:student.paperTypes.quickQuizDesc'),
       icon: Zap,
       color: "text-pink-600 dark:text-pink-400",
       bgColor: "bg-pink-50 dark:bg-pink-950/30",
@@ -699,8 +702,8 @@ const StudentDashboard = () => {
   const scholarshipPaperTypes = [
     {
       id: "past-papers",
-      title: "Past Papers",
-      description: "Official past papers from previous years",
+      title: t('dashboard:student.paperTypes.pastPapers'),
+      description: t('dashboard:student.paperTypes.pastPapersDesc'),
       icon: FileText,
       color: "text-blue-600 dark:text-blue-400",
       bgColor: "bg-blue-50 dark:bg-blue-950/30",
@@ -708,8 +711,8 @@ const StudentDashboard = () => {
     },
     {
       id: "model-papers",
-      title: "Model Papers",
-      description: "Practice papers designed by experts",
+      title: t('dashboard:student.paperTypes.modelPapers'),
+      description: t('dashboard:student.paperTypes.modelPapersDesc'),
       icon: Award,
       color: "text-green-600 dark:text-green-400",
       bgColor: "bg-green-50 dark:bg-green-950/30",
@@ -794,9 +797,9 @@ const StudentDashboard = () => {
   ];
 
   const languages = [
-    { value: "sinhala", label: "Sinhala" },
-    { value: "english", label: "English" },
-    { value: "tamil", label: "Tamil" }
+    { value: "sinhala", label: t('dashboard:student.languages.sinhala') },
+    { value: "english", label: t('dashboard:student.languages.english') },
+    { value: "tamil", label: t('dashboard:student.languages.tamil') }
   ];
 
   const getTopicsForSubject = (subject: string) => {
@@ -852,29 +855,29 @@ const StudentDashboard = () => {
   const progress = averageScore;
 
   const stats = [
-    { 
-      label: "Quizzes Completed", 
-      value: statsLoading ? "..." : quizzesCompleted.toString(), 
-      icon: BookOpen, 
-      color: "text-primary" 
+    {
+      label: t('dashboard:student.stats.quizzesCompleted'),
+      value: statsLoading ? t('common:status.loading') : quizzesCompleted.toString(),
+      icon: BookOpen,
+      color: "text-primary"
     },
-    { 
-      label: "Average Score", 
-      value: statsLoading ? "..." : `${averageScore}%`, 
-      icon: Trophy, 
-      color: "text-success" 
+    {
+      label: t('dashboard:student.stats.averageScore'),
+      value: statsLoading ? t('common:status.loading') : `${averageScore}%`,
+      icon: Trophy,
+      color: "text-success"
     },
-    { 
-      label: "Time Spent", 
-      value: statsLoading ? "..." : formatTime(totalTimeSpent), 
-      icon: Clock, 
-      color: "text-secondary" 
+    {
+      label: t('dashboard:student.stats.timeSpent'),
+      value: statsLoading ? t('common:status.loading') : formatTime(totalTimeSpent),
+      icon: Clock,
+      color: "text-secondary"
     },
-    { 
-      label: "Progress", 
-      value: statsLoading ? "..." : `${progress}%`, 
-      icon: TrendingUp, 
-      color: "text-accent" 
+    {
+      label: t('dashboard:student.stats.progress'),
+      value: statsLoading ? t('common:status.loading') : `${progress}%`,
+      icon: TrendingUp,
+      color: "text-accent"
     },
   ];
 
@@ -901,7 +904,7 @@ const StudentDashboard = () => {
             </div>
             <div>
               <span className="text-2xl font-bold bg-gradient-hero bg-clip-text text-transparent">
-                Island First
+                {t('common:appName')}
               </span>
               <p className="text-xs text-muted-foreground">Smart Learning Platform</p>
             </div>
@@ -927,7 +930,7 @@ const StudentDashboard = () => {
             <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-primary/10 rounded-lg">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
               <span className="text-sm font-medium text-primary">
-                Welcome, {user?.firstName}!
+                {t('dashboard:student.welcome', { name: user?.firstName })}
               </span>
             </div>
             <Button 
@@ -939,19 +942,20 @@ const StudentDashboard = () => {
             >
               <MessageCircle className="h-4 w-4" />
             </Button>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="icon"
               onClick={() => navigate('/settings')}
               className="btn-modern"
-              title="Settings"
+              title={t('common:buttons.settings')}
             >
               <SettingsIcon className="h-4 w-4" />
             </Button>
+            <LanguageSwitcher />
             <DarkModeToggle />
             <Button variant="outline" onClick={handleLogout} className="btn-modern">
               <LogOut className="h-4 w-4 mr-2" />
-              Logout
+              {t('common:buttons.logout')}
             </Button>
           </div>
         </div>

@@ -1,0 +1,67 @@
+{
+  "appName": "Island First",
+  "tagline": "Smart MCQ Platform for Enhanced Learning",
+  "taglineShort": "Smart Learning Platform",
+  "buttons": {
+    "logout": "Logout",
+    "login": "Log In",
+    "register": "Register",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "submit": "Submit",
+    "close": "Close",
+    "getStarted": "Get Started",
+    "viewAll": "View All",
+    "tryAgain": "Try Again",
+    "backToHome": "Back to Home",
+    "backToSignIn": "Back to Sign In",
+    "send": "Send",
+    "sending": "Sending...",
+    "loading": "Please wait...",
+    "upgrade": "Upgrade to Premium",
+    "contactUs": "Contact Us",
+    "settings": "Settings"
+  },
+  "status": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "noData": "No data available",
+    "comingSoon": "Coming Soon",
+    "syncing": "Syncing...",
+    "offline": "You are offline",
+    "premiumActive": "Premium Active",
+    "liveDashboard": "Live Dashboard"
+  },
+  "labels": {
+    "search": "Search",
+    "filter": "Filter",
+    "sortBy": "Sort by",
+    "all": "All",
+    "name": "Name",
+    "email": "Email",
+    "score": "Score",
+    "date": "Date",
+    "time": "Time",
+    "rank": "Rank",
+    "you": "You"
+  },
+  "feedback": {
+    "successTitle": "Success",
+    "errorTitle": "Error",
+    "warningTitle": "Warning",
+    "infoTitle": "Info",
+    "synced": "Synced",
+    "syncedDesc": "Your offline quiz data has been synced successfully."
+  },
+  "accessibility": {
+    "switchToLight": "Switch to light mode",
+    "switchToDark": "Switch to dark mode",
+    "toggleTheme": "Toggle theme",
+    "selectLanguage": "Select language"
+  }
+}

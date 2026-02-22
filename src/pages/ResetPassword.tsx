@@ -7,9 +7,12 @@ import { Label } from "@/components/ui/label";
 import { GraduationCap, AlertCircle, Eye, EyeOff, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { apiService } from "@/lib/api";
+import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation(['auth', 'common']);
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
   const email = searchParams.get("email");
@@ -24,7 +27,7 @@ const ResetPassword = () => {
 
   useEffect(() => {
     if (!token || !email) {
-      toast.error("Invalid reset link");
+      toast.error(t('auth:resetPasswordPage.invalidLink'));
       navigate("/auth");
     }
   }, [token, email, navigate]);
@@ -38,15 +41,15 @@ const ResetPassword = () => {
     const validationErrors: { [key: string]: string } = {};
 
     if (!password) {
-      validationErrors.password = "Password is required";
+      validationErrors.password = t('auth:resetPasswordPage.passwordRequired');
     } else if (password.length < 6) {
-      validationErrors.password = "Password must be at least 6 characters";
+      validationErrors.password = t('auth:resetPasswordPage.passwordTooShort');
     }
 
     if (!confirmPassword) {
-      validationErrors.confirmPassword = "Please confirm your password";
+      validationErrors.confirmPassword = t('auth:resetPasswordPage.confirmRequired');
     } else if (password !== confirmPassword) {
-      validationErrors.confirmPassword = "Passwords do not match";
+      validationErrors.confirmPassword = t('auth:resetPasswordPage.passwordsMismatch');
     }
 
     if (Object.keys(validationErrors).length > 0) {
@@ -58,11 +61,11 @@ const ResetPassword = () => {
     try {
       await apiService.resetPassword(email!, token!, password);
       setResetSuccess(true);
-      toast.success("Password reset successful!");
+      toast.success(t('auth:resetPasswordPage.resetSuccess'));
     } catch (error: any) {
-      const errorMessage = error.message || "Failed to reset password. Please try again.";
+      const errorMessage = error.message || t('common:status.error');
       if (errorMessage.toLowerCase().includes("expired") || errorMessage.toLowerCase().includes("invalid token")) {
-        setFieldErrors({ general: "This reset link has expired or is invalid. Please request a new one." });
+        setFieldErrors({ general: t('auth:resetPasswordPage.expiredLink') });
       } else {
         setFieldErrors({ general: errorMessage });
       }
@@ -76,11 +79,14 @@ const ResetPassword = () => {
     return (
       <div className="min-h-screen bg-gradient-mesh flex items-center justify-center p-4">
         <div className="w-full max-w-md">
+          <div className="flex justify-end mb-4">
+            <LanguageSwitcher />
+          </div>
           <div className="text-center mb-8">
             <div className="flex items-center justify-center gap-2 mb-4">
               <GraduationCap className="h-10 w-10 text-primary" />
               <span className="text-3xl font-bold bg-gradient-hero bg-clip-text text-transparent">
-                Island First
+                {t('common:appName')}
               </span>
             </div>
           </div>
@@ -92,15 +98,15 @@ const ResetPassword = () => {
                   <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
                 </div>
               </div>
-              <CardTitle className="text-2xl text-center">Password Reset Complete</CardTitle>
+              <CardTitle className="text-2xl text-center">{t('auth:resetPasswordPage.successTitle')}</CardTitle>
               <CardDescription className="text-center">
-                Your password has been successfully reset
+                {t('auth:resetPasswordPage.successDesc')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-800 rounded-lg p-4">
                 <p className="text-sm text-green-900 dark:text-green-200 text-center">
-                  You can now sign in with your new password
+                  {t('auth:resetPasswordPage.successInfo')}
                 </p>
               </div>
 
@@ -108,7 +114,7 @@ const ResetPassword = () => {
                 onClick={() => navigate("/auth")}
                 className="w-full bg-gradient-hero hover:opacity-90 transition-opacity"
               >
-                Go to Sign In
+                {t('auth:resetPasswordPage.goToSignIn')}
               </Button>
             </CardContent>
           </Card>
@@ -120,21 +126,24 @@ const ResetPassword = () => {
   return (
     <div className="min-h-screen bg-gradient-mesh flex items-center justify-center p-4">
       <div className="w-full max-w-md">
+        <div className="flex justify-end mb-4">
+          <LanguageSwitcher />
+        </div>
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
             <GraduationCap className="h-10 w-10 text-primary" />
             <span className="text-3xl font-bold bg-gradient-hero bg-clip-text text-transparent">
-              Island First
+              {t('common:appName')}
             </span>
           </div>
-          <p className="text-muted-foreground">Create a new password</p>
+          <p className="text-muted-foreground">{t('auth:resetPasswordPage.subtitle')}</p>
         </div>
 
         <Card className="border-2 shadow-elegant bg-gradient-card">
           <CardHeader>
-            <CardTitle className="text-2xl text-center">Reset Password</CardTitle>
+            <CardTitle className="text-2xl text-center">{t('auth:resetPasswordPage.title')}</CardTitle>
             <CardDescription className="text-center">
-              Enter your new password below
+              {t('auth:resetPasswordPage.description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -151,7 +160,7 @@ const ResetPassword = () => {
 
               {/* Email Display (read-only) */}
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t('auth:fields.email')}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -163,12 +172,12 @@ const ResetPassword = () => {
 
               {/* New Password Field */}
               <div className="space-y-2">
-                <Label htmlFor="password">New Password</Label>
+                <Label htmlFor="password">{t('auth:resetPasswordPage.newPassword')}</Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Enter new password"
+                    placeholder={t('auth:resetPasswordPage.newPasswordPlaceholder')}
                     value={password}
                     onChange={(e) => {
                       setPassword(e.target.value);
@@ -202,19 +211,19 @@ const ResetPassword = () => {
                 )}
                 {!fieldErrors.password && (
                   <p className="text-xs text-muted-foreground">
-                    Password must be at least 6 characters and contain uppercase, lowercase, number, and special character
+                    {t('auth:passwordHint')}
                   </p>
                 )}
               </div>
 
               {/* Confirm Password Field */}
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                <Label htmlFor="confirmPassword">{t('auth:resetPasswordPage.confirmNewPassword')}</Label>
                 <div className="relative">
                   <Input
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
-                    placeholder="Confirm new password"
+                    placeholder={t('auth:resetPasswordPage.confirmNewPasswordPlaceholder')}
                     value={confirmPassword}
                     onChange={(e) => {
                       setConfirmPassword(e.target.value);
@@ -253,7 +262,7 @@ const ResetPassword = () => {
                 className="w-full bg-gradient-hero hover:opacity-90 transition-opacity"
                 disabled={isLoading}
               >
-                {isLoading ? "Resetting Password..." : "Reset Password"}
+                {isLoading ? t('auth:resetPasswordPage.resetting') : t('auth:resetPasswordPage.resetButton')}
               </Button>
 
               {/* Back to Sign In */}
@@ -264,7 +273,7 @@ const ResetPassword = () => {
                   onClick={() => navigate("/auth")}
                   className="text-primary hover:underline"
                 >
-                  Back to Sign In
+                  {t('common:buttons.backToSignIn')}
                 </Button>
               </div>
             </form>
@@ -273,7 +282,7 @@ const ResetPassword = () => {
 
         <div className="text-center mt-6">
           <Button variant="ghost" onClick={() => navigate("/")}>
-            Back to Home
+            {t('common:buttons.backToHome')}
           </Button>
         </div>
       </div>

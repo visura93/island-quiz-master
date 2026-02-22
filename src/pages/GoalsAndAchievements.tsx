@@ -1,5 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -70,6 +73,7 @@ const GoalsAndAchievements = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { t } = useTranslation(['social', 'common']);
 
   const [activeGoals, setActiveGoals] = useState<StudyGoal[]>([]);
   const [completedGoalsList, setCompletedGoalsList] = useState<StudyGoal[]>([]);
@@ -198,7 +202,7 @@ const GoalsAndAchievements = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-pulse text-center space-y-3">
           <Trophy className="h-12 w-12 mx-auto text-primary/50" />
-          <p className="text-muted-foreground">Loading your achievements...</p>
+          <p className="text-muted-foreground">{t('social:goals.loading')}</p>
         </div>
       </div>
     );
@@ -216,11 +220,15 @@ const GoalsAndAchievements = () => {
           </Button>
           <div className="flex-1">
             <h1 className="text-3xl font-bold bg-gradient-hero bg-clip-text text-transparent">
-              Goals & Achievements
+              {t('social:goals.title')}
             </h1>
             <p className="text-muted-foreground mt-1">
-              Track your progress and collect badges
+              {t('social:goals.subtitle')}
             </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <LanguageSwitcher />
+            <DarkModeToggle />
           </div>
         </div>
 
@@ -230,21 +238,21 @@ const GoalsAndAchievements = () => {
             <CardContent className="p-4 text-center">
               <Target className="h-6 w-6 mx-auto mb-2 text-blue-500" />
               <p className="text-2xl font-bold">{activeGoals.length}</p>
-              <p className="text-xs text-muted-foreground">Active Goals</p>
+              <p className="text-xs text-muted-foreground">{t('social:goals.summary.activeGoals')}</p>
             </CardContent>
           </Card>
           <Card className="border-2 bg-gradient-card">
             <CardContent className="p-4 text-center">
               <CheckCircle className="h-6 w-6 mx-auto mb-2 text-green-500" />
               <p className="text-2xl font-bold">{completedGoalsList.length}</p>
-              <p className="text-xs text-muted-foreground">Goals Completed</p>
+              <p className="text-xs text-muted-foreground">{t('social:goals.summary.goalsCompleted')}</p>
             </CardContent>
           </Card>
           <Card className="border-2 bg-gradient-card">
             <CardContent className="p-4 text-center">
               <Trophy className="h-6 w-6 mx-auto mb-2 text-amber-500" />
               <p className="text-2xl font-bold">{earnedCount}/{badges.length}</p>
-              <p className="text-xs text-muted-foreground">Badges Earned</p>
+              <p className="text-xs text-muted-foreground">{t('social:goals.summary.badgesEarned')}</p>
             </CardContent>
           </Card>
         </div>
@@ -253,11 +261,11 @@ const GoalsAndAchievements = () => {
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="goals" className="gap-2">
               <Target className="h-4 w-4" />
-              Study Goals
+              {t('social:goals.tabs.studyGoals')}
             </TabsTrigger>
             <TabsTrigger value="badges" className="gap-2">
               <Trophy className="h-4 w-4" />
-              Badges
+              {t('social:goals.tabs.badges')}
               {earnedCount > 0 && (
                 <Badge variant="secondary" className="ml-1 text-xs px-1.5 py-0">
                   {earnedCount}
@@ -269,14 +277,14 @@ const GoalsAndAchievements = () => {
           {/* ─── Goals Tab ─── */}
           <TabsContent value="goals" className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Active Goals</h2>
+              <h2 className="text-xl font-semibold">{t('social:goals.activeGoals')}</h2>
               <Button
                 onClick={() => setShowCreateDialog(true)}
                 disabled={activeGoals.length >= 5}
                 className="gap-2 bg-gradient-hero hover:opacity-90"
               >
                 <Plus className="h-4 w-4" />
-                Add Goal
+                {t('social:goals.addGoal')}
               </Button>
             </div>
 
@@ -284,13 +292,13 @@ const GoalsAndAchievements = () => {
               <Card className="border-2 border-dashed">
                 <CardContent className="py-12 text-center">
                   <Target className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
-                  <h3 className="text-lg font-semibold mb-2">No active goals</h3>
+                  <h3 className="text-lg font-semibold mb-2">{t('social:goals.noGoals')}</h3>
                   <p className="text-muted-foreground mb-4">
-                    Set a study goal to stay motivated and track your progress.
+                    {t('social:goals.noGoalsDesc')}
                   </p>
                   <Button onClick={() => setShowCreateDialog(true)} className="gap-2">
                     <Plus className="h-4 w-4" />
-                    Create Your First Goal
+                    {t('social:goals.createFirstGoal')}
                   </Button>
                 </CardContent>
               </Card>

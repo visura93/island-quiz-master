@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { apiService, Subject, CreateSubjectRequest, SystemSettings, UpdateSystemSettingsRequest } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
@@ -27,6 +29,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 const ManageSubjects = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation(['admin', 'common']);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [filteredSubjects, setFilteredSubjects] = useState<Subject[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -85,10 +88,10 @@ const ManageSubjects = () => {
       setSubjects(data);
       setFilteredSubjects(data);
     } catch (err: any) {
-      setError(err.message || "Failed to load subjects");
+      setError(err.message || t('common:status.error'));
       toast({
-        title: "Error",
-        description: err.message || "Failed to load subjects",
+        title: t('common:feedback.errorTitle'),
+        description: err.message || t('common:status.error'),
         variant: "destructive",
       });
     } finally {
@@ -104,8 +107,8 @@ const ManageSubjects = () => {
     } catch (err: any) {
       console.error("Error loading system settings:", err);
       toast({
-        title: "Warning",
-        description: "Failed to load system settings. Using default values.",
+        title: t('common:feedback.warningTitle'),
+        description: t('common:status.error'),
         variant: "destructive",
       });
       // Set default values if loading fails
@@ -138,13 +141,13 @@ const ManageSubjects = () => {
       setSystemSettings(updated);
       
       toast({
-        title: "Success",
-        description: "Quiz category settings updated successfully",
+        title: t('common:feedback.successTitle'),
+        description: t('admin:manageSubjects.updateSuccess'),
       });
     } catch (err: any) {
       toast({
-        title: "Error",
-        description: err.message || "Failed to update settings",
+        title: t('common:feedback.errorTitle'),
+        description: err.message || t('common:status.error'),
         variant: "destructive",
       });
     } finally {
@@ -231,8 +234,8 @@ const ManageSubjects = () => {
       // Validation
       if (!formData.name.trim()) {
         toast({
-          title: "Validation Error",
-          description: "Subject name is required",
+          title: t('admin:createQuiz.validationError'),
+          description: t('admin:manageSubjects.errors.nameRequired'),
           variant: "destructive",
         });
         return;
@@ -240,8 +243,8 @@ const ManageSubjects = () => {
 
       if (!formData.value.trim()) {
         toast({
-          title: "Validation Error",
-          description: "Subject value is required",
+          title: t('admin:createQuiz.validationError'),
+          description: t('admin:manageSubjects.errors.valueRequired'),
           variant: "destructive",
         });
         return;
@@ -251,15 +254,15 @@ const ManageSubjects = () => {
         // Update existing subject
         await apiService.updateSubject(editingSubject.id, formData);
         toast({
-          title: "Success",
-          description: "Subject updated successfully",
+          title: t('common:feedback.successTitle'),
+          description: t('admin:manageSubjects.updateSuccess'),
         });
       } else {
         // Create new subject
         await apiService.createSubject(formData);
         toast({
-          title: "Success",
-          description: "Subject created successfully",
+          title: t('common:feedback.successTitle'),
+          description: t('admin:manageSubjects.createSuccess'),
         });
       }
 
@@ -267,8 +270,8 @@ const ManageSubjects = () => {
       loadSubjects();
     } catch (err: any) {
       toast({
-        title: "Error",
-        description: err.message || "Failed to save subject",
+        title: t('common:feedback.errorTitle'),
+        description: err.message || t('common:status.error'),
         variant: "destructive",
       });
     }
@@ -285,16 +288,16 @@ const ManageSubjects = () => {
     try {
       await apiService.deleteSubject(subjectToDelete.id);
       toast({
-        title: "Success",
-        description: "Subject deleted successfully",
+        title: t('common:feedback.successTitle'),
+        description: t('admin:manageSubjects.deleteSuccess'),
       });
       setDeleteDialogOpen(false);
       setSubjectToDelete(null);
       loadSubjects();
     } catch (err: any) {
       toast({
-        title: "Error",
-        description: err.message || "Failed to delete subject",
+        title: t('common:feedback.errorTitle'),
+        description: err.message || t('common:status.error'),
         variant: "destructive",
       });
     }
@@ -329,15 +332,18 @@ const ManageSubjects = () => {
                 className="gap-2"
               >
                 <ArrowLeft className="h-5 w-5" />
-                Back to Dashboard
+                {t('common:buttons.back')}
               </Button>
               <div className="h-8 w-px bg-border" />
               <div className="flex items-center gap-3">
                 <BookOpen className="h-6 w-6 text-primary" />
-                <h1 className="text-2xl font-bold">Manage Subjects</h1>
+                <h1 className="text-2xl font-bold">{t('admin:manageSubjects.title')}</h1>
               </div>
             </div>
-            <DarkModeToggle />
+            <div className="flex items-center gap-2">
+              <LanguageSwitcher />
+              <DarkModeToggle />
+            </div>
           </div>
         </div>
       </div>
@@ -360,7 +366,7 @@ const ManageSubjects = () => {
           <CardContent>
             {settingsLoading ? (
               <div className="text-center py-8">
-                <div className="text-muted-foreground">Loading settings...</div>
+                <div className="text-muted-foreground">{t('common:status.loading')}</div>
               </div>
             ) : systemSettings ? (
               <div className="space-y-6">
@@ -450,7 +456,7 @@ const ManageSubjects = () => {
                     className="bg-gradient-hero hover:opacity-90 transition-opacity"
                   >
                     <Save className="h-4 w-4 mr-2" />
-                    {savingSettings ? "Saving..." : "Save Settings"}
+                    {savingSettings ? t('common:status.loading') : t('common:buttons.save')}
                   </Button>
                 </div>
 
@@ -544,7 +550,7 @@ const ManageSubjects = () => {
         {loading ? (
           <Card>
             <CardContent className="p-12 text-center">
-              <div className="text-muted-foreground">Loading subjects...</div>
+              <div className="text-muted-foreground">{t('common:status.loading')}</div>
             </CardContent>
           </Card>
         ) : error ? (
@@ -762,11 +768,11 @@ const ManageSubjects = () => {
           <DialogFooter>
             <Button variant="outline" onClick={handleCloseDialog}>
               <X className="h-4 w-4 mr-2" />
-              Cancel
+              {t('common:buttons.cancel')}
             </Button>
             <Button onClick={handleSaveSubject}>
               <Save className="h-4 w-4 mr-2" />
-              {editingSubject ? "Update" : "Create"}
+              {editingSubject ? t('common:buttons.save') : t('common:buttons.save')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -784,9 +790,9 @@ const ManageSubjects = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('common:buttons.cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive">
-              Delete
+              {t('common:buttons.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

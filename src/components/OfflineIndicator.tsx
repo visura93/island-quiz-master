@@ -9,11 +9,13 @@ import {
   removePendingCompletion,
   hasPendingSync,
 } from "@/lib/offlineStore";
+import { useTranslation } from "react-i18next";
 
 export function OfflineIndicator() {
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [syncing, setSyncing] = useState(false);
   const { toast } = useToast();
+  const { t } = useTranslation('common');
 
   const syncPending = useCallback(async () => {
     const pending = await hasPendingSync();
@@ -49,8 +51,8 @@ export function OfflineIndicator() {
       const stillPending = await hasPendingSync();
       if (!stillPending) {
         toast({
-          title: "Synced",
-          description: "Your offline quiz data has been synced successfully.",
+          title: t('feedback.synced'),
+          description: t('feedback.syncedDesc'),
         });
       }
     } catch {
@@ -58,7 +60,7 @@ export function OfflineIndicator() {
     } finally {
       setSyncing(false);
     }
-  }, [toast]);
+  }, [toast, t]);
 
   useEffect(() => {
     const handleOnline = () => {
@@ -87,13 +89,13 @@ export function OfflineIndicator() {
       {syncing ? (
         <>
           <RefreshCw className="h-4 w-4 animate-spin text-blue-600" />
-          <span className="text-sm font-medium text-blue-600">Syncing...</span>
+          <span className="text-sm font-medium text-blue-600">{t('status.syncing')}</span>
         </>
       ) : (
         <>
           <WifiOff className="h-4 w-4 text-amber-600" />
           <span className="text-sm font-medium text-amber-600">
-            You are offline
+            {t('status.offline')}
           </span>
         </>
       )}

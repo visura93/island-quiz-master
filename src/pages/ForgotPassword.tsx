@@ -7,9 +7,12 @@ import { Label } from "@/components/ui/label";
 import { GraduationCap, AlertCircle, ArrowLeft, Mail, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { apiService } from "@/lib/api";
+import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation(['auth', 'common']);
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
@@ -23,9 +26,9 @@ const ForgotPassword = () => {
     try {
       await apiService.forgotPassword(email);
       setEmailSent(true);
-      toast.success("Password reset email sent!");
+      toast.success(t('auth:forgotPasswordPage.emailSent'));
     } catch (error: any) {
-      const errorMessage = error.message || "Failed to send reset email. Please try again.";
+      const errorMessage = error.message || t('common:status.error');
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -37,11 +40,14 @@ const ForgotPassword = () => {
     return (
       <div className="min-h-screen bg-gradient-mesh flex items-center justify-center p-4">
         <div className="w-full max-w-md">
+          <div className="flex justify-end mb-4">
+            <LanguageSwitcher />
+          </div>
           <div className="text-center mb-8">
             <div className="flex items-center justify-center gap-2 mb-4">
               <GraduationCap className="h-10 w-10 text-primary" />
               <span className="text-3xl font-bold bg-gradient-hero bg-clip-text text-transparent">
-                Island First
+                {t('common:appName')}
               </span>
             </div>
           </div>
@@ -53,9 +59,9 @@ const ForgotPassword = () => {
                   <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
                 </div>
               </div>
-              <CardTitle className="text-2xl text-center">Check Your Email</CardTitle>
+              <CardTitle className="text-2xl text-center">{t('auth:forgotPasswordPage.checkEmail')}</CardTitle>
               <CardDescription className="text-center">
-                We've sent a password reset link to your email address
+                {t('auth:forgotPasswordPage.checkEmailDesc')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -63,8 +69,7 @@ const ForgotPassword = () => {
                 <p className="text-sm text-blue-900 dark:text-blue-200 flex items-start gap-2">
                   <Mail className="h-5 w-5 mt-0.5 flex-shrink-0" />
                   <span>
-                    If an account exists for <strong>{email}</strong>, you will receive a password reset link shortly.
-                    Please check your spam folder if you don't see it in your inbox.
+                    {t('auth:forgotPasswordPage.emailInfo', { email })}
                   </span>
                 </p>
               </div>
@@ -75,7 +80,7 @@ const ForgotPassword = () => {
                   className="w-full"
                   variant="default"
                 >
-                  Return to Sign In
+                  {t('auth:forgotPasswordPage.returnToSignIn')}
                 </Button>
                 <Button
                   onClick={() => {
@@ -85,7 +90,7 @@ const ForgotPassword = () => {
                   className="w-full"
                   variant="outline"
                 >
-                  Send Another Email
+                  {t('auth:forgotPasswordPage.sendAnother')}
                 </Button>
               </div>
             </CardContent>
@@ -98,21 +103,24 @@ const ForgotPassword = () => {
   return (
     <div className="min-h-screen bg-gradient-mesh flex items-center justify-center p-4">
       <div className="w-full max-w-md">
+        <div className="flex justify-end mb-4">
+          <LanguageSwitcher />
+        </div>
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
             <GraduationCap className="h-10 w-10 text-primary" />
             <span className="text-3xl font-bold bg-gradient-hero bg-clip-text text-transparent">
-              Island First
+              {t('common:appName')}
             </span>
           </div>
-          <p className="text-muted-foreground">Reset your password</p>
+          <p className="text-muted-foreground">{t('auth:forgotPasswordPage.subtitle')}</p>
         </div>
 
         <Card className="border-2 shadow-elegant bg-gradient-card">
           <CardHeader>
-            <CardTitle className="text-2xl text-center">Forgot Password?</CardTitle>
+            <CardTitle className="text-2xl text-center">{t('auth:forgotPasswordPage.title')}</CardTitle>
             <CardDescription className="text-center">
-              Enter your email address and we'll send you a link to reset your password
+              {t('auth:forgotPasswordPage.description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -129,11 +137,11 @@ const ForgotPassword = () => {
 
               {/* Email Field */}
               <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
+                <Label htmlFor="email">{t('auth:forgotPasswordPage.emailAddress')}</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder={t('auth:fields.emailPlaceholder')}
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
@@ -151,7 +159,7 @@ const ForgotPassword = () => {
                 className="w-full bg-gradient-hero hover:opacity-90 transition-opacity"
                 disabled={isLoading}
               >
-                {isLoading ? "Sending..." : "Send Reset Link"}
+                {isLoading ? t('auth:forgotPasswordPage.sending') : t('auth:forgotPasswordPage.sendResetLink')}
               </Button>
 
               {/* Back to Sign In */}
@@ -163,7 +171,7 @@ const ForgotPassword = () => {
                   className="text-primary hover:underline"
                 >
                   <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Sign In
+                  {t('common:buttons.backToSignIn')}
                 </Button>
               </div>
             </form>
@@ -172,7 +180,7 @@ const ForgotPassword = () => {
 
         <div className="text-center mt-6">
           <Button variant="ghost" onClick={() => navigate("/")}>
-            Back to Home
+            {t('common:buttons.backToHome')}
           </Button>
         </div>
       </div>

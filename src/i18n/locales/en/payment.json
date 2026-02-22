@@ -1,0 +1,66 @@
+{
+  "title": "Payment",
+  "subtitle": "Choose your subscription plan",
+  "plans": {
+    "free": "Free",
+    "premium": "Premium",
+    "annual": "Annual"
+  },
+  "features": {
+    "unlimited": "Unlimited quiz access",
+    "analytics": "Advanced analytics",
+    "offline": "Offline access",
+    "priority": "Priority support"
+  },
+  "subscribe": "Subscribe Now",
+  "currentPlan": "Current Plan",
+  "premiumUntil": "Premium until {{date}}",
+  "upgrade": "Upgrade to Premium",
+  "paymentMethods": "Payment Methods",
+  "cardNumber": "Card Number",
+  "expiry": "Expiry",
+  "cvv": "CVV",
+  "pay": "Pay Now",
+  "cancel": "Cancel",
+  "premiumSubscription": "Premium Subscription",
+  "unlockFeatures": "Unlock all features and access premium content",
+  "premiumPlan": "Premium Plan",
+  "threeMonths": "3 Months Subscription",
+  "forThreeMonths": "for 3 months",
+  "whatYouGet": "What You'll Get:",
+  "featuresList": {
+    "unlimitedAccess": "Unlimited access to all quizzes",
+    "premiumContent": "Access to premium locked content",
+    "advancedAnalytics": "Advanced learning analytics",
+    "prioritySupport": "Priority support",
+    "adFree": "Ad-free experience",
+    "downloadable": "Downloadable study materials"
+  },
+  "instructions": {
+    "title": "Payment Instructions",
+    "subtitle": "Please transfer the payment and share the receipt with us",
+    "bankDetails": "Bank Account Details",
+    "bankName": "Bank Name",
+    "accountName": "Account Name",
+    "accountNumber": "Account Number",
+    "afterPayment": "After Payment",
+    "shareReceipt": "Share Your Payment Receipt",
+    "shareReceiptDesc": "Please send your payment slip or receipt to either WhatsApp or Email:",
+    "preferred": "Preferred",
+    "alternative": "Alternative",
+    "sendViaWhatsApp": "Send via WhatsApp",
+    "sendViaEmail": "Send via Email"
+  },
+  "importantNote": {
+    "title": "Important Note",
+    "note1": "Include your registered name and email in the message",
+    "note2": "Your premium access will be activated within 24 hours after verification",
+    "note3": "Keep your payment receipt for future reference",
+    "note4": "Contact us if you don't receive confirmation within 24 hours"
+  },
+  "copied": "Copied!",
+  "copiedDesc": "{{field}} copied to clipboard",
+  "backToDashboard": "Back to Dashboard",
+  "welcome": "Welcome, {{name}}!",
+  "premiumActive": "Premium Active"
+}

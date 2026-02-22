@@ -9,6 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GraduationCap, User, BookOpen, AlertCircle, X, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 type UserRole = "student" | "teacher";
 
@@ -16,6 +18,7 @@ const Auth = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login, loginWithGoogle, register, isAuthenticated, user, isLoading: authLoading } = useAuth();
+  const { t } = useTranslation(['auth', 'common']);
   const [isLogin, setIsLogin] = useState(true);
   const [selectedRole, setSelectedRole] = useState<UserRole>("student");
   const [email, setEmail] = useState("");
@@ -59,9 +62,9 @@ const Auth = () => {
         };
 
         await loginWithGoogle(credential, roleMap[selectedRole]);
-        toast.success("Google login successful!");
+        toast.success(t('auth:googleLoginSuccess'));
       } catch (error: any) {
-        const errorMessage = error.message || "Google authentication failed. Please try again.";
+        const errorMessage = error.message || t('auth:googleAuthFailed');
         setFieldErrors({ general: errorMessage });
         toast.error(errorMessage);
       } finally {
@@ -69,7 +72,7 @@ const Auth = () => {
       }
     },
     onError: () => {
-      toast.error("Google authentication failed");
+      toast.error(t('auth:googleAuthFailed'));
     },
   });
 
@@ -109,7 +112,7 @@ const Auth = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Loading...</p>
+          <p>{t('auth:loading')}</p>
         </div>
       </div>
     );
@@ -130,7 +133,7 @@ const Auth = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Redirecting to dashboard...</p>
+          <p>{t('auth:redirecting')}</p>
         </div>
       </div>
     );
@@ -144,7 +147,7 @@ const Auth = () => {
     try {
       if (isLogin) {
         await login(email, password);
-        toast.success("Login successful!");
+        toast.success(t('auth:loginSuccess'));
         setFieldErrors({});
         // The user will be redirected by the useEffect below when isAuthenticated becomes true
       } else {
@@ -152,21 +155,21 @@ const Auth = () => {
         const validationErrors: { [key: string]: string } = {};
         
         if (!firstName || !firstName.trim()) {
-          validationErrors.firstName = "First name is required";
+          validationErrors.firstName = t('auth:errors.firstNameRequired');
         }
         if (!lastName || !lastName.trim()) {
-          validationErrors.lastName = "Last name is required";
+          validationErrors.lastName = t('auth:errors.lastNameRequired');
         }
         if (!email || !email.trim()) {
-          validationErrors.email = "Email is required";
+          validationErrors.email = t('auth:errors.emailRequired');
         }
         if (!password) {
-          validationErrors.password = "Password is required";
+          validationErrors.password = t('auth:errors.passwordRequired');
         }
         if (!confirmPassword) {
-          validationErrors.confirmPassword = "Please confirm your password";
+          validationErrors.confirmPassword = t('auth:errors.confirmPasswordRequired');
         } else if (password !== confirmPassword) {
-          validationErrors.confirmPassword = "Passwords do not match";
+          validationErrors.confirmPassword = t('auth:errors.passwordsMismatch');
         }
 
         if (Object.keys(validationErrors).length > 0) {
@@ -181,7 +184,7 @@ const Auth = () => {
         };
 
         await register(firstName, lastName, email, password, roleMap[selectedRole]);
-        toast.success("Account created successfully!");
+        toast.success(t('auth:registerSuccess'));
         navigate(`/${selectedRole}-dashboard`, { replace: true });
       }
     } catch (error: any) {
@@ -231,7 +234,7 @@ const Auth = () => {
             errorMessage === 'An error occurred. Please try again.';
           
           if (isAuthError || !errorMessage || errorMessage.trim() === '') {
-            newFieldErrors.general = "Invalid email or password. Please try again.";
+            newFieldErrors.general = t('auth:errors.invalidCredentials');
           } else {
             // For other login errors, show the actual message
             newFieldErrors.general = errorMessage;
@@ -251,37 +254,40 @@ const Auth = () => {
     {
       id: "student" as UserRole,
       icon: GraduationCap,
-      title: "Student",
-      description: "Practice MCQs and track progress",
+      title: t('auth:roles.student'),
+      description: t('auth:roles.studentDesc'),
     },
     {
       id: "teacher" as UserRole,
       icon: BookOpen,
-      title: "Teacher",
-      description: "Create and manage MCQ content",
+      title: t('auth:roles.teacher'),
+      description: t('auth:roles.teacherDesc'),
     },
   ];
 
   return (
     <div className="min-h-screen bg-gradient-mesh flex items-center justify-center p-4">
       <div className="w-full max-w-md">
+        <div className="flex justify-end mb-4">
+          <LanguageSwitcher />
+        </div>
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
             <GraduationCap className="h-10 w-10 text-primary" />
             <span className="text-3xl font-bold bg-gradient-hero bg-clip-text text-transparent">
-              Island First
+              {t('common:appName')}
             </span>
           </div>
-          <p className="text-muted-foreground">Smart MCQ Platform for Enhanced Learning</p>
+          <p className="text-muted-foreground">{t('common:tagline')}</p>
         </div>
 
         <Card className="border-2 shadow-elegant bg-gradient-card">
           <CardHeader>
             <CardTitle className="text-2xl text-center">
-              {isLogin ? "Welcome Back" : "Create Account"}
+              {isLogin ? t('auth:welcomeBack') : t('auth:createAccount')}
             </CardTitle>
             <CardDescription className="text-center">
-              {isLogin ? "Sign in to continue" : "Sign up to get started"}
+              {isLogin ? t('auth:signInToContinue') : t('auth:signUpToGetStarted')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -299,7 +305,7 @@ const Auth = () => {
               {/* Role Selection */}
               {!isLogin && (
                 <div className="space-y-3">
-                  <Label>Select Your Role</Label>
+                  <Label>{t('auth:selectRole')}</Label>
                   <div className="grid grid-cols-2 gap-2">
                     {roles.map((role) => (
                       <button
@@ -326,10 +332,10 @@ const Auth = () => {
               {!isLogin && (
                 <>
                   <div className="space-y-2">
-                    <Label htmlFor="firstName">First Name</Label>
+                    <Label htmlFor="firstName">{t('auth:fields.firstName')}</Label>
                     <Input
                       id="firstName"
-                      placeholder="Enter your first name"
+                      placeholder={t('auth:fields.firstNamePlaceholder')}
                       value={firstName}
                       onChange={(e) => {
                         setFirstName(e.target.value);
@@ -348,10 +354,10 @@ const Auth = () => {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="lastName">Last Name</Label>
+                    <Label htmlFor="lastName">{t('auth:fields.lastName')}</Label>
                     <Input
                       id="lastName"
-                      placeholder="Enter your last name"
+                      placeholder={t('auth:fields.lastNamePlaceholder')}
                       value={lastName}
                       onChange={(e) => {
                         setLastName(e.target.value);
@@ -374,11 +380,11 @@ const Auth = () => {
 
               {/* Email Field */}
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t('auth:fields.email')}</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder={t('auth:fields.emailPlaceholder')}
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
@@ -399,12 +405,12 @@ const Auth = () => {
 
               {/* Password Field */}
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t('auth:fields.password')}</Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
+                    placeholder={t('auth:fields.passwordPlaceholder')}
                     value={password}
                     onChange={(e) => {
                       setPassword(e.target.value);
@@ -437,7 +443,7 @@ const Auth = () => {
                 )}
                 {!isLogin && !fieldErrors.password && (
                   <p className="text-xs text-muted-foreground">
-                    Password must be at least 6 characters and contain uppercase, lowercase, number, and special character
+                    {t('auth:passwordHint')}
                   </p>
                 )}
               </div>
@@ -445,12 +451,12 @@ const Auth = () => {
               {/* Confirm Password Field (Sign Up Only) */}
               {!isLogin && (
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <Label htmlFor="confirmPassword">{t('auth:fields.confirmPassword')}</Label>
                   <div className="relative">
                     <Input
                       id="confirmPassword"
                       type={showConfirmPassword ? "text" : "password"}
-                      placeholder="Confirm your password"
+                      placeholder={t('auth:fields.confirmPasswordPlaceholder')}
                       value={confirmPassword}
                       onChange={(e) => {
                         setConfirmPassword(e.target.value);
@@ -485,12 +491,12 @@ const Auth = () => {
               )}
 
               {/* Submit Button */}
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full bg-gradient-hero hover:opacity-90 transition-opacity"
                 disabled={isLoading}
               >
-                {isLoading ? "Please wait..." : (isLogin ? "Sign In" : "Create Account")}
+                {isLoading ? t('common:buttons.loading') : (isLogin ? t('auth:signIn') : t('auth:signUp'))}
               </Button>
 
               {/* Divider */}
@@ -500,7 +506,7 @@ const Auth = () => {
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
                   <span className="bg-background px-2 text-muted-foreground">
-                    Or continue with
+                    {t('auth:orContinueWith')}
                   </span>
                 </div>
               </div>
@@ -531,7 +537,7 @@ const Auth = () => {
                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                   />
                 </svg>
-                {isLogin ? "Sign in with Google" : "Sign up with Google"}
+                {isLogin ? t('auth:signInWithGoogle') : t('auth:signUpWithGoogle')}
               </Button>
 
               {/* Forgot Password Link (Login Only) */}
@@ -542,7 +548,7 @@ const Auth = () => {
                     onClick={() => navigate("/forgot-password")}
                     className="text-muted-foreground hover:text-primary hover:underline transition-colors"
                   >
-                    Forgot your password?
+                    {t('auth:forgotPassword')}
                   </button>
                 </div>
               )}
@@ -562,8 +568,8 @@ const Auth = () => {
                   className="text-primary hover:underline"
                 >
                   {isLogin
-                    ? "Don't have an account? Sign up"
-                    : "Already have an account? Sign in"}
+                    ? t('auth:noAccount')
+                    : t('auth:hasAccount')}
                 </button>
               </div>
             </form>
@@ -572,7 +578,7 @@ const Auth = () => {
 
         <div className="text-center mt-6">
           <Button variant="ghost" onClick={() => navigate("/")}>
-            Back to Home
+            {t('common:buttons.backToHome')}
           </Button>
         </div>
       </div>

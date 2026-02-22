@@ -1,16 +1,18 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { 
-  ArrowLeft, 
-  Clock, 
-  Trophy, 
-  Calendar, 
-  BookOpen, 
+import {
+  ArrowLeft,
+  Clock,
+  Trophy,
+  Calendar,
+  BookOpen,
   Target,
   TrendingUp,
   Star,
@@ -24,6 +26,7 @@ import { apiService, QuizAttempt } from "@/lib/api";
 import { OptimizedImage } from "@/components/OptimizedImage";
 
 const CompletedQuizzes = () => {
+  const { t } = useTranslation(['results', 'common']);
   const navigate = useNavigate();
   const { user } = useAuth();
   const [filterBy, setFilterBy] = useState<string>("all");
@@ -118,15 +121,16 @@ const CompletedQuizzes = () => {
                 className="btn-modern"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
+                {t('common:buttons.backToHome')}
               </Button>
               <div>
                 <h1 className="text-3xl font-bold bg-gradient-hero bg-clip-text text-transparent">
-                  Completed Quizzes
+                  {t('results:completedQuizzes.title')}
                 </h1>
-                <p className="text-muted-foreground">Your quiz history and performance</p>
+                <p className="text-muted-foreground">{t('results:completedQuizzes.subtitle')}</p>
               </div>
             </div>
+            <LanguageSwitcher />
           </div>
         </div>
       </div>
@@ -142,7 +146,7 @@ const CompletedQuizzes = () => {
               <div className="text-3xl font-bold text-primary mb-1">
                 {completedQuizzes.length}
               </div>
-              <p className="text-sm text-muted-foreground">Quizzes Completed</p>
+              <p className="text-sm text-muted-foreground">{t('Quizzes Completed')}</p>
             </CardContent>
           </Card>
 
@@ -154,7 +158,7 @@ const CompletedQuizzes = () => {
               <div className="text-3xl font-bold text-green-600 mb-1">
                 {averageScore}%
               </div>
-              <p className="text-sm text-muted-foreground">Average Score</p>
+              <p className="text-sm text-muted-foreground">{t('Average Score')}</p>
             </CardContent>
           </Card>
 
@@ -166,7 +170,7 @@ const CompletedQuizzes = () => {
               <div className="text-3xl font-bold text-blue-600 mb-1">
                 {formatTime(totalTimeSpent)}
               </div>
-              <p className="text-sm text-muted-foreground">Total Time Spent</p>
+              <p className="text-sm text-muted-foreground">{t('Total Time Spent')}</p>
             </CardContent>
           </Card>
 
@@ -180,7 +184,7 @@ const CompletedQuizzes = () => {
                   ? Math.round(completedQuizzes.filter(q => q.score >= 80).length / completedQuizzes.length * 100)
                   : 0}%
               </div>
-              <p className="text-sm text-muted-foreground">Success Rate</p>
+              <p className="text-sm text-muted-foreground">{t('Success Rate')}</p>
             </CardContent>
           </Card>
         </div>
@@ -192,28 +196,28 @@ const CompletedQuizzes = () => {
             onClick={() => setFilterBy("all")}
             className="btn-modern"
           >
-            All Quizzes
+            {t('All Quizzes')}
           </Button>
           <Button
             variant={filterBy === "past" ? "default" : "outline"}
             onClick={() => setFilterBy("past")}
             className="btn-modern"
           >
-            Past Papers
+            {t('Past Papers')}
           </Button>
           <Button
             variant={filterBy === "model" ? "default" : "outline"}
             onClick={() => setFilterBy("model")}
             className="btn-modern"
           >
-            Model Papers
+            {t('Model Papers')}
           </Button>
           <Button
             variant={filterBy === "school" ? "default" : "outline"}
             onClick={() => setFilterBy("school")}
             className="btn-modern"
           >
-            School Papers
+            {t('School Papers')}
           </Button>
         </div>
 
@@ -221,7 +225,7 @@ const CompletedQuizzes = () => {
         {isLoading && (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading completed quizzes...</p>
+            <p className="text-muted-foreground">{t('common:status.loading')}</p>
           </div>
         )}
 
@@ -230,11 +234,11 @@ const CompletedQuizzes = () => {
           <div className="text-center py-12">
             <div className="text-red-600 mb-4">
               <BookOpen className="h-12 w-12 mx-auto mb-2" />
-              <p className="text-lg font-semibold">Error loading data</p>
+              <p className="text-lg font-semibold">{t('Error loading data')}</p>
               <p className="text-sm text-muted-foreground">{error}</p>
             </div>
             <Button onClick={() => window.location.reload()} variant="outline">
-              Try Again
+              {t('common:buttons.tryAgain')}
             </Button>
           </div>
         )}
@@ -299,7 +303,7 @@ const CompletedQuizzes = () => {
                         {quiz.score}%
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {quiz.correctAnswers}/{quiz.totalQuestions} correct
+                        {quiz.correctAnswers}/{quiz.totalQuestions} {t('correct')}
                       </p>
                     </div>
                     
@@ -315,7 +319,7 @@ const CompletedQuizzes = () => {
                 {/* Progress Bar */}
                 <div className="mt-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium">Performance</span>
+                    <span className="text-sm font-medium">{t('Performance')}</span>
                     <span className="text-sm text-muted-foreground">{quiz.score}%</span>
                   </div>
                   <Progress 
@@ -379,7 +383,7 @@ const CompletedQuizzes = () => {
                     disabled={loadingDetails}
                   >
                     <Eye className="h-4 w-4 mr-2" />
-                    {loadingDetails ? "Loading..." : "View Answers"}
+                    {loadingDetails ? t('common:status.loading') : t('View Answers')}
                   </Button>
                 </div>
               </CardContent>
@@ -390,18 +394,18 @@ const CompletedQuizzes = () => {
               <Card className="border-2 shadow-elegant bg-gradient-card">
                 <CardContent className="p-12 text-center">
                   <BookOpen className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-                  <h3 className="text-xl font-semibold mb-2">No quizzes found</h3>
+                  <h3 className="text-xl font-semibold mb-2">{t('No quizzes found')}</h3>
                   <p className="text-muted-foreground mb-4">
-                    {filterBy === "all" 
-                      ? "You haven't completed any quizzes yet." 
-                      : `No ${filterBy} quizzes completed yet.`
+                    {filterBy === "all"
+                      ? t('results:completedQuizzes.noQuizzesDesc')
+                      : t('No {{filter}} quizzes completed yet.', { filter: filterBy })
                     }
                   </p>
-                  <Button 
+                  <Button
                     onClick={() => navigate('/student-dashboard')}
                     className="btn-modern"
                   >
-                    Start Your First Quiz
+                    {t('Start Your First Quiz')}
                   </Button>
                 </CardContent>
               </Card>
@@ -419,26 +423,26 @@ const CompletedQuizzes = () => {
             <DialogHeader>
               <DialogTitle>{selectedQuiz?.quizTitle}</DialogTitle>
               <DialogDescription>
-                Quiz completed on {selectedQuiz ? formatDate(selectedQuiz.completedDate) : ""}
+                {t('Quiz completed on {{date}}', { date: selectedQuiz ? formatDate(selectedQuiz.completedDate) : "" })}
               </DialogDescription>
             </DialogHeader>
             {selectedQuiz && selectedQuiz.questions && selectedQuiz.questions.length > 0 && (
               <div className="space-y-4">
                 <div className="grid grid-cols-3 gap-4 p-4 bg-muted/50 rounded-lg">
                   <div>
-                    <div className="text-sm text-muted-foreground">Score</div>
+                    <div className="text-sm text-muted-foreground">{t('results:completedQuizzes.details.score')}</div>
                     <div className={`text-2xl font-bold ${getScoreTextColor(selectedQuiz.score)}`}>
                       {selectedQuiz.score}%
                     </div>
                   </div>
                   <div>
-                    <div className="text-sm text-muted-foreground">Correct Answers</div>
+                    <div className="text-sm text-muted-foreground">{t('Correct Answers')}</div>
                     <div className="text-2xl font-bold">
                       {selectedQuiz.correctAnswers} / {selectedQuiz.totalQuestions}
                     </div>
                   </div>
                   <div>
-                    <div className="text-sm text-muted-foreground">Time Spent</div>
+                    <div className="text-sm text-muted-foreground">{t('results:completedQuizzes.details.timeTaken')}</div>
                     <div className="text-2xl font-bold">
                       {formatTime(selectedQuiz.timeSpent)}
                     </div>
@@ -446,21 +450,21 @@ const CompletedQuizzes = () => {
                 </div>
 
                 <div className="space-y-4">
-                  <h3 className="font-semibold text-lg">Question Review</h3>
+                  <h3 className="font-semibold text-lg">{t('Question Review')}</h3>
                   {selectedQuiz.questions.map((question, index) => (
                     <Card key={question.id || index} className="border-2">
                       <CardContent className="p-4">
                         <div className="flex items-center gap-2 mb-3">
-                          <span className="font-semibold">Question {index + 1}</span>
+                          <span className="font-semibold">{t('Question')} {index + 1}</span>
                           {question.isCorrect ? (
                             <Badge className="bg-green-600">
                               <CheckCircle className="h-3 w-3 mr-1" />
-                              Correct
+                              {t('Correct')}
                             </Badge>
                           ) : (
                             <Badge variant="destructive">
                               <XCircle className="h-3 w-3 mr-1" />
-                              Incorrect
+                              {t('Incorrect')}
                             </Badge>
                           )}
                         </div>
@@ -530,12 +534,12 @@ const CompletedQuizzes = () => {
                                 </div>
                                 {isCorrect && (
                                   <Badge className="bg-green-600 ml-auto flex-shrink-0">
-                                    {correctIndexes.length > 1 ? `Correct (${correctIndexes.indexOf(optionIndex) + 1}/${correctIndexes.length})` : 'Correct'}
+                                    {correctIndexes.length > 1 ? `${t('Correct')} (${correctIndexes.indexOf(optionIndex) + 1}/${correctIndexes.length})` : t('Correct')}
                                   </Badge>
                                 )}
                                 {isSelected && !isCorrect && (
                                   <Badge variant="destructive" className="ml-auto flex-shrink-0">
-                                    Selected
+                                    {t('Selected')}
                                   </Badge>
                                 )}
                               </div>
@@ -545,7 +549,7 @@ const CompletedQuizzes = () => {
 
                         {question.explanation && (
                           <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded">
-                            <p className="text-sm font-semibold text-blue-900 mb-1">Explanation:</p>
+                            <p className="text-sm font-semibold text-blue-900 mb-1">{t('Explanation')}:</p>
                             <p className="text-sm text-blue-800">{question.explanation}</p>
                           </div>
                         )}
@@ -558,7 +562,7 @@ const CompletedQuizzes = () => {
             {selectedQuiz && (!selectedQuiz.questions || selectedQuiz.questions.length === 0) && (
               <div className="text-center py-8">
                 <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-                <p className="text-muted-foreground mb-2">Question details are not available for this quiz.</p>
+                <p className="text-muted-foreground mb-2">{t('Question details are not available for this quiz.')}</p>
                 <p className="text-xs text-muted-foreground">
                   The backend endpoint GET /api/quizattempt/{selectedQuiz.id} should return questions array.
                 </p>
@@ -567,7 +571,7 @@ const CompletedQuizzes = () => {
             {loadingDetails && (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                <p className="text-muted-foreground">Loading quiz details...</p>
+                <p className="text-muted-foreground">{t('common:status.loading')}</p>
               </div>
             )}
           </DialogContent>

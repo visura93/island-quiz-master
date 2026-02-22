@@ -1,0 +1,61 @@
+{
+  "createQuiz": {
+    "title": "Create Quiz",
+    "subtitle": "Create a new quiz",
+    "fields": {
+      "quizTitle": "Quiz Title",
+      "description": "Description",
+      "grade": "Grade",
+      "medium": "Medium",
+      "subject": "Subject",
+      "quizType": "Quiz Type",
+      "timeLimit": "Time Limit",
+      "difficulty": "Difficulty"
+    },
+    "notifications": {
+      "imageUploaded": "Image uploaded",
+      "questionImageUploaded": "Question image uploaded successfully",
+      "optionImageUploaded": "Option image uploaded successfully",
+      "thumbnailUploaded": "Thumbnail uploaded",
+      "thumbnailUploadedDesc": "Quiz thumbnail uploaded successfully",
+      "uploadFailed": "Upload failed",
+      "imagePasted": "Image pasted",
+      "imagePastedDesc": "Image has been pasted successfully"
+    },
+    "createSuccess": "Quiz created successfully!",
+    "updateSuccess": "Quiz updated successfully!",
+    "validationError": "Validation error"
+  },
+  "viewQuizzes": {
+    "title": "Quizzes",
+    "searchPlaceholder": "Search quizzes...",
+    "deleteSuccess": "Quiz deleted successfully",
+    "loadError": "Failed to load quizzes",
+    "deleteConfirm": "Delete Quiz",
+    "deleteConfirmDesc": "Are you sure you want to delete this quiz? This action cannot be undone."
+  },
+  "manageSubjects": {
+    "title": "Manage Subjects",
+    "categories": {
+      "all": "All Categories",
+      "ol": "Grade 10-11 (O/L)",
+      "al": "Grade 12-13 (A/L)",
+      "scholarship": "Scholarship"
+    },
+    "errors": {
+      "nameRequired": "Subject name is required",
+      "valueRequired": "Subject value is required"
+    },
+    "updateSuccess": "Subject updated successfully",
+    "createSuccess": "Subject created successfully",
+    "deleteSuccess": "Subject deleted successfully"
+  },
+  "manageStudents": {
+    "title": "Manage Students",
+    "searchPlaceholder": "Search students...",
+    "stats": {
+      "totalStudents": "Total Students",
+      "activeStudents": "Active Students"
+    }
+  }
+}

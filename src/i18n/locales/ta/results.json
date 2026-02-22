@@ -1,0 +1,57 @@
+{
+  "completedQuizzes": {
+    "title": "முடிந்த வினாடி வினாக்கள்",
+    "subtitle": "உங்கள் வினாடி வினா வரலாறு",
+    "noQuizzes": "முடிந்த வினாடி வினாக்கள் இல்லை",
+    "noQuizzesDesc": "வரலாற்றை பார்க்க சில வினாடி வினாக்களை முடிக்கவும்.",
+    "filters": {
+      "all": "அனைத்தும்",
+      "subject": "பாடம்",
+      "date": "தேதி"
+    },
+    "details": {
+      "score": "மதிப்பெண்",
+      "timeTaken": "எடுத்த நேரம்",
+      "date": "தேதி",
+      "subject": "பாடம்",
+      "grade": "வகுப்பு",
+      "difficulty": "கஷ்டப் பட்டியல்"
+    },
+    "difficulty": {
+      "beginner": "தொடக்கநிலை",
+      "intermediate": "நடுத்தர",
+      "advanced": "மேம்பட்ட"
+    }
+  },
+  "timeAnalytics": {
+    "title": "நேர பகுப்பாய்வு",
+    "subtitle": "படிப்பு நேரத்தை கண்காணி",
+    "headerSubtitle": "உங்கள் கற்றல் முன்னேற்றம் மற்றும் நேர முதலீட்டை கண்காணிக்கவும்",
+    "totalTime": "மொத்த நேரம்",
+    "thisWeek": "இந்த வாரம்",
+    "thisMonth": "இந்த மாதம்",
+    "daily": "தினசரி",
+    "weekly": "வாராந்திர",
+    "monthly": "மாதாந்திர",
+    "noData": "பகுப்பாய்வு தரவு இல்லை",
+    "loading": "நேர பகுப்பாய்வை ஏற்றுகிறது...",
+    "errorLoading": "தரவு ஏற்றுவதில் பிழை",
+    "avgPerSession": "அமர்வுக்கு சராசரி",
+    "sessions": "அமர்வுகள்",
+    "mostProductive": "மிகவும் உற்பத்தியான",
+    "timeBySubject": "பாடம் வாரியாக நேரம்",
+    "timeBySubjectDesc": "பாடங்கள் முழுவதும் படிப்பு நேர விநியோகம்",
+    "timeByQuizType": "வினாடி வினா வகை வாரியாக நேரம்",
+    "timeByQuizTypeDesc": "வினாடி வினா வகைகள் முழுவதும் படிப்பு நேர விநியோகம்",
+    "noDataAvailable": "தரவு கிடைக்கவில்லை",
+    "noSubjectData": "பாட தரவு கிடைக்கவில்லை",
+    "noTypeData": "வகை தரவு கிடைக்கவில்லை",
+    "timeTrend": "நேர போக்கு - {{range}}",
+    "timeTrendDesc": "உங்கள் படிப்பு நேர முன்னேற்றம்",
+    "noDataForRange": "இந்த நேர வரம்பிற்கு தரவு கிடைக்கவில்லை",
+    "recentActivity": "சமீபத்திய செயல்பாடு",
+    "recentActivityDesc": "உங்கள் சமீபத்திய படிப்பு அமர்வுகள்",
+    "noRecentActivity": "சமீபத்திய செயல்பாடு இல்லை",
+    "backToDashboard": "டாஷ்போர்டுக்கு திரும்பு"
+  }
+}

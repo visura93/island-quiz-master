@@ -1,0 +1,57 @@
+{
+  "completedQuizzes": {
+    "title": "සම්පූර්ණ කළ ප්‍රශ්නාවලි",
+    "subtitle": "ඔබගේ ප්‍රශ්නාවලි ඉතිහාසය",
+    "noQuizzes": "සම්පූර්ණ කළ ප්‍රශ්නාවලි නැත",
+    "noQuizzesDesc": "ඔබගේ ඉතිහාසය බලීමට ප්‍රශ්නාවලි සම්පූර්ණ කරන්න.",
+    "filters": {
+      "all": "සියල්ල",
+      "subject": "විෂය",
+      "date": "දිනය"
+    },
+    "details": {
+      "score": "ලකුණු",
+      "timeTaken": "ගත කළ කාලය",
+      "date": "දිනය",
+      "subject": "විෂය",
+      "grade": "ශ්‍රේණිය",
+      "difficulty": "දුෂ්කරත්වය"
+    },
+    "difficulty": {
+      "beginner": "ආරම්භකයා",
+      "intermediate": "මධ්‍යස්ථ",
+      "advanced": "උසස්"
+    }
+  },
+  "timeAnalytics": {
+    "title": "කාල විශ්ලේෂණ",
+    "subtitle": "ඔබගේ අධ්‍යයන කාලය නිරීක්ෂණය කරන්න",
+    "headerSubtitle": "ඔබගේ ඉගෙනුම් ප්‍රගතිය සහ කාල ආයෝජනය නිරීක්ෂණය කරන්න",
+    "totalTime": "සම්පූර්ණ කාලය",
+    "thisWeek": "මෙම සතිය",
+    "thisMonth": "මෙම මාසය",
+    "daily": "දිනිය",
+    "weekly": "සතිපතා",
+    "monthly": "මාසිකව",
+    "noData": "විශ්ලේෂණ දත්ත නැත",
+    "loading": "කාල විශ්ලේෂණ පූරණය වෙමින්...",
+    "errorLoading": "දත්ත පූරණය කිරීමේ දෝෂය",
+    "avgPerSession": "සැසියකට සාමාන්‍ය",
+    "sessions": "සැසි",
+    "mostProductive": "වඩාත් ඵලදායී",
+    "timeBySubject": "විෂය අනුව කාලය",
+    "timeBySubjectDesc": "විෂයයන් හරහා අධ්‍යයන කාල බෙදා හැරීම",
+    "timeByQuizType": "ප්‍රශ්නාවලිය වර්ගය අනුව කාලය",
+    "timeByQuizTypeDesc": "ප්‍රශ්නාවලිය වර්ග හරහා අධ්‍යයන කාල බෙදා හැරීම",
+    "noDataAvailable": "දත්ත නොමැත",
+    "noSubjectData": "විෂය දත්ත නොමැත",
+    "noTypeData": "වර්ග දත්ත නොමැත",
+    "timeTrend": "කාල ප්‍රවණතා - {{range}}",
+    "timeTrendDesc": "ඔබගේ අධ්‍යයන කාල ප්‍රගතිය",
+    "noDataForRange": "මෙම කාල පරාසය සඳහා දත්ත නොමැත",
+    "recentActivity": "මෑත ක්‍රියාකාරකම්",
+    "recentActivityDesc": "ඔබගේ නවතම අධ්‍යයන සැසි",
+    "noRecentActivity": "මෑත ක්‍රියාකාරකම් නැත",
+    "backToDashboard": "උපකරණ පුවරුවට ආපසු"
+  }
+}

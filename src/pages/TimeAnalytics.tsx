@@ -38,11 +38,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { apiService, TimeAnalytics as TimeAnalyticsType } from "@/lib/api";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useTranslation } from "react-i18next";
 
 const TimeAnalytics = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isDark } = useTheme();
+  const { t } = useTranslation(['results', 'common']);
   const [timeRange, setTimeRange] = useState<"daily" | "weekly" | "monthly">("daily");
   const [timeAnalyticsData, setTimeAnalyticsData] = useState<TimeAnalyticsType | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -150,20 +153,23 @@ const TimeAnalytics = () => {
                 className={isDark ? "btn-modern bg-slate-800/50 border-cyan-500/30 text-cyan-100 hover:bg-slate-700/50 hover:border-cyan-500/50" : "btn-modern"}
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
+                {t('results:timeAnalytics.backToDashboard')}
               </Button>
               <div>
                 <h1 className={`text-3xl font-bold bg-clip-text text-transparent ${
-                  isDark 
-                    ? "bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400" 
+                  isDark
+                    ? "bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400"
                     : "bg-gradient-hero"
                 }`}>
-                  Time Analytics
+                  {t('results:timeAnalytics.title')}
                 </h1>
-                <p className={isDark ? "text-slate-400" : "text-muted-foreground"}>Track your learning progress and time investment</p>
+                <p className={isDark ? "text-slate-400" : "text-muted-foreground"}>{t('results:timeAnalytics.headerSubtitle')}</p>
               </div>
             </div>
-            <DarkModeToggle />
+            <div className="flex items-center gap-2">
+              <LanguageSwitcher />
+              <DarkModeToggle />
+            </div>
           </div>
         </div>
       </div>
@@ -180,7 +186,7 @@ const TimeAnalytics = () => {
                 isDark ? "border-t-cyan-400" : "border-t-primary"
               }`} style={{ animationDuration: '0.75s' }}></div>
             </div>
-            <p className={isDark ? "text-slate-400 mt-4" : "text-muted-foreground mt-4"}>Loading time analytics...</p>
+            <p className={isDark ? "text-slate-400 mt-4" : "text-muted-foreground mt-4"}>{t('results:timeAnalytics.loading')}</p>
           </div>
         )}
 
@@ -189,7 +195,7 @@ const TimeAnalytics = () => {
           <div className="text-center py-12">
             <div className={isDark ? "text-red-400 mb-4" : "text-red-600 mb-4"}>
               <Clock className="h-12 w-12 mx-auto mb-2" />
-              <p className="text-lg font-semibold">Error loading data</p>
+              <p className="text-lg font-semibold">{t('results:timeAnalytics.errorLoading')}</p>
               <p className={isDark ? "text-sm text-slate-400" : "text-sm text-muted-foreground"}>{error}</p>
             </div>
             <Button 
@@ -197,7 +203,7 @@ const TimeAnalytics = () => {
               variant="outline"
               className={isDark ? "bg-slate-800/50 border-red-500/30 text-red-100 hover:bg-slate-700/50" : ""}
             >
-              Try Again
+              {t('common:buttons.tryAgain')}
             </Button>
           </div>
         )}
@@ -217,7 +223,7 @@ const TimeAnalytics = () => {
             }`}
           >
             <Calendar className="h-4 w-4 mr-2" />
-            Daily
+            {t('results:timeAnalytics.daily')}
           </Button>
           <Button
             variant={timeRange === "weekly" ? "default" : "outline"}
@@ -229,7 +235,7 @@ const TimeAnalytics = () => {
             }`}
           >
             <BarChart3 className="h-4 w-4 mr-2" />
-            Weekly
+            {t('results:timeAnalytics.weekly')}
           </Button>
           <Button
             variant={timeRange === "monthly" ? "default" : "outline"}
@@ -241,7 +247,7 @@ const TimeAnalytics = () => {
             }`}
           >
             <TrendingUp className="h-4 w-4 mr-2" />
-            Monthly
+            {t('results:timeAnalytics.monthly')}
           </Button>
         </div>
 
@@ -269,7 +275,7 @@ const TimeAnalytics = () => {
                 }`}>
                   {formatTime(getTotalTimeForRange())}
                 </div>
-                <p className={isDark ? "text-sm text-slate-400" : "text-sm text-muted-foreground"}>Total Time</p>
+                <p className={isDark ? "text-sm text-slate-400" : "text-sm text-muted-foreground"}>{t('results:timeAnalytics.totalTime')}</p>
               </div>
             </CardContent>
           </Card>
@@ -296,7 +302,7 @@ const TimeAnalytics = () => {
                 }`}>
                   {formatTime(getAverageTimePerSession())}
                 </div>
-                <p className={isDark ? "text-sm text-slate-400" : "text-sm text-muted-foreground"}>Avg per Session</p>
+                <p className={isDark ? "text-sm text-slate-400" : "text-sm text-muted-foreground"}>{t('results:timeAnalytics.avgPerSession')}</p>
               </div>
             </CardContent>
           </Card>
@@ -323,7 +329,7 @@ const TimeAnalytics = () => {
                 }`}>
                   {getCurrentData().length}
                 </div>
-                <p className={isDark ? "text-sm text-slate-400" : "text-sm text-muted-foreground"}>Sessions</p>
+                <p className={isDark ? "text-sm text-slate-400" : "text-sm text-muted-foreground"}>{t('results:timeAnalytics.sessions')}</p>
               </div>
             </CardContent>
           </Card>
@@ -350,7 +356,7 @@ const TimeAnalytics = () => {
                 }`}>
                   {getMostProductiveDay() || "N/A"}
                 </div>
-                <p className={isDark ? "text-sm text-slate-400" : "text-sm text-muted-foreground"}>Most Productive</p>
+                <p className={isDark ? "text-sm text-slate-400" : "text-sm text-muted-foreground"}>{t('results:timeAnalytics.mostProductive')}</p>
               </div>
             </CardContent>
           </Card>
@@ -372,9 +378,9 @@ const TimeAnalytics = () => {
                 }`}>
                   <PieChartIcon className={`h-5 w-5 ${isDark ? "text-cyan-400" : "text-primary"}`} />
                 </div>
-                Time by Subject
+                {t('results:timeAnalytics.timeBySubject')}
               </CardTitle>
-              <CardDescription className={isDark ? "text-slate-400" : ""}>Distribution of study time across subjects</CardDescription>
+              <CardDescription className={isDark ? "text-slate-400" : ""}>{t('results:timeAnalytics.timeBySubjectDesc')}</CardDescription>
             </CardHeader>
             <CardContent>
               {timeAnalyticsData.subjectBreakdown && timeAnalyticsData.subjectBreakdown.length > 0 ? (
@@ -421,7 +427,7 @@ const TimeAnalytics = () => {
                 <div className={`h-80 flex items-center justify-center ${isDark ? "text-slate-400" : "text-muted-foreground"}`}>
                   <div className="text-center">
                     <PieChartIcon className="h-12 w-12 mx-auto mb-2 opacity-30" />
-                    <p>No data available</p>
+                    <p>{t('results:timeAnalytics.noDataAvailable')}</p>
                   </div>
                 </div>
               )}
@@ -446,7 +452,7 @@ const TimeAnalytics = () => {
                   </div>
                   ))
                 ) : (
-                  <p className={`text-sm text-center py-4 ${isDark ? "text-slate-400" : "text-muted-foreground"}`}>No subject data available</p>
+                  <p className={`text-sm text-center py-4 ${isDark ? "text-slate-400" : "text-muted-foreground"}`}>{t('results:timeAnalytics.noSubjectData')}</p>
                 )}
               </div>
             </CardContent>
@@ -467,9 +473,9 @@ const TimeAnalytics = () => {
                 }`}>
                   <BookOpen className={`h-5 w-5 ${isDark ? "text-purple-400" : "text-secondary"}`} />
                 </div>
-                Time by Quiz Type
+                {t('results:timeAnalytics.timeByQuizType')}
               </CardTitle>
-              <CardDescription className={isDark ? "text-slate-400" : ""}>Distribution of study time across quiz types</CardDescription>
+              <CardDescription className={isDark ? "text-slate-400" : ""}>{t('results:timeAnalytics.timeByQuizTypeDesc')}</CardDescription>
             </CardHeader>
             <CardContent>
               {timeAnalyticsData.typeBreakdown && timeAnalyticsData.typeBreakdown.length > 0 ? (
@@ -516,7 +522,7 @@ const TimeAnalytics = () => {
                 <div className={`h-80 flex items-center justify-center ${isDark ? "text-slate-400" : "text-muted-foreground"}`}>
                   <div className="text-center">
                     <PieChartIcon className="h-12 w-12 mx-auto mb-2 opacity-30" />
-                    <p>No data available</p>
+                    <p>{t('results:timeAnalytics.noDataAvailable')}</p>
                   </div>
                 </div>
               )}
@@ -541,7 +547,7 @@ const TimeAnalytics = () => {
                   </div>
                   ))
                 ) : (
-                  <p className={`text-sm text-center py-4 ${isDark ? "text-slate-400" : "text-muted-foreground"}`}>No type data available</p>
+                  <p className={`text-sm text-center py-4 ${isDark ? "text-slate-400" : "text-muted-foreground"}`}>{t('results:timeAnalytics.noTypeData')}</p>
                 )}
               </div>
             </CardContent>
@@ -563,9 +569,9 @@ const TimeAnalytics = () => {
               }`}>
                 <TrendingUp className={`h-5 w-5 ${isDark ? "text-blue-400" : "text-accent"}`} />
               </div>
-              Time Trend - {timeRange.charAt(0).toUpperCase() + timeRange.slice(1)}
+              {t('results:timeAnalytics.timeTrend', { range: t(`results:timeAnalytics.${timeRange}`) })}
             </CardTitle>
-            <CardDescription className={isDark ? "text-slate-400" : ""}>Your study time progression over time</CardDescription>
+            <CardDescription className={isDark ? "text-slate-400" : ""}>{t('results:timeAnalytics.timeTrendDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             {getCurrentData() && getCurrentData().length > 0 ? (
@@ -611,7 +617,7 @@ const TimeAnalytics = () => {
               <div className={`h-80 flex items-center justify-center ${isDark ? "text-slate-400" : "text-muted-foreground"}`}>
                 <div className="text-center">
                   <TrendingUp className="h-12 w-12 mx-auto mb-2 opacity-30" />
-                  <p>No data available for this time range</p>
+                  <p>{t('results:timeAnalytics.noDataForRange')}</p>
                 </div>
               </div>
             )}
@@ -633,9 +639,9 @@ const TimeAnalytics = () => {
               }`}>
                 <Activity className={`h-5 w-5 ${isDark ? "text-green-400" : "text-green-600"}`} />
               </div>
-              Recent Activity
+              {t('results:timeAnalytics.recentActivity')}
             </CardTitle>
-            <CardDescription className={isDark ? "text-slate-400" : ""}>Your latest study sessions</CardDescription>
+            <CardDescription className={isDark ? "text-slate-400" : ""}>{t('results:timeAnalytics.recentActivityDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -671,7 +677,7 @@ const TimeAnalytics = () => {
               ) : (
                 <div className={`text-center py-8 ${isDark ? "text-slate-400" : "text-muted-foreground"}`}>
                   <Activity className="h-12 w-12 mx-auto mb-2 opacity-30" />
-                  <p>No recent activity</p>
+                  <p>{t('results:timeAnalytics.noRecentActivity')}</p>
                 </div>
               )}
             </div>

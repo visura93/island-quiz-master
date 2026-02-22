@@ -1,0 +1,36 @@
+{
+  "steps": {
+    "step1": {
+      "title": "Welcome, {{name}}!",
+      "content1": "We're excited to have you here! Let's take a quick tour to help you get started.",
+      "content2": "This will only take a moment, and you can skip it anytime."
+    },
+    "step2": {
+      "title": "Dark Mode is Active",
+      "content1": "We've set your interface to Dark Mode by default to reduce eye strain and save battery life.",
+      "content2": "You can switch between dark and light themes anytime by clicking the theme toggle button.",
+      "lookFor": "Look for this button:"
+    },
+    "step3": {
+      "title": "Where to Find It",
+      "content": "The theme toggle button is located in the top-right corner of your screen, next to your profile information.",
+      "step1": "Look at the top navigation bar on any page",
+      "step2Moon": "Find the moon icon button on the right side",
+      "step2Sun": "Find the sun icon button on the right side",
+      "step3": "Click it to switch between dark and light modes"
+    },
+    "step4": {
+      "title": "You're All Set!",
+      "content1": "That's it! You're ready to start using the platform.",
+      "content2": "Remember, you can always change your theme preference using the toggle button in the top-right corner.",
+      "content3": "Happy learning!"
+    }
+  },
+  "buttons": {
+    "skipTutorial": "Skip Tutorial",
+    "back": "Back",
+    "next": "Next",
+    "getStarted": "Get Started"
+  },
+  "ariaClose": "Close tutorial"
+}

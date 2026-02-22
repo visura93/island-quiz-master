@@ -6,10 +6,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { WelcomeTutorial } from "@/components/WelcomeTutorial";
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 const TeacherDashboard = () => {
   const navigate = useNavigate();
   const { user, logout, isNewUser, setIsNewUser } = useAuth();
+  const { t } = useTranslation(['dashboard', 'common']);
   const [showWelcomeTutorial, setShowWelcomeTutorial] = useState<boolean>(false);
 
   // Show welcome tutorial for new users
@@ -30,9 +33,9 @@ const TeacherDashboard = () => {
   };
 
   const stats = [
-    { label: "Total MCQs", value: "0", icon: FileText, color: "text-primary" },
-    { label: "Active Students", value: "0", icon: Users, color: "text-secondary" },
-    { label: "Earnings", value: "$0", icon: DollarSign, color: "text-success" },
+    { label: t('dashboard:teacher.stats.totalMcqs'), value: "0", icon: FileText, color: "text-primary" },
+    { label: t('dashboard:teacher.stats.activeStudents'), value: "0", icon: Users, color: "text-secondary" },
+    { label: t('dashboard:teacher.stats.earnings'), value: "$0", icon: DollarSign, color: "text-success" },
   ];
 
   return (
@@ -55,17 +58,18 @@ const TeacherDashboard = () => {
           >
             <GraduationCap className="h-8 w-8 text-primary" />
             <span className="text-2xl font-bold bg-gradient-hero bg-clip-text text-transparent">
-              Island First
+              {t('common:appName')}
             </span>
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground">
-              Welcome, {user?.firstName}!
+              {t('dashboard:teacher.welcome', { name: user?.firstName })}
             </span>
+            <LanguageSwitcher />
             <DarkModeToggle />
             <Button variant="outline" onClick={handleLogout}>
               <LogOut className="h-4 w-4 mr-2" />
-              Logout
+              {t('common:buttons.logout')}
             </Button>
           </div>
         </div>
@@ -75,12 +79,12 @@ const TeacherDashboard = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-4xl font-bold mb-2">Teacher Dashboard</h1>
-            <p className="text-muted-foreground text-lg">Manage your MCQ collections</p>
+            <h1 className="text-4xl font-bold mb-2">{t('dashboard:teacher.title')}</h1>
+            <p className="text-muted-foreground text-lg">{t('dashboard:teacher.subtitle')}</p>
           </div>
           <Button className="bg-gradient-hero hover:opacity-90 transition-opacity">
             <Plus className="h-5 w-5 mr-2" />
-            Create MCQ Set
+            {t('dashboard:teacher.createMcqSet')}
           </Button>
         </div>
 
@@ -104,17 +108,17 @@ const TeacherDashboard = () => {
         {/* MCQ Collections */}
         <Card className="border-2 shadow-elegant bg-gradient-card">
           <CardHeader>
-            <CardTitle className="text-2xl">Your MCQ Collections</CardTitle>
-            <CardDescription>Create and manage your question sets</CardDescription>
+            <CardTitle className="text-2xl">{t('dashboard:teacher.collections.title')}</CardTitle>
+            <CardDescription>{t('dashboard:teacher.collections.subtitle')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-center py-12 text-muted-foreground">
               <FileText className="h-16 w-16 mx-auto mb-4 opacity-50" />
-              <p className="text-lg mb-2">No MCQ sets created yet</p>
-              <p className="text-sm mb-6">Start creating your first MCQ collection</p>
+              <p className="text-lg mb-2">{t('dashboard:teacher.collections.empty')}</p>
+              <p className="text-sm mb-6">{t('dashboard:teacher.collections.emptyDesc')}</p>
               <Button className="bg-gradient-hero hover:opacity-90 transition-opacity">
                 <Plus className="h-5 w-5 mr-2" />
-                Create Your First Set
+                {t('dashboard:teacher.collections.createFirst')}
               </Button>
             </div>
           </CardContent>

@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -30,6 +33,7 @@ import {
 const ViewQuizzes = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation(['admin', 'common']);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [filteredQuizzes, setFilteredQuizzes] = useState<Quiz[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -54,11 +58,11 @@ const ViewQuizzes = () => {
       setQuizzes(data);
       setFilteredQuizzes(data);
     } catch (err: any) {
-      setError(err.message || "Failed to load quizzes");
+      setError(err.message || t('admin:viewQuizzes.loadError'));
       console.error("Error loading quizzes:", err);
       toast({
-        title: "Error",
-        description: err.message || "Failed to load quizzes",
+        title: t('common:feedback.errorTitle'),
+        description: err.message || t('admin:viewQuizzes.loadError'),
         variant: "destructive",
       });
     } finally {
@@ -101,14 +105,14 @@ const ViewQuizzes = () => {
     try {
       await apiService.deleteQuiz(quizToDelete.id);
       toast({
-        title: "Success",
-        description: "Quiz deleted successfully",
+        title: t('common:feedback.successTitle'),
+        description: t('admin:viewQuizzes.deleteSuccess'),
       });
       await loadQuizzes();
     } catch (err: any) {
       toast({
-        title: "Error",
-        description: err.message || "Failed to delete quiz",
+        title: t('common:feedback.errorTitle'),
+        description: err.message || t('common:status.error'),
         variant: "destructive",
       });
     } finally {
@@ -143,25 +147,31 @@ const ViewQuizzes = () => {
     <div className="min-h-screen bg-gradient-mesh">
       <header className="border-b border-border/50 backdrop-blur-sm bg-background/80">
         <div className="container mx-auto px-4 py-4">
-          <Button variant="ghost" onClick={() => navigate("/admin-dashboard")} className="mb-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
-          </Button>
+          <div className="flex items-center justify-between">
+            <Button variant="ghost" onClick={() => navigate("/admin-dashboard")} className="mb-4">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              {t('common:buttons.back')}
+            </Button>
+            <div className="flex items-center gap-2">
+              <LanguageSwitcher />
+              <DarkModeToggle />
+            </div>
+          </div>
         </div>
       </header>
 
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-4xl font-bold mb-2">All Quizzes</h1>
-            <p className="text-muted-foreground text-lg">View and manage all quizzes</p>
+            <h1 className="text-4xl font-bold mb-2">{t('admin:viewQuizzes.title')}</h1>
+            <p className="text-muted-foreground text-lg">{t('admin:viewQuizzes.title')}</p>
           </div>
           <Button 
             onClick={() => navigate("/admin/create-quiz")}
             className="bg-gradient-hero hover:opacity-90 transition-opacity"
           >
             <Plus className="h-5 w-5 mr-2" />
-            Create New Quiz
+            {t('admin:createQuiz.title')}
           </Button>
         </div>
 
@@ -171,7 +181,7 @@ const ViewQuizzes = () => {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
-                placeholder="Search quizzes by title, subject, grade, medium, type, or difficulty..."
+                placeholder={t('admin:viewQuizzes.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -201,7 +211,7 @@ const ViewQuizzes = () => {
         {loading ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading quizzes...</p>
+            <p className="text-muted-foreground">{t('common:status.loading')}</p>
           </div>
         ) : filteredQuizzes.length === 0 ? (
           <Card className="border-2 shadow-elegant bg-gradient-card">
@@ -218,7 +228,7 @@ const ViewQuizzes = () => {
               {!searchQuery && (
                 <Button onClick={() => navigate("/admin/create-quiz")}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Create Quiz
+                  {t('admin:createQuiz.title')}
                 </Button>
               )}
             </CardContent>
@@ -286,7 +296,7 @@ const ViewQuizzes = () => {
                       onClick={() => handleEditQuiz(quiz.id)}
                     >
                       <Edit className="h-4 w-4 mr-2" />
-                      Edit
+                      {t('common:buttons.edit')}
                     </Button>
                     <Button
                       variant="destructive"
@@ -306,15 +316,15 @@ const ViewQuizzes = () => {
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Delete Quiz</AlertDialogTitle>
+              <AlertDialogTitle>{t('admin:viewQuizzes.deleteConfirm')}</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete "{quizToDelete?.title}"? This action cannot be undone.
+                {t('admin:viewQuizzes.deleteConfirmDesc')}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel>{t('common:buttons.cancel')}</AlertDialogCancel>
               <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">
-                Delete
+                {t('common:buttons.delete')}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

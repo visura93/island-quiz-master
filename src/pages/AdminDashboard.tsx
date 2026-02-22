@@ -26,10 +26,13 @@ import { useState, useEffect } from "react";
 import { apiService, StudentActivity } from "@/lib/api";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { WelcomeTutorial } from "@/components/WelcomeTutorial";
+import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { user, logout, isNewUser, setIsNewUser } = useAuth();
+  const { t } = useTranslation(['dashboard', 'common']);
   const [students, setStudents] = useState<StudentActivity[]>([]);
   const [filteredStudents, setFilteredStudents] = useState<StudentActivity[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -106,10 +109,10 @@ const AdminDashboard = () => {
     : 0;
 
   const stats = [
-    { label: "Total Students", value: totalStudents.toString(), icon: Users, color: "text-primary" },
-    { label: "Active Students", value: activeStudents.toString(), icon: UserCheck, color: "text-green-600" },
-    { label: "Total Quizzes", value: totalQuizzes.toString(), icon: BookOpen, color: "text-secondary" },
-    { label: "Avg Score", value: averageScore.toFixed(1) + "%", icon: TrendingUp, color: "text-accent" },
+    { label: t('dashboard:admin.stats.totalStudents'), value: totalStudents.toString(), icon: Users, color: "text-primary" },
+    { label: t('dashboard:admin.stats.activeStudents'), value: activeStudents.toString(), icon: UserCheck, color: "text-green-600" },
+    { label: t('dashboard:admin.stats.totalQuizzes'), value: totalQuizzes.toString(), icon: BookOpen, color: "text-secondary" },
+    { label: t('dashboard:admin.stats.avgScore', 'Avg Score'), value: averageScore.toFixed(1) + "%", icon: TrendingUp, color: "text-accent" },
   ];
 
   const formatDate = (dateString: string) => {
@@ -141,17 +144,18 @@ const AdminDashboard = () => {
           >
             <GraduationCap className="h-8 w-8 text-primary" />
             <span className="text-2xl font-bold bg-gradient-hero bg-clip-text text-transparent">
-              Island First
+              {t('common:appName')}
             </span>
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground">
-              Welcome, {user?.firstName}!
+              {t('dashboard:admin.welcome', { name: user?.firstName, defaultValue: `Welcome, ${user?.firstName}!` })}
             </span>
+            <LanguageSwitcher />
             <DarkModeToggle />
             <Button variant="outline" onClick={handleLogout}>
               <LogOut className="h-4 w-4 mr-2" />
-              Logout
+              {t('common:buttons.logout')}
             </Button>
           </div>
         </div>
@@ -161,8 +165,8 @@ const AdminDashboard = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-4xl font-bold mb-2">Admin Dashboard</h1>
-            <p className="text-muted-foreground text-lg">Manage students and view their activity</p>
+            <h1 className="text-4xl font-bold mb-2">{t('dashboard:admin.title')}</h1>
+            <p className="text-muted-foreground text-lg">{t('dashboard:admin.subtitle')}</p>
           </div>
           <div className="flex gap-3">
             <Button 
@@ -170,11 +174,11 @@ const AdminDashboard = () => {
               className="bg-gradient-hero hover:opacity-90 transition-opacity"
             >
               <Plus className="h-5 w-5 mr-2" />
-              Create Quiz
+              {t('dashboard:admin.createQuiz', 'Create Quiz')}
             </Button>
             <Button variant="outline">
               <Settings className="h-5 w-5 mr-2" />
-              Settings
+              {t('common:buttons.settings')}
             </Button>
           </div>
         </div>
@@ -185,12 +189,12 @@ const AdminDashboard = () => {
             <Card 
               key={index} 
               className={`border-2 hover:shadow-hover transition-all bg-gradient-card ${
-                (stat.label === "Total Quizzes" || stat.label === "Total Students") ? "cursor-pointer hover:scale-105" : ""
+                (stat.label === t('dashboard:admin.stats.totalQuizzes') || stat.label === t('dashboard:admin.stats.totalStudents')) ? "cursor-pointer hover:scale-105" : ""
               }`}
               onClick={() => {
-                if (stat.label === "Total Quizzes") {
+                if (stat.label === t('dashboard:admin.stats.totalQuizzes')) {
                   navigate("/admin/quizzes");
-                } else if (stat.label === "Total Students") {
+                } else if (stat.label === t('dashboard:admin.stats.totalStudents')) {
                   navigate("/admin/manage-students");
                 }
               }}
@@ -217,10 +221,10 @@ const AdminDashboard = () => {
             <CardHeader>
               <CardTitle className="text-xl flex items-center gap-3">
                 <BookOpen className="h-6 w-6 text-primary" />
-                Manage Subjects
+                {t('dashboard:admin.manageSubjects', 'Manage Subjects')}
               </CardTitle>
               <CardDescription>
-                Configure subjects, free quiz counts, and payment settings
+                {t('dashboard:admin.manageSubjectsDesc', 'Configure subjects, free quiz counts, and payment settings')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -228,15 +232,15 @@ const AdminDashboard = () => {
                 <ul className="space-y-2">
                   <li className="flex items-center gap-2">
                     <Plus className="h-4 w-4 text-green-500" />
-                    Add, edit, or remove subjects
+                    {t('dashboard:admin.subjectActions.addEditRemove', 'Add, edit, or remove subjects')}
                   </li>
                   <li className="flex items-center gap-2">
                     <Settings className="h-4 w-4 text-blue-500" />
-                    Configure free quiz counts per subject
+                    {t('dashboard:admin.subjectActions.configureQuizCounts', 'Configure free quiz counts per subject')}
                   </li>
                   <li className="flex items-center gap-2">
                     <Shield className="h-4 w-4 text-purple-500" />
-                    Control quiz access and payment requirements
+                    {t('dashboard:admin.subjectActions.controlAccess', 'Control quiz access and payment requirements')}
                   </li>
                 </ul>
               </div>
@@ -250,10 +254,10 @@ const AdminDashboard = () => {
             <CardHeader>
               <CardTitle className="text-xl flex items-center gap-3">
                 <GraduationCap className="h-6 w-6 text-primary" />
-                Manage Quizzes
+                {t('dashboard:admin.manageQuizzes', 'Manage Quizzes')}
               </CardTitle>
               <CardDescription>
-                View, edit, and manage all quizzes in the system
+                {t('dashboard:admin.manageQuizzesDesc', 'View, edit, and manage all quizzes in the system')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -261,15 +265,15 @@ const AdminDashboard = () => {
                 <ul className="space-y-2">
                   <li className="flex items-center gap-2">
                     <Plus className="h-4 w-4 text-green-500" />
-                    Create new quizzes
+                    {t('dashboard:admin.quizActions.create', 'Create new quizzes')}
                   </li>
                   <li className="flex items-center gap-2">
                     <Settings className="h-4 w-4 text-blue-500" />
-                    Edit existing quizzes
+                    {t('dashboard:admin.quizActions.edit', 'Edit existing quizzes')}
                   </li>
                   <li className="flex items-center gap-2">
                     <Eye className="h-4 w-4 text-purple-500" />
-                    View all quiz details
+                    {t('dashboard:admin.quizActions.viewAll', 'View all quiz details')}
                   </li>
                 </ul>
               </div>
@@ -282,9 +286,9 @@ const AdminDashboard = () => {
           <CardHeader>
             <CardTitle className="text-2xl flex items-center gap-2">
               <Users className="h-6 w-6 text-primary" />
-              Student Activity
+              {t('dashboard:admin.studentActivity', 'Student Activity')}
             </CardTitle>
-            <CardDescription>View and manage student profiles and quiz activities</CardDescription>
+            <CardDescription>{t('dashboard:admin.studentActivityDesc', 'View and manage student profiles and quiz activities')}</CardDescription>
           </CardHeader>
           <CardContent>
             {/* Search Bar */}
@@ -292,7 +296,7 @@ const AdminDashboard = () => {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
-                  placeholder="Search students by name or email..."
+                  placeholder={t('dashboard:admin.searchStudentsPlaceholder', 'Search students by name or email...')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -309,14 +313,14 @@ const AdminDashboard = () => {
             {loading ? (
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                <p className="text-muted-foreground">Loading students...</p>
+                <p className="text-muted-foreground">{t('dashboard:admin.loadingStudents', 'Loading students...')}</p>
               </div>
             ) : filteredStudents.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p className="text-lg font-medium mb-2">No students found</p>
+                <p className="text-lg font-medium mb-2">{t('dashboard:admin.noStudentsFound', 'No students found')}</p>
                 <p className="text-sm">
-                  {searchQuery ? "Try adjusting your search query" : "No students registered yet"}
+                  {searchQuery ? t('dashboard:admin.adjustSearch', 'Try adjusting your search query') : t('dashboard:admin.noStudentsYet', 'No students registered yet')}
                 </p>
               </div>
             ) : (
@@ -339,12 +343,12 @@ const AdminDashboard = () => {
                               {student.isActive ? (
                                 <Badge className="bg-green-600">
                                   <UserCheck className="h-3 w-3 mr-1" />
-                                  Active
+                                  {t('dashboard:admin.active', 'Active')}
                                 </Badge>
                               ) : (
                                 <Badge variant="secondary">
                                   <UserX className="h-3 w-3 mr-1" />
-                                  Inactive
+                                  {t('dashboard:admin.inactive', 'Inactive')}
                                 </Badge>
                               )}
                             </div>
@@ -355,7 +359,7 @@ const AdminDashboard = () => {
                               </div>
                               <div className="flex items-center gap-1">
                                 <Calendar className="h-4 w-4" />
-                                Joined: {formatDate(student.createdAt)}
+                                {t('dashboard:admin.joined', 'Joined')}: {formatDate(student.createdAt)}
                               </div>
                             </div>
                           </div>
@@ -363,19 +367,19 @@ const AdminDashboard = () => {
                         <div className="flex items-center gap-8 mr-4">
                           <div className="text-center">
                             <div className="text-2xl font-bold text-primary">{student.totalQuizzes}</div>
-                            <div className="text-xs text-muted-foreground">Quizzes</div>
+                            <div className="text-xs text-muted-foreground">{t('dashboard:admin.quizzes', 'Quizzes')}</div>
                           </div>
                           <div className="text-center">
                             <div className="text-2xl font-bold text-green-600">
                               {student.averageScore.toFixed(1)}%
                             </div>
-                            <div className="text-xs text-muted-foreground">Avg Score</div>
+                            <div className="text-xs text-muted-foreground">{t('dashboard:admin.avgScore', 'Avg Score')}</div>
                           </div>
                           <div className="text-center">
                             <div className="text-sm font-medium text-muted-foreground">
-                              {student.lastActivityDate ? formatDate(student.lastActivityDate) : "Never"}
+                              {student.lastActivityDate ? formatDate(student.lastActivityDate) : t('dashboard:admin.never', 'Never')}
                             </div>
-                            <div className="text-xs text-muted-foreground">Last Activity</div>
+                            <div className="text-xs text-muted-foreground">{t('dashboard:admin.lastActivity', 'Last Activity')}</div>
                           </div>
                         </div>
                         <Button
@@ -386,7 +390,7 @@ const AdminDashboard = () => {
                           }}
                         >
                           <Eye className="h-4 w-4 mr-2" />
-                          View Details
+                          {t('dashboard:admin.viewDetails', 'View Details')}
                         </Button>
                       </div>
                     </CardContent>

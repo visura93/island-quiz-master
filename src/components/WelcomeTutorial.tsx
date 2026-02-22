@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { X, Moon, Sun, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 interface WelcomeTutorialProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ export const WelcomeTutorial: React.FC<WelcomeTutorialProps> = ({
   userName = 'there',
 }) => {
   const { isDark } = useTheme();
+  const { t } = useTranslation('tutorial');
   const [step, setStep] = useState(0);
 
   useEffect(() => {
@@ -28,32 +30,32 @@ export const WelcomeTutorial: React.FC<WelcomeTutorialProps> = ({
 
   const steps = [
     {
-      title: `Welcome, ${userName}! 🎉`,
+      title: t('steps.step1.title', { name: userName }),
       content: (
         <>
           <p className="text-muted-foreground mb-4">
-            We're excited to have you here! Let's take a quick tour to help you get started.
+            {t('steps.step1.content1')}
           </p>
           <p className="text-muted-foreground">
-            This will only take a moment, and you can skip it anytime.
+            {t('steps.step1.content2')}
           </p>
         </>
       ),
       icon: <Info className="h-6 w-6 text-primary" />,
     },
     {
-      title: 'Dark Mode is Active 🌙',
+      title: t('steps.step2.title'),
       content: (
         <>
           <p className="text-muted-foreground mb-4">
-            We've set your interface to <span className="font-semibold text-foreground">Dark Mode</span> by default to reduce eye strain and save battery life.
+            {t('steps.step2.content1')}
           </p>
           <p className="text-muted-foreground mb-4">
-            You can switch between dark and light themes anytime by clicking the theme toggle button.
+            {t('steps.step2.content2')}
           </p>
           <div className="flex items-center gap-4 p-4 bg-accent/20 rounded-lg border border-border">
             <div className="flex items-center gap-2 text-sm">
-              <span className="text-muted-foreground">Look for this button:</span>
+              <span className="text-muted-foreground">{t('steps.step2.lookFor')}</span>
               <div className="relative h-9 w-9 rounded-lg border-2 border-primary bg-background flex items-center justify-center">
                 {isDark ? (
                   <Moon className="h-4 w-4 text-primary" />
@@ -68,11 +70,11 @@ export const WelcomeTutorial: React.FC<WelcomeTutorialProps> = ({
       icon: <Moon className="h-6 w-6 text-primary" />,
     },
     {
-      title: 'Where to Find It 📍',
+      title: t('steps.step3.title'),
       content: (
         <>
           <p className="text-muted-foreground mb-4">
-            The theme toggle button is located in the <span className="font-semibold text-foreground">top-right corner</span> of your screen, next to your profile information.
+            {t('steps.step3.content')}
           </p>
           <div className="space-y-3">
             <div className="flex items-start gap-3 p-3 bg-accent/20 rounded-lg border border-border">
@@ -80,7 +82,7 @@ export const WelcomeTutorial: React.FC<WelcomeTutorialProps> = ({
                 1
               </div>
               <p className="text-sm text-muted-foreground pt-1">
-                Look at the top navigation bar on any page
+                {t('steps.step3.step1')}
               </p>
             </div>
             <div className="flex items-start gap-3 p-3 bg-accent/20 rounded-lg border border-border">
@@ -88,7 +90,7 @@ export const WelcomeTutorial: React.FC<WelcomeTutorialProps> = ({
                 2
               </div>
               <p className="text-sm text-muted-foreground pt-1">
-                Find the {isDark ? 'moon' : 'sun'} icon button on the right side
+                {isDark ? t('steps.step3.step2Moon') : t('steps.step3.step2Sun')}
               </p>
             </div>
             <div className="flex items-start gap-3 p-3 bg-accent/20 rounded-lg border border-border">
@@ -96,7 +98,7 @@ export const WelcomeTutorial: React.FC<WelcomeTutorialProps> = ({
                 3
               </div>
               <p className="text-sm text-muted-foreground pt-1">
-                Click it to switch between dark and light modes
+                {t('steps.step3.step3')}
               </p>
             </div>
           </div>
@@ -105,17 +107,17 @@ export const WelcomeTutorial: React.FC<WelcomeTutorialProps> = ({
       icon: <Sun className="h-6 w-6 text-primary" />,
     },
     {
-      title: "You're All Set! ✨",
+      title: t('steps.step4.title'),
       content: (
         <>
           <p className="text-muted-foreground mb-4">
-            That's it! You're ready to start using the platform.
+            {t('steps.step4.content1')}
           </p>
           <p className="text-muted-foreground mb-4">
-            Remember, you can always change your theme preference using the toggle button in the top-right corner.
+            {t('steps.step4.content2')}
           </p>
           <p className="text-sm text-muted-foreground italic">
-            Happy learning! 📚
+            {t('steps.step4.content3')}
           </p>
         </>
       ),
@@ -165,7 +167,7 @@ export const WelcomeTutorial: React.FC<WelcomeTutorialProps> = ({
               size="icon"
               onClick={onClose}
               className="h-8 w-8 rounded-lg"
-              aria-label="Close tutorial"
+              aria-label={t('ariaClose')}
             >
               <X className="h-4 w-4" />
             </Button>
@@ -197,7 +199,7 @@ export const WelcomeTutorial: React.FC<WelcomeTutorialProps> = ({
               onClick={onClose}
               className="flex-1"
             >
-              Skip Tutorial
+              {t('buttons.skipTutorial')}
             </Button>
             <div className="flex gap-2">
               {!isFirstStep && (
@@ -206,14 +208,14 @@ export const WelcomeTutorial: React.FC<WelcomeTutorialProps> = ({
                   onClick={handleBack}
                   className="px-6"
                 >
-                  Back
+                  {t('buttons.back')}
                 </Button>
               )}
               <Button
                 onClick={handleNext}
                 className="px-6"
               >
-                {isLastStep ? 'Get Started' : 'Next'}
+                {isLastStep ? t('buttons.getStarted') : t('buttons.next')}
               </Button>
             </div>
           </div>

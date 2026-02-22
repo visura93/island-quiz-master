@@ -1,0 +1,117 @@
+{
+  "leaderboard": {
+    "title": "ශ්‍රේෂ්ඨ ලේඛනය",
+    "subtitle": "ඔබ කොතැනද බලන්න",
+    "participantsCompeting": "{{count}} {{category}} සිසුන් තරඟ කිරීම",
+    "back": "ආපසු",
+    "selectCategory": "කාණ්ඩය තෝරන්න",
+    "tabs": {
+      "bySubject": "විෂය අනුව",
+      "subject": "විෂය",
+      "overall": "සමස්ත",
+      "weeklyMonthly": "සතිපතා / මාසිකව",
+      "time": "කාලය",
+      "streaks": "ප්‍රවාහ"
+    },
+    "selectSubject": "විෂය තෝරන්න",
+    "thisWeek": "මෙම සතිය",
+    "thisMonth": "මෙම මාසය",
+    "noRankings": "ශ්‍රේණිගත කිරීම් නැත",
+    "noRankingsDesc": "ශ්‍රේෂ්ඨ ලේඛනයේ පෙනී සිටීමට ප්‍රශ්නාවලි සම්පූර්ණ කරන්න!",
+    "table": {
+      "rank": "#",
+      "student": "සිසු",
+      "score": "ලකුණු",
+      "quizzes": "ප්‍රශ්නාවලි",
+      "streak": "ප්‍රවාහය",
+      "current": "වත්මන්",
+      "best": "හොඳම"
+    },
+    "yourRank": "ඔබගේ ශ්‍රේණිය",
+    "soon": "ඉදිරියේ දී",
+    "streakCard": {
+      "currentStreak": "වත්මන් ප්‍රවාහය",
+      "days": "{{count}} දින",
+      "best": "හොඳම: {{count}} දින",
+      "last90Days": "පිමිනි දිනය 90",
+      "less": "අඩු",
+      "more": "වැඩි",
+      "milestones": "සන්ධිස්ථාන",
+      "streakRankings": "ප්‍රවාහ ශ්‍රේණිගත",
+      "done": "හොඳයි",
+      "active": "ක්‍රියාකාරී",
+      "inactive": "අක්‍රීය"
+    },
+    "podium": {
+      "first": "1 වැනි",
+      "second": "2 වැනි",
+      "third": "3 වැනි"
+    },
+    "quizzesCount": "{{count}} ප්‍රශ්නාවලි"
+  },
+  "goals": {
+    "title": "ඉලක්ක සහ ජයග්‍රහණ",
+    "subtitle": "ඔබගේ ප්‍රගතිය නිරීක්ෂණය කර ලාංඡන එකතු කරන්න",
+    "loading": "ඔබගේ ජයග්‍රහණ පූරණය වෙමින්...",
+    "summary": {
+      "activeGoals": "ක්‍රියාකාරී ඉලක්ක",
+      "goalsCompleted": "ඉලක්ක සම්පූර්ණ",
+      "badgesEarned": "ලාංඡන ලබා ගැනිණ"
+    },
+    "tabs": {
+      "studyGoals": "අධ්‍යයන ඉලක්ක",
+      "badges": "ලාංඡන"
+    },
+    "activeGoals": "ක්‍රියාකාරී ඉලක්ක",
+    "addGoal": "ඉලක්කය එකතු කරන්න",
+    "noGoals": "ක්‍රියාකාරී ඉලක්ක නැත",
+    "noGoalsDesc": "ඉලක්කයක් සකසා ඔබගේ ප්‍රගතිය නිරීක්ෂණය කරන්න.",
+    "createFirstGoal": "ඔබගේ පළමු ඉලක්කය සාදන්න",
+    "completedGoals": "සම්පූර්ණ ඉලක්ක ({{count}})",
+    "completed": "{{date}} සම්පූර්ණ",
+    "ends": "{{date}} අවසන්",
+    "expired": "කල් ඉකුත්",
+    "achievementBadges": "ජයග්‍රහණ ලාංඡන",
+    "unlocked": "{{count}} / {{total}} අගුළු හැරිණ",
+    "unlockedDate": "{{date}} අගුළු හැරිණ",
+    "createGoal": {
+      "title": "අධ්‍යයන ඉලක්කයක් සාදන්න",
+      "subtitle": "ඉලක්කයක් සකසා ස්වයංක්‍රීයව ප්‍රගතිය නිරීක්ෂණය කරන්න.",
+      "goalType": "ඉලක්ක වර්ගය",
+      "completeQuizzes": "ප්‍රශ්නාවලි සම්පූර්ණ කරන්න",
+      "achieveScore": "ලකුණු ඉලක්කය ළඟා වන්න",
+      "buildStreak": "ප්‍රවාහයක් ගොඩනඟන්න",
+      "targetLabel": {
+        "quiz_count": "ප්‍රශ්නාවලි ගණන",
+        "score_target": "ඉලක්ක ලකුණු (%)",
+        "streak": "ප්‍රවාහ දිනය"
+      },
+      "placeholder": {
+        "quiz_count": "උදා: 5",
+        "score_target": "උදා: 80",
+        "streak": "උදා: 7"
+      },
+      "subjectOptional": "විෂය (අමතරව)",
+      "allSubjects": "සියලු විෂයයන්",
+      "timePeriod": "කාල සීමාව",
+      "thisWeek": "මෙම සතිය",
+      "thisMonth": "මෙම මාසය",
+      "createButton": "ඉලක්කය සාදන්න",
+      "invalidTarget": "අවලංගු ඉලක්කය",
+      "invalidTargetDesc": "කරුණාකර වලංගු ඉලක්ක අංකයක් ඇතුළු කරන්න.",
+      "limitReached": "සීමාව ළඟා විය",
+      "limitReachedDesc": "ඔබට ක්‍රියාකාරී ඉලක්ක 5ක් දක්වා ඇත.",
+      "goalCreated": "ඉලක්කය සාදන ලදී"
+    },
+    "badgeCelebration": {
+      "badgeUnlocked": "ලාංඡනය අගුළු හැරිණ!",
+      "awesome": "අපූරුයි!"
+    },
+    "rarity": {
+      "common": "සාමාන්‍ය",
+      "rare": "දුර්ලභ",
+      "epic": "හිතාවිත්",
+      "legendary": "පුරාවෘත්ත"
+    }
+  }
+}

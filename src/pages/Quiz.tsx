@@ -31,12 +31,14 @@ import { formatTimeRemaining, formatLastSavedTime } from "@/lib/quizProgress";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiService, Question, QuizAnswer } from "@/lib/api";
 import { OptimizedImage } from "@/components/OptimizedImage";
-import { 
-  saveQuizProgress, 
-  loadQuizProgress, 
+import {
+  saveQuizProgress,
+  loadQuizProgress,
   clearQuizProgress,
-  QuizProgress 
+  QuizProgress
 } from "@/lib/quizProgress";
+import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 interface QuizState {
   bundleId?: string;
@@ -60,6 +62,7 @@ const Quiz = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useTranslation(['quiz', 'common']);
   const quizData = location.state as QuizState;
   const pendingSubmissions = useRef<Promise<void>[]>([]);
 
@@ -642,20 +645,20 @@ const Quiz = () => {
         <div className="container mx-auto px-4 py-8">
           <Card className="max-w-4xl mx-auto">
             <CardHeader className="text-center">
-              <CardTitle className="text-3xl">Quiz Completed!</CardTitle>
-              <CardDescription>Here are your results</CardDescription>
+              <CardTitle className="text-3xl">{t('quiz:title')}</CardTitle>
+              <CardDescription>{t('quiz:results.viewAnswers')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Summary Section */}
               <div className="text-center">
                 <div className="text-6xl font-bold text-primary mb-2">{score}%</div>
-                <p className="text-lg text-muted-foreground">Your Score</p>
+                <p className="text-lg text-muted-foreground">{t('quiz:yourScore')}</p>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4 text-center">
                 <div>
                   <div className="text-2xl font-bold">{quizResult?.correctAnswers || Object.keys(selectedAnswers).length}</div>
-                  <p className="text-sm text-muted-foreground">Correct Answers</p>
+                  <p className="text-sm text-muted-foreground">{t('quiz:correctAnswers')}</p>
                 </div>
                 <div>
                   <div className="text-2xl font-bold">{quizResult?.totalQuestions || totalQuestions}</div>
@@ -810,18 +813,18 @@ const Quiz = () => {
 
               {/* Action Buttons */}
               <div className="space-y-4 pt-4 border-t">
-                <Button 
-                  onClick={() => navigate('/student-dashboard')} 
+                <Button
+                  onClick={() => navigate('/student-dashboard')}
                   className="w-full"
                 >
-                  Back to Dashboard
+                  {t('quiz:results.goHome')}
                 </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => window.location.reload()} 
+                <Button
+                  variant="outline"
+                  onClick={() => window.location.reload()}
                   className="w-full"
                 >
-                  Retake Quiz
+                  {t('quiz:results.retake')}
                 </Button>
               </div>
             </CardContent>
@@ -957,7 +960,7 @@ const Quiz = () => {
               <div className="space-y-4">
                 {savedProgress ? (
                   <>
-                    <Button 
+                    <Button
                       onClick={() => {
                         setShouldResume(true);
                         handleStartQuiz(true);
@@ -967,9 +970,9 @@ const Quiz = () => {
                       size="lg"
                     >
                       <RotateCw className="h-5 w-5 mr-2" />
-                      {loading ? "Resuming Quiz..." : "Continue Quiz"}
+                      {loading ? t('common:status.loading') : t('quiz:submitConfirm.cancel')}
                     </Button>
-                    <Button 
+                    <Button
                       onClick={() => {
                         if (quizData.quizId) {
                           clearQuizProgress(quizData.quizId);
@@ -983,27 +986,27 @@ const Quiz = () => {
                       size="lg"
                     >
                       <Play className="h-5 w-5 mr-2" />
-                      {loading ? "Starting..." : "Start Fresh Quiz"}
+                      {loading ? t('common:status.loading') : t('quiz:startQuiz')}
                     </Button>
                   </>
                 ) : (
-                  <Button 
+                  <Button
                     onClick={() => handleStartQuiz(false)}
                     disabled={loading}
                     className="w-full bg-gradient-hero hover:opacity-90 btn-modern shadow-elegant hover:shadow-hover"
                     size="lg"
                   >
                     <Play className="h-5 w-5 mr-2" />
-                    {loading ? "Starting Quiz..." : "Start Quiz"}
+                    {loading ? t('common:status.loading') : t('quiz:startQuiz')}
                   </Button>
                 )}
-                <Button 
-                  variant="outline" 
-                  onClick={() => navigate('/student-dashboard')} 
+                <Button
+                  variant="outline"
+                  onClick={() => navigate('/student-dashboard')}
                   className="w-full btn-modern"
                 >
                   <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Dashboard
+                  {t('quiz:results.goHome')}
                 </Button>
               </div>
             </CardContent>
@@ -1019,20 +1022,20 @@ const Quiz = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-8 bg-background/80 backdrop-blur-sm rounded-xl p-6 border-2 shadow-elegant">
           <div className="flex items-center gap-4">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => navigate('/student-dashboard')}
               className="btn-modern"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
+              {t('common:buttons.back')}
             </Button>
             <div>
               <h1 className="text-3xl font-bold bg-gradient-hero bg-clip-text text-transparent">
                 {quizTitle || quizData.bundleTitle}
               </h1>
               <p className="text-muted-foreground text-lg">
-                Question {currentQuestionIndex + 1} of {totalQuestions}
+                {t('quiz:questionOf', { current: currentQuestionIndex + 1, total: totalQuestions })}
               </p>
             </div>
           </div>
@@ -1124,15 +1127,15 @@ const Quiz = () => {
                   <div className="space-y-1.5 pt-3 border-t">
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded bg-green-500"></div>
-                      <span className="text-xs text-muted-foreground">Answered</span>
+                      <span className="text-xs text-muted-foreground">{t('quiz:answered')}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded bg-amber-400"></div>
-                      <span className="text-xs text-muted-foreground">Flagged</span>
+                      <span className="text-xs text-muted-foreground">{t('quiz:flagged')}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded bg-muted/60 border border-border"></div>
-                      <span className="text-xs text-muted-foreground">Not Answered</span>
+                      <span className="text-xs text-muted-foreground">{t('quiz:unanswered')}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded border-2 border-primary"></div>
@@ -1156,7 +1159,7 @@ const Quiz = () => {
                       <div className="p-2 bg-gradient-hero rounded-lg">
                         <BookOpen className="h-5 w-5 text-white" />
                       </div>
-                      Review Your Answers
+                      {t('quiz:reviewAnswers')}
                     </CardTitle>
                     <Button
                       variant="outline"
@@ -1164,7 +1167,7 @@ const Quiz = () => {
                       className="btn-modern"
                     >
                       <ArrowLeft className="h-4 w-4 mr-2" />
-                      Back to Quiz
+                      {t('common:buttons.back')}
                     </Button>
                   </div>
                 </CardHeader>

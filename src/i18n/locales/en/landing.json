@@ -1,0 +1,102 @@
+{
+  "hero": {
+    "title": "Smart MCQ Platform for",
+    "titleHighlight": "Enhanced Learning",
+    "subtitle": "Empowering teachers to create and monetize content while helping students excel through intelligent practice and analytics.",
+    "startTrial": "Start Free Trial",
+    "watchDemo": "Watch Demo"
+  },
+  "features": {
+    "sectionTitle": "Powerful Features",
+    "sectionSubtitle": "Everything you need for effective MCQ-based learning",
+    "items": {
+      "mcqManagement": "Smart MCQ Management",
+      "mcqManagementDesc": "Create, organize, and manage multiple-choice questions with ease",
+      "roleAccess": "Role-Based Access",
+      "roleAccessDesc": "Separate portals for teachers, students, and administrators",
+      "analytics": "Performance Analytics",
+      "analyticsDesc": "Track progress and identify areas for improvement",
+      "secure": "Secure & Scalable",
+      "secureDesc": "Cloud-based infrastructure with enterprise-grade security"
+    }
+  },
+  "benefits": {
+    "forTeachers": "For Teachers",
+    "forStudents": "For Students",
+    "teachers": {
+      "b1": "Upload and monetize MCQ content",
+      "b2": "Monitor student progress in real-time",
+      "b3": "Customize quiz settings and timers",
+      "b4": "Earn through subscriptions"
+    },
+    "students": {
+      "b1": "Access curated MCQ collections",
+      "b2": "Practice with customizable settings",
+      "b3": "Track your learning progress",
+      "b4": "Flexible subscription plans"
+    }
+  },
+  "cta": {
+    "title": "Ready to Transform Learning?",
+    "subtitle": "Join thousands of teachers and students already using Island First",
+    "button": "Get Started Now"
+  },
+  "footer": {
+    "copyright": "© 2025 Island First. All rights reserved."
+  },
+  "nav": {
+    "logIn": "Log In",
+    "getStarted": "Get Started"
+  },
+  "notFound": {
+    "title": "404",
+    "message": "Oops! Page not found",
+    "returnHome": "Return to Home"
+  },
+  "contact": {
+    "title": "Contact Us",
+    "subtitle": "Get in touch with our team",
+    "helpTitle": "We're Here to Help",
+    "helpSubtitle": "Have questions or need assistance? Our team is ready to support you on your learning journey.",
+    "emailUs": "Email Us",
+    "emailUsDesc": "Send us your queries anytime",
+    "callUs": "Call Us",
+    "callUsDesc": "Mon-Fri from 8am to 5pm",
+    "visitUs": "Visit Us",
+    "visitUsDesc": "Come say hello at our office",
+    "sendMessage": "Send us a Message",
+    "sendMessageDesc": "Fill out the form below and we'll get back to you as soon as possible",
+    "fullName": "Full Name",
+    "namePlaceholder": "Your name",
+    "emailPlaceholder": "your.email@example.com",
+    "subject": "Subject",
+    "subjectPlaceholder": "What is this regarding?",
+    "message": "Message",
+    "messagePlaceholder": "Tell us more about your inquiry...",
+    "sendButton": "Send Message",
+    "officeHours": "Office Hours",
+    "monFri": "Monday - Friday",
+    "sat": "Saturday",
+    "sun": "Sunday",
+    "closed": "Closed",
+    "aboutTitle": "About Island First",
+    "aboutText1": "Island First is Sri Lanka's leading online learning platform, dedicated to helping students excel in their academic journey. We provide comprehensive quiz materials, practice papers, and learning resources for all grade levels.",
+    "aboutText2": "Our mission is to make quality education accessible to every student across the island, empowering them to achieve their full potential through innovative learning solutions.",
+    "connectWith": "Connect With Us",
+    "connectWithDesc": "Follow us on social media for updates and tips",
+    "faqTitle": "Frequently Asked Questions",
+    "faqSubtitle": "Quick answers to common questions",
+    "faqItems": {
+      "q1": "How do I reset my password?",
+      "a1": "Navigate to Settings → Password tab and click \"Change Password\" to reset your password securely.",
+      "q2": "What payment methods do you accept?",
+      "a2": "We accept credit/debit cards, bank transfers, and mobile payment options for premium subscriptions.",
+      "q3": "How can I track my learning progress?",
+      "a3": "Your dashboard displays comprehensive statistics including completed quizzes, average scores, and time spent learning.",
+      "q4": "Do you offer refunds?",
+      "a4": "Yes, we offer a 7-day money-back guarantee for premium subscriptions. Contact support for assistance."
+    },
+    "messageSent": "Message Sent!",
+    "messageSentDesc": "Thank you for contacting us. We'll get back to you within 24 hours."
+  }
+}

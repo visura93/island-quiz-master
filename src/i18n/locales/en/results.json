@@ -1,0 +1,57 @@
+{
+  "completedQuizzes": {
+    "title": "Completed Quizzes",
+    "subtitle": "Your quiz history",
+    "noQuizzes": "No completed quizzes yet",
+    "noQuizzesDesc": "Complete some quizzes to see your history here.",
+    "filters": {
+      "all": "All",
+      "subject": "Subject",
+      "date": "Date"
+    },
+    "details": {
+      "score": "Score",
+      "timeTaken": "Time Taken",
+      "date": "Date",
+      "subject": "Subject",
+      "grade": "Grade",
+      "difficulty": "Difficulty"
+    },
+    "difficulty": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced"
+    }
+  },
+  "timeAnalytics": {
+    "title": "Time Analytics",
+    "subtitle": "Track your study time",
+    "headerSubtitle": "Track your learning progress and time investment",
+    "totalTime": "Total Time",
+    "thisWeek": "This Week",
+    "thisMonth": "This Month",
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "noData": "No analytics data yet",
+    "loading": "Loading time analytics...",
+    "errorLoading": "Error loading data",
+    "avgPerSession": "Avg per Session",
+    "sessions": "Sessions",
+    "mostProductive": "Most Productive",
+    "timeBySubject": "Time by Subject",
+    "timeBySubjectDesc": "Distribution of study time across subjects",
+    "timeByQuizType": "Time by Quiz Type",
+    "timeByQuizTypeDesc": "Distribution of study time across quiz types",
+    "noDataAvailable": "No data available",
+    "noSubjectData": "No subject data available",
+    "noTypeData": "No type data available",
+    "timeTrend": "Time Trend - {{range}}",
+    "timeTrendDesc": "Your study time progression over time",
+    "noDataForRange": "No data available for this time range",
+    "recentActivity": "Recent Activity",
+    "recentActivityDesc": "Your latest study sessions",
+    "noRecentActivity": "No recent activity",
+    "backToDashboard": "Back to Dashboard"
+  }
+}
